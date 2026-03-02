@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen } from './test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import KanbanBoard from './KanbanBoard'
 import type { Item } from './types'
@@ -53,7 +53,7 @@ describe('KanbanBoard', () => {
     const { container } = render(
       <KanbanBoard {...defaultProps} highlightedItems={new Set([1])} />
     )
-    expect(container.querySelector('[data-item-id="1"]')).toHaveClass('highlighted')
-    expect(container.querySelector('[data-item-id="2"]')).not.toHaveClass('highlighted')
+    expect(container.querySelector('[data-item-id="1"]')).toHaveAttribute('data-highlighted', 'true')
+    expect(container.querySelector('[data-item-id="2"]')).not.toHaveAttribute('data-highlighted')
   })
 })

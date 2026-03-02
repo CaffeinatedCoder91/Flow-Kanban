@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from './test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import InsightCard from './InsightCard'
 import type { Insight } from './types'
@@ -64,7 +64,7 @@ describe('InsightCard', () => {
     const { container } = render(
       <InsightCard insight={{ ...baseInsight, severity: 'high' }} onDismiss={vi.fn()} onAction={vi.fn()} />
     )
-    expect(container.firstChild).toHaveClass('insight-severity-high')
+    expect(container.firstChild).toHaveAttribute('data-severity', 'high')
   })
 
   it('calls onDismiss when dismiss button is clicked', () => {

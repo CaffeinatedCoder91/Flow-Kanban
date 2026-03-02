@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from './test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import KanbanCard from './KanbanCard'
 import type { Item } from './types'
@@ -99,7 +99,7 @@ describe('KanbanCard', () => {
     const { container } = wrap(
       <KanbanCard item={item} highlighted onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />
     )
-    expect(container.querySelector('.kanban-card')).toHaveClass('highlighted')
+    expect(container.querySelector('[data-item-id="1"]')).toHaveAttribute('data-highlighted', 'true')
   })
 
   it('sets data-item-id attribute', () => {
@@ -152,12 +152,12 @@ describe('KanbanCard', () => {
 
   it('applies overdue urgency class to the due date span', () => {
     const { container } = wrap(<KanbanCard item={{ ...item, due_date: relDate(-2) }} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    expect(container.querySelector('.card-due-date-overdue')).toBeInTheDocument()
+    expect(container.querySelector('[data-urgency="overdue"]')).toBeInTheDocument()
   })
 
   it('applies today urgency class to the due date span', () => {
     const { container } = wrap(<KanbanCard item={{ ...item, due_date: relDate(0) }} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    expect(container.querySelector('.card-due-date-today')).toBeInTheDocument()
+    expect(container.querySelector('[data-urgency="today"]')).toBeInTheDocument()
   })
 
   it('shows negotiate button when due_date is set and status is not done', () => {

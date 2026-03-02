@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from './test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import AssistantPanel from './AssistantPanel'
 
@@ -19,25 +19,23 @@ describe('AssistantPanel', () => {
   })
 
   it('is hidden when isOpen is false', () => {
-    const { container } = render(<AssistantPanel {...defaultProps} isOpen={false} />)
-    const panel = container.querySelector('.assistant-panel')
-    expect(panel).not.toHaveClass('assistant-panel-open')
+    render(<AssistantPanel {...defaultProps} isOpen={false} />)
+    expect(screen.getByTestId('assistant-panel')).toHaveAttribute('data-open', 'false')
   })
 
   it('is visible when isOpen is true', () => {
-    const { container } = render(<AssistantPanel {...defaultProps} isOpen={true} />)
-    const panel = container.querySelector('.assistant-panel')
-    expect(panel).toHaveClass('assistant-panel-open')
+    render(<AssistantPanel {...defaultProps} isOpen={true} />)
+    expect(screen.getByTestId('assistant-panel')).toHaveAttribute('data-open', 'true')
   })
 
   it('shows overlay when open', () => {
-    const { container } = render(<AssistantPanel {...defaultProps} isOpen={true} />)
-    expect(container.querySelector('.assistant-overlay')).toBeInTheDocument()
+    render(<AssistantPanel {...defaultProps} isOpen={true} />)
+    expect(screen.getByTestId('assistant-overlay')).toBeInTheDocument()
   })
 
   it('hides overlay when closed', () => {
-    const { container } = render(<AssistantPanel {...defaultProps} isOpen={false} />)
-    expect(container.querySelector('.assistant-overlay')).not.toBeInTheDocument()
+    render(<AssistantPanel {...defaultProps} isOpen={false} />)
+    expect(screen.queryByTestId('assistant-overlay')).not.toBeInTheDocument()
   })
 
   it('calls onClose when close button is clicked', () => {

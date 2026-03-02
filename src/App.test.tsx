@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from './test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App'
 
@@ -530,7 +530,7 @@ describe('Proactive assistant messaging', () => {
     })
     render(<App />)
     await waitFor(() => {
-      expect(document.querySelector('.assistant-panel-open')).toBeInTheDocument()
+      expect(document.querySelector('[data-testid="assistant-panel"][data-open="true"]')).toBeInTheDocument()
     })
   })
 
@@ -586,7 +586,7 @@ describe('Proactive assistant messaging', () => {
     })
     render(<App />)
     await waitFor(() => screen.getByText(/"Test item" is in progress and due today/))
-    expect(document.querySelector('.assistant-panel-open')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-testid="assistant-panel"][data-open="true"]')).not.toBeInTheDocument()
   })
 
   it('does not re-alert the same item on subsequent insight refreshes', async () => {

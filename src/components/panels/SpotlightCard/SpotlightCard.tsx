@@ -1,0 +1,27 @@
+import { DismissBtn } from '../InsightCard'
+import { Card, Icon, Content, Label, TaskLink, Reason, StartBtn } from './SpotlightCard.styles'
+import type { SpotlightCardProps } from './SpotlightCard.types'
+
+export default function SpotlightCard({ recommendation, item, onDismiss, onStartWorking }: SpotlightCardProps) {
+  const scrollToItem = () => {
+    const el = document.querySelector(`[data-item-id="${recommendation.recommendedItemId}"]`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  return (
+    <Card>
+      <Icon>⭐</Icon>
+      <Content>
+        <Label>Recommended next task</Label>
+        <TaskLink onClick={scrollToItem}>
+          {item?.title ?? `Task #${recommendation.recommendedItemId}`}
+        </TaskLink>
+        <Reason>{recommendation.reason}</Reason>
+        <StartBtn onClick={() => onStartWorking(recommendation.recommendedItemId)}>
+          Start working
+        </StartBtn>
+      </Content>
+      <DismissBtn onClick={onDismiss} aria-label="Dismiss">&times;</DismissBtn>
+    </Card>
+  )
+}

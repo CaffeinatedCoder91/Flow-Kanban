@@ -286,16 +286,16 @@ const ToastRetryBtn = styled.button`
 
   &:hover { background: rgba(255,255,255,0.22); }
 `
-import KanbanBoard from './KanbanBoard'
-import InsightCard from './InsightCard'
-import SpotlightCard from './SpotlightCard'
-import AssistantPanel from './AssistantPanel'
-import TaskPreview from './TaskPreview'
-import SummaryView from './SummaryView'
-import NarrativeWidget from './NarrativeWidget'
-import DeadlineNegotiationModal from './DeadlineNegotiationModal'
-import WelcomeModal, { hasSeenWelcome } from './WelcomeModal'
-import HelpModal from './HelpModal'
+import KanbanBoard from './components/board/KanbanBoard'
+import InsightCard from './components/panels/InsightCard'
+import SpotlightCard from './components/panels/SpotlightCard'
+import AssistantPanel from './components/panels/AssistantPanel'
+import TaskPreview from './components/modals/TaskPreview'
+import SummaryView from './components/panels/SummaryView'
+import NarrativeWidget from './components/panels/NarrativeWidget'
+import DeadlineNegotiationModal from './components/modals/DeadlineNegotiationModal'
+import WelcomeModal, { hasSeenWelcome } from './components/modals/WelcomeModal'
+import HelpModal from './components/modals/HelpModal'
 
 interface Recommendation {
   recommendedItemId: number

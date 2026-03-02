@@ -4,7 +4,7 @@ import App from './App'
 
 // NarrativeWidget makes its own /api/narrative fetch; stub it out so it doesn't
 // interfere with the fetch mock sequences used by App tests.
-vi.mock('./NarrativeWidget', () => ({ default: () => null }))
+vi.mock('./components/panels/NarrativeWidget', () => ({ default: () => null }))
 
 const mockItems = [{
   id: 1,

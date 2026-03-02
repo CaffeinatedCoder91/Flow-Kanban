@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pkill -f 'npm run dev' || true; pkill -f 'vite' || true; pkill -f 'tsx.*server' || true"
+          }
+        ]
+      }
+    ]
+  }
+}

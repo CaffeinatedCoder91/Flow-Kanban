@@ -6,15 +6,15 @@ import type { Item } from '../../../types'
 const noop = vi.fn()
 
 const items: Item[] = [
-  { id: 1, title: 'Not started task', description: null, status: 'not_started', priority: 'medium',   color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
-  { id: 2, title: 'In progress task', description: null, status: 'in_progress', priority: 'high',     color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
-  { id: 3, title: 'Done task',        description: null, status: 'done',        priority: 'low',      color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
-  { id: 4, title: 'Stuck task',       description: null, status: 'stuck',       priority: 'critical', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+  { id: 'mock-1', title: 'Not started task', description: null, status: 'not_started', priority: 'medium',   color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+  { id: 'mock-2', title: 'In progress task', description: null, status: 'in_progress', priority: 'high',     color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+  { id: 'mock-3', title: 'Done task',        description: null, status: 'done',        priority: 'low',      color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+  { id: 'mock-4', title: 'Stuck task',       description: null, status: 'stuck',       priority: 'critical', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
 ]
 
 const defaultProps = {
   items,
-  highlightedItems: new Set<number>(),
+  highlightedItems: new Set<string>(),
   onAdd: vi.fn().mockResolvedValue(undefined),
   onDelete: noop,
   onUpdateStatus: noop,
@@ -51,9 +51,9 @@ describe('KanbanBoard', () => {
 
   it('passes highlightedItems to cards', () => {
     const { container } = render(
-      <KanbanBoard {...defaultProps} highlightedItems={new Set([1])} />
+      <KanbanBoard {...defaultProps} highlightedItems={new Set(['mock-1'])} />
     )
-    expect(container.querySelector('[data-item-id="1"]')).toHaveAttribute('data-highlighted', 'true')
-    expect(container.querySelector('[data-item-id="2"]')).not.toHaveAttribute('data-highlighted')
+    expect(container.querySelector('[data-item-id="mock-1"]')).toHaveAttribute('data-highlighted', 'true')
+    expect(container.querySelector('[data-item-id="mock-2"]')).not.toHaveAttribute('data-highlighted')
   })
 })

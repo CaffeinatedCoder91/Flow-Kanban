@@ -22,7 +22,7 @@ const IN_3_DAYS = localAddDays(3)
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
-    id: 42,
+    id: 'mock-42',
     title: 'Fix the login bug',
     description: null,
     status: 'not_started',
@@ -213,7 +213,7 @@ describe('DeadlineNegotiationModal', () => {
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
     } as Response)
-    render(<DeadlineNegotiationModal item={makeItem({ id: 42 })} onClose={vi.fn()} onDone={vi.fn()} />)
+    render(<DeadlineNegotiationModal item={makeItem({ id: 'mock-42' })} onClose={vi.fn()} onDone={vi.fn()} />)
     fireEvent.click(screen.getByText('Reschedule'))
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
@@ -385,7 +385,7 @@ describe('DeadlineNegotiationModal', () => {
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
     } as Response)
-    render(<DeadlineNegotiationModal item={makeItem({ id: 42 })} onClose={vi.fn()} onDone={vi.fn()} />)
+    render(<DeadlineNegotiationModal item={makeItem({ id: 'mock-42' })} onClose={vi.fn()} onDone={vi.fn()} />)
     fireEvent.click(screen.getByText('Split Task'))
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
@@ -424,7 +424,7 @@ describe('DeadlineNegotiationModal', () => {
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
     } as Response)
-    render(<DeadlineNegotiationModal item={makeItem({ id: 42 })} onClose={vi.fn()} onDone={vi.fn()} />)
+    render(<DeadlineNegotiationModal item={makeItem({ id: 'mock-42' })} onClose={vi.fn()} onDone={vi.fn()} />)
     fireEvent.click(screen.getByText('Split Task'))
     await waitFor(() => screen.getByLabelText(/Also delete original task/i))
     fireEvent.click(screen.getByLabelText(/Also delete original task/i))
@@ -441,7 +441,7 @@ describe('DeadlineNegotiationModal', () => {
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
     } as Response)
-    render(<DeadlineNegotiationModal item={makeItem({ id: 42 })} onClose={vi.fn()} onDone={vi.fn()} />)
+    render(<DeadlineNegotiationModal item={makeItem({ id: 'mock-42' })} onClose={vi.fn()} onDone={vi.fn()} />)
     fireEvent.click(screen.getByText('Split Task'))
     fireEvent.change(screen.getByPlaceholderText('Subtask 1…'), { target: { value: 'New task' } })
     await waitFor(() => expect(screen.getByText('Create 1 subtask')).not.toBeDisabled())

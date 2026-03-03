@@ -5,13 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev          # Start frontend (Vite) and backend (Express) concurrently
-npm run dev:client   # Start only frontend (http://localhost:5173)
-npm run dev:server   # Start only backend (http://localhost:3001)
+npm run dev          # Start Vite (frontend only, http://localhost:5173)
+npm run dev:full     # Start full stack via vercel dev (frontend + API on http://localhost:3000)
 npm run lint         # Run ESLint
 npm test             # Run all tests
 npm run test:watch   # Run tests in watch mode
-npm run db:reset     # Delete SQLite database and restart server
 ```
 
 Run a single test file:
@@ -21,18 +19,45 @@ npx vitest run src/App.test.tsx
 
 ## Architecture
 
-This is a full-stack TypeScript todo app with three layers:
+This is a full-stack TypeScript kanban app:
 
-- **Frontend** (`src/`): React app built with Vite. Single-page app that fetches from `/api/*` endpoints.
-- **Backend** (`server/index.ts`): Express server on port 3001. Provides REST API for todos.
-- **Database** (`db/todos.db`): SQLite file database using better-sqlite3. Schema is auto-created on server start.
+- **Frontend** (`src/`): React + Vite + Emotion CSS-in-JS. SPA that calls `/api/*` endpoints.
+- **API** (`api/`): Vercel serverless functions (one file per route). Node.js 20.
+- **Database**: Supabase (Postgres). Schema in `db/supabase-schema.sql`.
+- **Auth**: Supabase Auth. All API routes require `Authorization: Bearer <supabase-jwt>`.
 
-Vite proxies `/api` requests to the backend during development.
+When using `npm run dev:full`, `vercel dev` serves both Vite (frontend) and API functions on port 3000.
+When using `npm run dev` (Vite only), API routes are unavailable — use this for UI-only development.
+
+## Key files
+
+- `lib/supabase.ts` — Supabase client setup + TypeScript types (Item, ItemHistory)
+- `lib/db.ts` — All DB helpers (getItems, createItem, updateItem, deleteItem, getItemHistory)
+- `api/_utils.ts` — Shared helpers: getUserId (JWT verification), CORS, response helpers
+- `db/supabase-schema.sql` — Full Supabase schema with tables, indexes, and RLS policies
+
+## API routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/items` | GET | Load all items with history |
+| `/api/items` | POST | Create item |
+| `/api/items/bulk` | POST | Bulk create items |
+| `/api/items/[id]` | PATCH | Update item |
+| `/api/items/[id]` | DELETE | Delete item |
+| `/api/chat` | POST | AI assistant with board tool use |
+| `/api/insights` | POST | Board analysis (stale, bottleneck, duplicates) |
+| `/api/recommend-next` | POST | AI-recommended next task |
+| `/api/narrative` | POST | Standup summary + momentum score |
+| `/api/check-deadline-risks` | POST | Scan for at-risk deadlines |
+| `/api/deadline-actions` | POST | Record deadline action |
+| `/api/suggest-reschedule` | POST | AI due-date suggestions |
+| `/api/suggest-split` | POST | AI task split suggestions |
+| `/api/extract-tasks` | POST | Extract tasks from text |
+| `/api/extract-from-file` | POST | Extract tasks from file (.txt/.pdf/.docx) |
 
 ## Browser Testing
 
-When testing the app in Chrome:
-
-1. **Always use `npm run dev`** (not separate client/server commands) - this ensures the Vite proxy to the backend works correctly
-2. **Check the port** - Default is http://localhost:5173, but if that port is in use, Vite will pick another (5174, 5175, etc.). Check the terminal output for the actual URL
-3. **Wait for both servers** - The backend takes a moment to start. Wait ~3 seconds after running the command before navigating to the app
+1. Run `npm run dev:full` (`vercel dev`) for full-stack testing — serves frontend + API on http://localhost:3000
+2. Run `npm run dev` (`vite`) for UI-only testing — http://localhost:5173, no API
+3. All API calls require a Supabase JWT in the `Authorization: Bearer` header

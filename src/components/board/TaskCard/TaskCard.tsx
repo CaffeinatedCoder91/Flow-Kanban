@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { DraggableAttributes } from '@dnd-kit/core'
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
-import { Item, STATUS_CONFIG, PRIORITY_CONFIG } from '../../../types'
+import { STATUS_CONFIG, PRIORITY_CONFIG } from '../../../types'
 import { TaskCardProps, DueDateUrgency } from './TaskCard.types'
 import {
   DeleteBtn, Card, CardHeader, CardHeaderLeft, ColorTag, ColorCircle,

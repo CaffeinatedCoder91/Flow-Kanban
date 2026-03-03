@@ -11,13 +11,13 @@ import {
   useSensors,
   closestCorners,
 } from '@dnd-kit/core'
-import { Item, STATUS_CONFIG } from '../../../types'
+import { STATUS_CONFIG } from '../../../types'
 import { KanbanBoardProps } from './KanbanBoard.types'
 import Column from '../Column'
 import { DragOverlayCard } from '../TaskCard'
 
 export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps) {
-  const [activeId, setActiveId] = useState<number | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -33,7 +33,7 @@ export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, 
   }
 
   function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as number)
+    setActiveId(event.active.id as string)
   }
 
   function handleDragOver(event: DragOverEvent) {
@@ -44,7 +44,7 @@ export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, 
     const overColumn = findColumn(over.id)
 
     if (activeColumn && overColumn && activeColumn !== overColumn) {
-      onUpdateStatus(active.id as number, overColumn)
+      onUpdateStatus(active.id as string, overColumn)
     }
   }
 
@@ -58,7 +58,7 @@ export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, 
     if (overColumn) {
       const currentItem = items.find(t => t.id === active.id)
       if (currentItem && currentItem.status !== overColumn) {
-        onUpdateStatus(active.id as number, overColumn)
+        onUpdateStatus(active.id as string, overColumn)
       }
     }
   }
@@ -71,6 +71,25 @@ export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, 
     ...col,
     items: items.filter(t => t.status === col.key),
   }))
+
+  if (items.length === 0) {
+    return (
+      <div className="empty-board-state">
+        <svg className="empty-board-illustration" viewBox="0 0 180 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="46" height="100" rx="6" fill="#f0edff" stroke="#d4ccf7" strokeWidth="1.5"/>
+          <rect x="67" y="10" width="46" height="100" rx="6" fill="#f0edff" stroke="#d4ccf7" strokeWidth="1.5"/>
+          <rect x="124" y="10" width="46" height="100" rx="6" fill="#f0edff" stroke="#d4ccf7" strokeWidth="1.5"/>
+          <rect x="18" y="22" width="30" height="6" rx="3" fill="#d4ccf7"/>
+          <rect x="75" y="22" width="30" height="6" rx="3" fill="#d4ccf7"/>
+          <rect x="132" y="22" width="30" height="6" rx="3" fill="#d4ccf7"/>
+          <circle cx="90" cy="75" r="16" fill="#8B5CF6" opacity="0.15"/>
+          <path d="M90 67v16M82 75h16" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+        <h3>Your board is empty</h3>
+        <p>Add your first task using the bar above, or use the + button in any column.</p>
+      </div>
+    )
+  }
 
   return (
     <DndContext

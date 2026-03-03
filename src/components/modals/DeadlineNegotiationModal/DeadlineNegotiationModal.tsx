@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../../../lib/api'
 import { DeadlineNegotiationModalProps } from './DeadlineNegotiationModal.types'
 
 type Screen = 'home' | 'reschedule' | 'split' | 'deprioritize'
@@ -70,9 +71,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
     if (screen !== 'reschedule') return
     setSuggestions(null)
     setSuggestionsLoading(true)
-    fetch('/api/suggest-reschedule', {
+    apiFetch('/api/suggest-reschedule', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId: item.id }),
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -84,9 +84,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
   useEffect(() => {
     if (screen !== 'split') return
     setSplitLoading(true)
-    fetch('/api/suggest-split', {
+    apiFetch('/api/suggest-split', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId: item.id }),
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -103,9 +102,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
   const prompt   = `This task is ${dueLabel}. What would you like to do?`
 
   const patch = async (fields: Record<string, unknown>) => {
-    const res = await fetch(`/api/items/${item.id}`, {
+    const res = await apiFetch(`/api/items/${item.id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fields),
     })
     if (!res.ok) throw new Error('Update failed')
@@ -118,9 +116,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
     setBusy(true); setError(null)
     try {
       await patch({ due_date: newDate })
-      fetch('/api/deadline-actions', {
+      apiFetch('/api/deadline-actions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ item_id: item.id, action_type: 'reschedule', original_due_date: item.due_date, new_due_date: newDate }),
       }).catch(() => {})
       const due = new Date(newDate + 'T00:00:00')
@@ -157,9 +154,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
       }
 
       await patch(fields)
-      fetch('/api/deadline-actions', {
+      apiFetch('/api/deadline-actions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           item_id: item.id,
           action_type: 'deprioritize',
@@ -183,9 +179,8 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
     setBusy(true); setError(null)
     try {
       for (const row of rows) {
-        const res = await fetch('/api/items', {
+        const res = await apiFetch('/api/items', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title:       row.title.trim(),
             description: row.description || null,
@@ -195,11 +190,10 @@ export default function DeadlineNegotiationModal({ item, onClose, onDone }: Dead
         if (!res.ok) throw new Error('Failed to create subtask')
       }
       if (deleteOriginal) {
-        await fetch(`/api/items/${item.id}`, { method: 'DELETE' })
+        await apiFetch(`/api/items/${item.id}`, { method: 'DELETE' })
       }
-      fetch('/api/deadline-actions', {
+      apiFetch('/api/deadline-actions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ item_id: item.id, action_type: 'split', original_due_date: item.due_date }),
       }).catch(() => {})
       const n = rows.length

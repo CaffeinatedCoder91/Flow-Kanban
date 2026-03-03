@@ -32,6 +32,11 @@ export default function Column({
         <span className="column-dot" style={{ backgroundColor: color }}></span>
         <span className="column-label">{label}</span>
         <span className="column-count">{items.length}</span>
+        <button
+          className="column-header-add"
+          onClick={() => setAdding(true)}
+          aria-label={`Add task to ${label}`}
+        >+</button>
       </div>
       <div className="column-body" ref={setNodeRef}>
         <SortableContext items={items.map(t => t.id)} strategy={verticalListSortingStrategy}>

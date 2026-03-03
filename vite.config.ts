@@ -8,6 +8,7 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   plugins: [react({
     babel: {
       plugins: ['@emotion/babel-plugin']
@@ -15,7 +16,7 @@ export default defineConfig({
   })],
   server: {
     proxy: {
-      '/api': 'http://localhost:3001'
+      '/api': 'http://localhost:3000'
     }
   },
   test: {

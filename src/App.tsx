@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
 import styled from '@emotion/styled'
-import { fetchWithRetry } from './utils/fetchWithRetry'
+import { apiFetch } from './lib/api'
+import { useAuth } from './context/AuthContext'
 import { Item, Insight, ProposedTask, STATUS_CONFIG } from './types'
 
 const ModalOverlay = styled.div`
@@ -298,11 +299,12 @@ import WelcomeModal, { hasSeenWelcome } from './components/modals/WelcomeModal'
 import HelpModal from './components/modals/HelpModal'
 
 interface Recommendation {
-  recommendedItemId: number
+  recommendedItemId: string
   reason: string
 }
 
 function App() {
+  const { user, signOut } = useAuth()
   const [items, setItems] = useState<Item[]>([])
   const [text, setText] = useState('')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
@@ -324,11 +326,11 @@ function App() {
   const [recommendationDismissed, setRecommendationDismissed] = useState(false)
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
   const refreshMessageTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const [highlightedItems, setHighlightedItems] = useState<Set<number>>(new Set())
+  const [highlightedItems, setHighlightedItems] = useState<Set<string>>(new Set())
   const [view, setView] = useState<'board' | 'summary'>('board')
   const [prefillMessage, setPrefillMessage] = useState('')
   const [proactiveMessages, setProactiveMessages] = useState<string[]>([])
-  const alertedItemIdsRef = useRef<Set<number>>(new Set())
+  const alertedItemIdsRef = useRef<Set<string>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
   const [negotiationItem, setNegotiationItem] = useState<Item | null>(null)
   const [isBoardLoading, setIsBoardLoading] = useState(true)
@@ -338,7 +340,7 @@ function App() {
   const [insightsError, setInsightsError] = useState(false)
   const [showWelcome, setShowWelcome] = useState(() => !hasSeenWelcome())
   const [isHelpOpen, setIsHelpOpen] = useState(false)
-  const [sampleIds, setSampleIds] = useState<number[]>(() => {
+  const [sampleIds, setSampleIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('flow-sample-ids')
       return stored ? JSON.parse(stored) : []
@@ -357,7 +359,7 @@ function App() {
   })
 
   const getInsightKey = (insight: Insight) =>
-    `${insight.type}:${[...insight.items].sort((a, b) => a - b).join(',')}`
+    `${insight.type}:${[...insight.items].sort().join(',')}`
 
   const dismissInsight = (insight: Insight) => {
     const key = getInsightKey(insight)
@@ -371,7 +373,7 @@ function App() {
 
   const visibleInsights = insights.filter(i => !dismissedKeys.has(getInsightKey(i)))
 
-  const handleStartWorking = async (id: number) => {
+  const handleStartWorking = async (id: string) => {
     const item = items.find(t => t.id === id)
     if (item && item.status !== 'in_progress') {
       await updateItemStatus(id, 'in_progress')
@@ -410,7 +412,7 @@ function App() {
     setBoardLoadError(false)
     setIsBoardLoading(true)
     try {
-      const res = await fetchWithRetry('/api/items')
+      const res = await apiFetch('/api/items')
       if (!res.ok) throw new Error('board-load')
       const data: Item[] = await res.json()
       setItems(data)
@@ -424,14 +426,13 @@ function App() {
           { title: 'Fix login bug on mobile',          status: 'stuck',       priority: 'critical', description: 'Users on iOS can\'t sign in — blocked on auth service response.' },
         ]
         try {
-          const seedRes = await fetch('/api/items/bulk', {
+          const seedRes = await apiFetch('/api/items/bulk', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tasks }),
           })
           if (seedRes.ok) {
             const seedData = await seedRes.json()
-            const ids: number[] = seedData.items.map((i: Item) => i.id)
+            const ids: string[] = seedData.items.map((i: Item) => i.id)
             localStorage.setItem('flow-sample-ids', JSON.stringify(ids))
             setSampleIds(ids)
             setItems(seedData.items)
@@ -455,12 +456,8 @@ function App() {
     setIsInsightsLoading(true)
     try {
       const [insightsRes, deadlineRes] = await Promise.all([
-        fetchWithRetry('/api/insights', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items }),
-        }),
-        fetch('/api/check-deadline-risks', { method: 'POST' }).catch(() => null),
+        apiFetch('/api/insights', { method: 'POST', body: JSON.stringify({ items }) }),
+        apiFetch('/api/check-deadline-risks', { method: 'POST' }).catch(() => null),
       ])
       if (!insightsRes.ok) throw new Error('insights-load')
       const insightsData = await insightsRes.json()
@@ -469,7 +466,7 @@ function App() {
       const deadlineInsights: Insight[] = []
       if (deadlineRes?.ok) {
         const deadlineData = await deadlineRes.json()
-        type AtRiskItem = { item_id: number; title: string; due_date: string; status: string; risk_level: 'high' | 'medium' }
+        type AtRiskItem = { item_id: string; title: string; due_date: string; status: string; risk_level: 'high' | 'medium' }
         const atRisk: AtRiskItem[] = deadlineData.at_risk ?? []
 
         const highRisk = atRisk.filter(r => r.risk_level === 'high')
@@ -533,9 +530,8 @@ function App() {
 
       let newRecommendation: Recommendation | null = null
       if (isManual) {
-        const recommendRes = await fetch('/api/recommend-next', {
+        const recommendRes = await apiFetch('/api/recommend-next', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ items }),
         })
         if (recommendRes.ok) {
@@ -581,7 +577,7 @@ function App() {
   }
 
   const fetchItems = async () => {
-    const res = await fetch('/api/items')
+    const res = await apiFetch('/api/items')
     const data = await res.json()
     setItems(data)
   }
@@ -594,7 +590,7 @@ function App() {
   }
 
   const addItemWithStatus = async (title: string, status: string) => {
-    const tempId = -(Date.now())
+    const tempId = `temp-${Date.now()}`
     const tempItem: Item = {
       id: tempId, title, description: null, status, priority: 'medium',
       color: null, assignee: null, due_date: null, position: 0,
@@ -604,9 +600,8 @@ function App() {
     setItems(prev => [...prev, tempItem])
 
     try {
-      const res = await fetchWithRetry('/api/items', {
+      const res = await apiFetch('/api/items', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, status }),
       })
       if (!res.ok) throw new Error('create-task')
@@ -618,12 +613,12 @@ function App() {
     }
   }
 
-  const removeItem = async (id: number) => {
+  const removeItem = async (id: string) => {
     const snapshot = items.slice()
     setItems(prev => prev.filter(t => t.id !== id))
 
     try {
-      const res = await fetch(`/api/items/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`/api/items/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('delete-failed')
     } catch {
       setItems(snapshot)
@@ -631,16 +626,15 @@ function App() {
     }
   }
 
-  const patchItem = async (id: number, patch: Record<string, unknown>, fieldLabel: string) => {
+  const patchItem = async (id: string, patch: Record<string, unknown>, fieldLabel: string) => {
     const snapshot = items.find(t => t.id === id)
     if (!snapshot) return
 
     setItems(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
 
     try {
-      const res = await fetchWithRetry(`/api/items/${id}`, {
+      const res = await apiFetch(`/api/items/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       })
       if (!res.ok) throw new Error('patch-failed')
@@ -652,11 +646,11 @@ function App() {
     }
   }
 
-  const updateItemStatus      = (id: number, status: string)            => patchItem(id, { status },      'task status')
-  const updateItemPriority    = (id: number, priority: string)          => patchItem(id, { priority },    'priority')
-  const updateItemDescription = (id: number, description: string|null)  => patchItem(id, { description }, 'description')
-  const updateItemDueDate     = (id: number, due_date: string|null)     => patchItem(id, { due_date },    'due date')
-  const updateItemAssignee    = (id: number, assignee: string|null)     => patchItem(id, { assignee },    'assignee')
+  const updateItemStatus      = (id: string, status: string)            => patchItem(id, { status },      'task status')
+  const updateItemPriority    = (id: string, priority: string)          => patchItem(id, { priority },    'priority')
+  const updateItemDescription = (id: string, description: string|null)  => patchItem(id, { description }, 'description')
+  const updateItemDueDate     = (id: string, due_date: string|null)     => patchItem(id, { due_date },    'due date')
+  const updateItemAssignee    = (id: string, assignee: string|null)     => patchItem(id, { assignee },    'assignee')
 
   const resetImportState = () => {
     setImportText('')
@@ -689,7 +683,7 @@ function App() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/extract-from-file', { method: 'POST', body: formData })
+      const res = await apiFetch('/api/extract-from-file', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) {
         setExtractError(data.error ?? 'Failed to process file.')
@@ -719,9 +713,8 @@ function App() {
   const handleConfirmAll = async () => {
     setIsConfirming(true)
     try {
-      const res = await fetch('/api/items/bulk', {
+      const res = await apiFetch('/api/items/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tasks: extractedTasks }),
       })
       const data = await res.json()
@@ -746,9 +739,8 @@ function App() {
     setIsExtracting(true)
     setExtractError(null)
     try {
-      const res = await fetch('/api/extract-tasks', {
+      const res = await apiFetch('/api/extract-tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: importText }),
       })
       const data = await res.json()
@@ -767,10 +759,10 @@ function App() {
     }
   }
 
-  const updateItemColor = (id: number, color: string | null) => patchItem(id, { color }, 'color')
+  const updateItemColor = (id: string, color: string | null) => patchItem(id, { color }, 'color')
 
   const handleClearSample = async () => {
-    await Promise.all(sampleIds.map(id => fetch(`/api/items/${id}`, { method: 'DELETE' })))
+    await Promise.all(sampleIds.map(id => apiFetch(`/api/items/${id}`, { method: 'DELETE' })))
     localStorage.removeItem('flow-sample-ids')
     setItems(prev => prev.filter(t => !sampleIds.includes(t.id)))
     setSampleIds([])
@@ -791,7 +783,7 @@ function App() {
       <div className="toolbar">
         <div className="toolbar-left">
           <span className="board-indicator"></span>
-          <span className="board-name">Flow</span>
+          <span className="board-name" onClick={() => setView('board')}>Flow</span>
         </div>
         <form className="toolbar-center" onSubmit={addItem}>
           <svg className="toolbar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -842,6 +834,16 @@ function App() {
             data-tooltip-pos="below"
           >
             ?
+          </button>
+          <button
+            className="view-btn"
+            aria-label="Sign out"
+            data-tooltip={user?.email ?? 'Sign out'}
+            data-tooltip-pos="below"
+            onClick={signOut}
+            style={{ fontSize: '0.8rem' }}
+          >
+            ↪
           </button>
         </div>
       </div>

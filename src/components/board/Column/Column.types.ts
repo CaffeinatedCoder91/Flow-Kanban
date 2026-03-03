@@ -5,14 +5,14 @@ export interface ColumnProps {
   label: string
   color: string
   items: Item[]
-  highlightedItems: Set<number>
+  highlightedItems: Set<string>
   onAdd: (title: string, status: string) => Promise<void>
-  onDelete: (id: number) => void
-  onUpdateStatus: (id: number, status: string) => void
-  onUpdatePriority: (id: number, priority: string) => void
-  onUpdateDescription: (id: number, description: string | null) => void
-  onUpdateDueDate: (id: number, due_date: string | null) => void
-  onUpdateAssignee: (id: number, assignee: string | null) => void
-  onUpdateColor: (id: number, color: string | null) => void
+  onDelete: (id: string) => void
+  onUpdateStatus: (id: string, status: string) => void
+  onUpdatePriority: (id: string, priority: string) => void
+  onUpdateDescription: (id: string, description: string | null) => void
+  onUpdateDueDate: (id: string, due_date: string | null) => void
+  onUpdateAssignee: (id: string, assignee: string | null) => void
+  onUpdateColor: (id: string, color: string | null) => void
   onNegotiate?: (item: Item) => void
 }

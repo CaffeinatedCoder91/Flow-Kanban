@@ -2,12 +2,12 @@ import type { Item } from '../../../types'
 import type { Recommendation } from './SpotlightCard.types'
 
 export const recommendation: Recommendation = {
-  recommendedItemId: 5,
+  recommendedItemId: 'mock-5',
   reason: 'Most urgent task due tomorrow.',
 }
 
 export const item: Item = {
-  id: 5,
+  id: 'mock-5',
   title: 'Fix critical bug',
   description: null,
   status: 'not_started',

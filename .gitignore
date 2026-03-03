@@ -4,6 +4,9 @@ db/*.db
 *.log
 .claude/settings.local.json
 .env
+.env.local
 
 *storybook.log
 storybook-static
+.vercel
+.env*.local

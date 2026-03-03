@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../../../lib/api'
 
 type Period = 'last_week' | 'last_30_days' | 'this_month'
 
@@ -95,9 +96,8 @@ export default function SummaryView() {
     setPrevMomentum(null)
 
     const fetchNarrative = (p: string): Promise<NarrativeData> =>
-      fetch('/api/narrative', {
+      apiFetch('/api/narrative', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ period: p }),
       }).then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)

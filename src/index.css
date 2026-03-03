@@ -41,6 +41,12 @@ body {
   font-size: 1.25rem;
   font-weight: 700;
   color: #323338;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.board-name:hover {
+  color: #8B5CF6;
 }
 
 .toolbar-center {
@@ -53,6 +59,13 @@ body {
   border: 1px solid #e6e9ef;
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.toolbar-center:focus-within {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  background: #ffffff;
 }
 
 .toolbar-search-icon {
@@ -75,13 +88,13 @@ body {
 }
 
 .toolbar-center button {
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.875rem;
   cursor: pointer;
   background: #8B5CF6;
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
   flex-shrink: 0;
@@ -198,12 +211,44 @@ body {
   margin-left: auto;
 }
 
+.column-header-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #9499ab;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.kanban-column:hover .column-header-add {
+  opacity: 1;
+}
+
+.column-header-add:hover {
+  background: #f0edff;
+  color: #8B5CF6;
+}
+
 .column-body {
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex: 1;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e6e9ef transparent;
 }
 .column-over .column-body {
   background: #f0edff;
@@ -1362,29 +1407,34 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.55rem 1.5rem;
-  background: #ede9fe;
-  border-bottom: 1px solid #ddd6fe;
+  padding: 0.5rem 1.5rem;
+  background: #fafafa;
+  border-bottom: 1px solid #e6e9ef;
+  border-left: 3px solid #8B5CF6;
   font-size: 0.82rem;
-  color: #5b21b6;
+  color: #676879;
 }
 
 .sample-banner button {
+  margin-left: auto;
   background: none;
-  border: none;
+  border: 1px solid #d8dae5;
+  border-radius: 5px;
   font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: #7c3aed;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #676879;
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.15s;
+  padding: 0.2rem 0.6rem;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sample-banner button:hover {
-  color: #5b21b6;
+  background: #f6f7fb;
+  border-color: #b0b7c8;
+  color: #323338;
 }
 
 /* ── Generic CSS tooltips ──────────────────────────────────────────────────── */
@@ -1491,6 +1541,110 @@ body {
   background: #f1f3f8;
   color: #323338;
   border-color: #b0b7c8;
+}
+
+/* Column add-task button */
+
+.add-task-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 1px dashed #d8dae5;
+  border-radius: 6px;
+  color: #9499ab;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  box-sizing: border-box;
+}
+
+.add-task-btn:hover {
+  background: #f6f7fb;
+  border-color: #8B5CF6;
+  color: #8B5CF6;
+}
+
+/* Inline add form inside column */
+
+.inline-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inline-add-form input[type="text"] {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: #323338;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.inline-add-form input[type="text"]:focus {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.inline-add-form input[type="text"]::placeholder {
+  color: #9499ab;
+}
+
+.inline-add-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.inline-add-actions button[type="submit"] {
+  padding: 0.35rem 0.875rem;
+  background: #8B5CF6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inline-add-actions button[type="submit"]:hover:not(:disabled) {
+  background: #7C3AED;
+}
+
+.inline-add-actions button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inline-add-actions button[type="button"] {
+  padding: 0.35rem 0.75rem;
+  background: transparent;
+  color: #676879;
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.inline-add-actions button[type="button"]:hover:not(:disabled) {
+  background: #f6f7fb;
+  border-color: #c4c8d8;
 }
 
 /* Empty column state */

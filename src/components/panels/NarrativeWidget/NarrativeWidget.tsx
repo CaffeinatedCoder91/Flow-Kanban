@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { apiFetch } from '../../../lib/api'
 import type { NarrativeWidgetProps } from './NarrativeWidget.types'
 
 interface WidgetData {
@@ -24,9 +25,8 @@ export default function NarrativeWidget({ onViewFullReport }: NarrativeWidgetPro
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/narrative', {
+    apiFetch('/api/narrative', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ period: 'last_week' }),
     })
       .then(r => {

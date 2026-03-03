@@ -1,12 +1,12 @@
 export interface HistoryEntry {
-  id: number
-  item_id: number
+  id: string
+  item_id: string
   changed_at: string
   description: string
 }
 
 export interface Item {
-  id: number
+  id: string
   title: string
   description: string | null
   status: string
@@ -32,7 +32,7 @@ export interface Insight {
   severity: 'low' | 'medium' | 'high'
   title: string
   description: string
-  items: number[]
+  items: string[]
 }
 
 export interface FieldConfidence {

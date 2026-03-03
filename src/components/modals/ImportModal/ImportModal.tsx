@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiFetch } from '../../../lib/api'
 import { Item, ProposedTask } from '../../../types'
 import TaskPreview from '../TaskPreview'
 import { ImportModalProps } from './ImportModal.types'
@@ -39,7 +40,7 @@ export default function ImportModal({ onClose, onImported }: ImportModalProps) {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/extract-from-file', { method: 'POST', body: formData })
+      const res = await apiFetch('/api/extract-from-file', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) {
         setExtractError(data.error ?? 'Failed to process file.')
@@ -64,9 +65,8 @@ export default function ImportModal({ onClose, onImported }: ImportModalProps) {
     setIsExtracting(true)
     setExtractError(null)
     try {
-      const res = await fetch('/api/extract-tasks', {
+      const res = await apiFetch('/api/extract-tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: importText }),
       })
       const data = await res.json()
@@ -88,9 +88,8 @@ export default function ImportModal({ onClose, onImported }: ImportModalProps) {
   const handleConfirmAll = async () => {
     setIsConfirming(true)
     try {
-      const res = await fetch('/api/items/bulk', {
+      const res = await apiFetch('/api/items/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tasks: extractedTasks }),
       })
       const data = await res.json()

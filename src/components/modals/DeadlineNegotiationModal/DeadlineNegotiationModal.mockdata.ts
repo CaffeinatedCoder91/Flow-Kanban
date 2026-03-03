@@ -14,7 +14,7 @@ export const TOMORROW = localAddDays(1)
 
 export function makeItem(overrides: Partial<Item> = {}): Item {
   return {
-    id: 42,
+    id: 'mock-42',
     title: 'Fix the login bug',
     description: null,
     status: 'not_started',

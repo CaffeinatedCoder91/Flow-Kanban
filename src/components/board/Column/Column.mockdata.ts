@@ -2,7 +2,7 @@ import { Item } from '../../../types'
 
 export const mockItems: Item[] = [
   {
-    id: 1,
+    id: 'mock-1',
     title: 'Task one',
     description: null,
     status: 'not_started',

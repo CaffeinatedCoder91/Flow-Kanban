@@ -20,6 +20,7 @@ export const DeleteBtn = styled.button`
   &:hover { color: #dc3545; }
 `
 
+
 export const Card = styled.div<{
   accentColor: string
   isDragging?: boolean
@@ -186,6 +187,7 @@ export const DescriptionEdit = styled.textarea`
 export const Meta = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-top: ${p => p.theme.spacing[2]};
   gap: ${p => p.theme.spacing[2]};
 `
@@ -317,8 +319,8 @@ export const CardFooter = styled.div`
 `
 
 export const PrioritySelect = styled.select<{ priority: string }>`
-  font-size: 0.8rem;
-  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.28rem 0.55rem;
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -330,8 +332,8 @@ export const PrioritySelect = styled.select<{ priority: string }>`
 `
 
 export const StatusSelect = styled.select`
-  font-size: 0.8rem;
-  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+  padding: 0.28rem 0.55rem;
   border: none;
   border-radius: 12px;
   background: ${p => p.theme.colors.primaryLight};

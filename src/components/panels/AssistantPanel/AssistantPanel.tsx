@@ -1,4 +1,5 @@
 import { useState, FormEvent, useRef, useEffect } from 'react'
+import { apiFetch } from '../../../lib/api'
 import ReactMarkdown from 'react-markdown'
 import { AssistantPanelProps, Message } from './AssistantPanel.types'
 import {
@@ -61,11 +62,10 @@ export default function AssistantPanel({
     setIsSending(true)
     setIsLoading(true)
     try {
-      const boardResponse = await fetch('/api/items')
+      const boardResponse = await apiFetch('/api/items')
       const boardState = await boardResponse.json()
-      const response = await fetch('/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage, items: boardState }),
       })
       const data = await response.json()

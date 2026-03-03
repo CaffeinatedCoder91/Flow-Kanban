@@ -5,5 +5,5 @@ export const baseInsight: Insight = {
   severity: 'low',
   title: 'Stale tasks detected',
   description: '2 tasks have not been updated in over 7 days.',
-  items: [1, 2],
+  items: ['mock-1', 'mock-2'],
 }

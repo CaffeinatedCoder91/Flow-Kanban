@@ -1,7 +1,7 @@
 import { Item } from '../../../types'
 
 export const mockItem: Item = {
-  id: 1,
+  id: 'mock-1',
   title: 'Fix login bug',
   description: 'The login form throws a 500 error.',
   status: 'in_progress',

@@ -6,7 +6,7 @@ import { DndContext } from '@dnd-kit/core'
 
 const items: Item[] = [
   {
-    id: 1,
+    id: 'mock-1',
     title: 'Task one',
     description: null,
     status: 'not_started',
@@ -32,7 +32,7 @@ const defaultProps = {
   label: 'Not Started',
   color: '#8B5CF6',
   items,
-  highlightedItems: new Set<number>(),
+  highlightedItems: new Set<string>(),
   onAdd: vi.fn().mockResolvedValue(undefined),
   onDelete: noop,
   onUpdateStatus: noop,

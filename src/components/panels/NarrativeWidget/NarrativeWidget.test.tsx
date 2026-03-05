@@ -28,13 +28,13 @@ describe('NarrativeWidget', () => {
 
   it('renders a skeleton while the fetch is in flight', () => {
     vi.spyOn(global, 'fetch').mockReturnValue(new Promise(() => {})) // never resolves
-    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     expect(container.querySelector('.narrative-widget-skeleton')).toBeInTheDocument()
   })
 
   it('renders nothing on network failure', async () => {
     vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network failure'))
-    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await act(async () => {})
     expect(container.firstChild).toBeNull()
   })
@@ -45,21 +45,21 @@ describe('NarrativeWidget', () => {
       status: 500,
       json: () => Promise.resolve({ error: 'Internal server error' }),
     } as Response)
-    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await act(async () => {})
     expect(container.firstChild).toBeNull()
   })
 
   it('renders nothing when momentum is absent from the response', async () => {
     mockOkResponse({ narrative: 'Good week.' }) // no momentum field
-    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await act(async () => {})
     expect(container.firstChild).toBeNull()
   })
 
   it('renders nothing when narrative is absent from the response', async () => {
     mockOkResponse({ momentum: { score: 75, sentiment: 'healthy' } }) // no narrative field
-    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await act(async () => {})
     expect(container.firstChild).toBeNull()
   })
@@ -68,13 +68,13 @@ describe('NarrativeWidget', () => {
 
   it('renders the momentum score', async () => {
     mockOkResponse(HEALTHY_RESPONSE)
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => expect(screen.getByText('82')).toBeInTheDocument())
   })
 
   it('renders the narrative text', async () => {
     mockOkResponse(HEALTHY_RESPONSE)
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() =>
       expect(screen.getByText('Great progress this week — things are moving.')).toBeInTheDocument()
     )
@@ -82,25 +82,25 @@ describe('NarrativeWidget', () => {
 
   it('renders "Healthy" label for healthy sentiment', async () => {
     mockOkResponse({ momentum: { score: 82, sentiment: 'healthy' }, narrative: 'Good.' })
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => expect(screen.getByText('Healthy')).toBeInTheDocument())
   })
 
   it('renders "At Risk" label for at_risk sentiment', async () => {
     mockOkResponse({ momentum: { score: 55, sentiment: 'at_risk' }, narrative: 'Slowing down.' })
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => expect(screen.getByText('At Risk')).toBeInTheDocument())
   })
 
   it('renders "Critical" label for critical sentiment', async () => {
     mockOkResponse({ momentum: { score: 22, sentiment: 'critical' }, narrative: 'Things are stuck.' })
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => expect(screen.getByText('Critical')).toBeInTheDocument())
   })
 
   it('renders the "View full report" button', async () => {
     mockOkResponse(HEALTHY_RESPONSE)
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => expect(screen.getByText(/View full report/)).toBeInTheDocument())
   })
 
@@ -109,7 +109,7 @@ describe('NarrativeWidget', () => {
   it('calls onViewFullReport when the button is clicked', async () => {
     mockOkResponse(HEALTHY_RESPONSE)
     const onViewFullReport = vi.fn()
-    render(<NarrativeWidget onViewFullReport={onViewFullReport} />)
+    render(<NarrativeWidget onViewFullReport={onViewFullReport} hasItems={true} />)
     await waitFor(() => screen.getByText(/View full report/))
     fireEvent.click(screen.getByText(/View full report/))
     expect(onViewFullReport).toHaveBeenCalledTimes(1)
@@ -119,7 +119,7 @@ describe('NarrativeWidget', () => {
 
   it('POSTs to /api/narrative with period last_week', async () => {
     const fetchSpy = mockOkResponse(HEALTHY_RESPONSE)
-    render(<NarrativeWidget onViewFullReport={vi.fn()} />)
+    render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
     await waitFor(() => screen.getByText('82'))
     expect(fetchSpy).toHaveBeenCalledWith(
       '/api/narrative',

@@ -857,7 +857,7 @@ function App() {
         <SummaryView />
       ) : (
         <>
-          <NarrativeWidget onViewFullReport={() => setView('summary')} />
+          <NarrativeWidget onViewFullReport={() => setView('summary')} hasItems={items.length > 0} />
           {((!recommendationDismissed && recommendation) || visibleInsights.length > 0 || refreshMessage || insightsError || insightsFetched) && (
             <div className="insights-bar">
               {insightsFetched && !isInsightsLoading && visibleInsights.length === 0 && (!recommendation || recommendationDismissed) && !insightsError && !refreshMessage && (

@@ -20,11 +20,12 @@ const SENTIMENT_LABEL: Record<WidgetData['sentiment'], string> = {
   critical: 'Critical',
 }
 
-export default function NarrativeWidget({ onViewFullReport }: NarrativeWidgetProps) {
+export default function NarrativeWidget({ onViewFullReport, hasItems }: NarrativeWidgetProps) {
   const [data, setData] = useState<WidgetData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(hasItems)
 
   useEffect(() => {
+    if (!hasItems) return
     apiFetch('/api/narrative', {
       method: 'POST',
       body: JSON.stringify({ period: 'last_week' }),

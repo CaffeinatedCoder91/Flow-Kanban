@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
 import { theme } from '../../../theme'
-import KanbanBoard from './KanbanBoard'
+import { KanbanBoard } from './KanbanBoard'
 import { defaultBoardProps, mockItems } from './KanbanBoard.mockdata'
 
 const meta: Meta<typeof KanbanBoard> = {

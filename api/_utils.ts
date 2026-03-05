@@ -2,6 +2,7 @@
 // Shared helpers for all Vercel serverless functions.
 
 import { supabaseAdmin } from '../lib/supabase'
+import { captureException } from './_lib/sentry'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,9 +68,10 @@ export function notFound(res: Res, message = 'Not found'): void {
   res.status(404).json({ error: message })
 }
 
-export function serverError(res: Res, err: unknown): void {
+export function serverError(res: Res, err: unknown, context?: Record<string, unknown>): void {
   const message = err instanceof Error ? err.message : 'Internal server error'
   console.error('[api]', message, err)
+  captureException(err, context)
   res.status(500).json({ error: message })
 }
 

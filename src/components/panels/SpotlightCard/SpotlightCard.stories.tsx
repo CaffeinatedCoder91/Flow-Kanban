@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import SpotlightCard from './SpotlightCard'
+import { SpotlightCard } from './SpotlightCard'
 import { recommendation, item } from './SpotlightCard.mockdata'
 
 const meta: Meta<typeof SpotlightCard> = {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import type { WelcomeModalProps } from './WelcomeModal.types'
 
 const STEPS = [
@@ -40,7 +40,7 @@ function markWelcomeSeen() {
   } catch { /* ignore */ }
 }
 
-export default function WelcomeModal({ onClose }: WelcomeModalProps) {
+export const WelcomeModal = ({ onClose }: WelcomeModalProps): React.ReactElement => {
   const [step, setStep] = useState(0)
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1

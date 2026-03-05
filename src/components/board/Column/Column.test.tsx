@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '../../../test/utils'
 import { describe, it, expect, vi } from 'vitest'
-import Column from './Column'
+import { Column } from './Column'
 import type { Item } from '../../../types'
 import { DndContext } from '@dnd-kit/core'
 

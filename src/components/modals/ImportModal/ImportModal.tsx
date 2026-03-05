@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { apiFetch } from '../../../lib/api'
 import { Item, ProposedTask } from '../../../types'
-import TaskPreview from '../TaskPreview'
+import { TaskPreview } from '../TaskPreview'
 import { ImportModalProps } from './ImportModal.types'
 import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody,
@@ -10,7 +10,7 @@ import {
   CancelBtn, ProcessBtn,
 } from './ImportModal.styles'
 
-export default function ImportModal({ onClose, onImported }: ImportModalProps) {
+export const ImportModal = ({ onClose, onImported }: ImportModalProps): React.ReactElement => {
   const [importText, setImportText] = useState('')
   const [importFileName, setImportFileName] = useState<string | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)

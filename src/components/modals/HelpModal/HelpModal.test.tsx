@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '../../../test/utils'
 import { describe, it, expect, vi } from 'vitest'
-import HelpModal from './HelpModal'
+import { HelpModal } from './HelpModal'
 
 describe('HelpModal', () => {
   it('renders the dialog with correct aria attributes', () => {

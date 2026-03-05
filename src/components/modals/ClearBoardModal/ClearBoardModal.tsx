@@ -1,9 +1,10 @@
+import React from 'react'
 import { ClearBoardModalProps } from './ClearBoardModal.types'
 import {
   Overlay, Container, Icon, Title, Body, Footer, CancelBtn, ConfirmBtn,
 } from './ClearBoardModal.styles'
 
-export default function ClearBoardModal({ itemCount, onConfirm, onClose }: ClearBoardModalProps) {
+export const ClearBoardModal = ({ itemCount, onConfirm, onClose }: ClearBoardModalProps): React.ReactElement => {
   return (
     <Overlay onClick={onClose}>
       <Container onClick={e => e.stopPropagation()}>

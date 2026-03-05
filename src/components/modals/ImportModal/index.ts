@@ -1,2 +1,2 @@
-export { default } from './ImportModal'
+export { ImportModal } from './ImportModal'
 export type { ImportModalProps } from './ImportModal.types'

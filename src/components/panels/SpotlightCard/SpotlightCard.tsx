@@ -1,8 +1,9 @@
+import React from 'react'
 import { DismissBtn } from '../InsightCard'
 import { Card, Icon, Content, Label, TaskLink, Reason, StartBtn } from './SpotlightCard.styles'
 import type { SpotlightCardProps } from './SpotlightCard.types'
 
-export default function SpotlightCard({ recommendation, item, onDismiss, onStartWorking }: SpotlightCardProps) {
+export const SpotlightCard = ({ recommendation, item, onDismiss, onStartWorking }: SpotlightCardProps): React.ReactElement => {
   const scrollToItem = () => {
     const el = document.querySelector(`[data-item-id="${recommendation.recommendedItemId}"]`)
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })

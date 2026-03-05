@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '../../../test/utils'
-import ImportModal from './ImportModal'
+import { ImportModal } from './ImportModal'
 
 beforeEach(() => {
   vi.spyOn(global, 'fetch').mockResolvedValue({

@@ -1,2 +1,2 @@
-export { default } from './Column'
+export { Column } from './Column'
 export type { ColumnProps } from './Column.types'

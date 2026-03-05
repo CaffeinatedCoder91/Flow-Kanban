@@ -1,12 +1,12 @@
-import { useState, FormEvent } from 'react'
+import React, { useState, FormEvent } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { ColumnProps } from './Column.types'
-import TaskCard from '../TaskCard'
+import { TaskCard } from '../TaskCard'
 
-export default function Column({
+export const Column = ({
   statusKey, label, color, items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate
-}: ColumnProps) {
+}: ColumnProps): React.ReactElement => {
   const [adding, setAdding] = useState(false)
   const [text, setText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
 import { theme } from '../../../theme'
-import DeadlineNegotiationModal from './DeadlineNegotiationModal'
+import { DeadlineNegotiationModal } from './DeadlineNegotiationModal'
 import { makeItem, TOMORROW } from './DeadlineNegotiationModal.mockdata'
 
 const meta: Meta<typeof DeadlineNegotiationModal> = {

@@ -1,7 +1,7 @@
 // src/components/Auth/SignIn.tsx
 // Email + password sign-in form using Supabase auth.
 
-import { useState, type FormEvent } from 'react'
+import React, { useState, type FormEvent } from 'react'
 import styled from '@emotion/styled'
 import { useAuth } from '../../context/AuthContext'
 
@@ -143,7 +143,7 @@ interface SignInProps {
   onSwitchToSignUp: () => void
 }
 
-export default function SignIn({ onSwitchToSignUp }: SignInProps) {
+export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement => {
   const { signIn } = useAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')

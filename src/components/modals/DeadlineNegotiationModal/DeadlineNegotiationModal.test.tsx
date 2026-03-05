@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '../../../test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import DeadlineNegotiationModal from './DeadlineNegotiationModal'
+import { DeadlineNegotiationModal } from './DeadlineNegotiationModal'
 import type { Item } from '../../../types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

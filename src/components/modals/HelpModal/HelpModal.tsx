@@ -1,6 +1,7 @@
+import React from 'react'
 import type { HelpModalProps } from './HelpModal.types'
 
-export default function HelpModal({ onClose }: HelpModalProps) {
+export const HelpModal = ({ onClose }: HelpModalProps): React.ReactElement => {
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Help">
       <div className="modal help-modal" onClick={e => e.stopPropagation()}>

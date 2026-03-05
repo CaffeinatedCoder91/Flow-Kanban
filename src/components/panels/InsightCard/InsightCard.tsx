@@ -1,3 +1,4 @@
+import React from 'react'
 import { Insight } from '../../../types'
 import { InsightCardProps } from './InsightCard.types'
 import { Card, Icon, Content, Title, Description, ActionBtn, DismissBtn } from './InsightCard.styles'
@@ -11,7 +12,7 @@ const TYPE_ICONS: Record<Insight['type'], string> = {
   deadline_risk:      '⏰',
 }
 
-export default function InsightCard({ insight, onDismiss, onAction }: InsightCardProps) {
+export const InsightCard = ({ insight, onDismiss, onAction }: InsightCardProps): React.ReactElement => {
   const actionLabel =
     insight.type === 'duplicate'     ? 'Ask AI'   :
     insight.type === 'deadline_risk' ? 'Resolve'   :

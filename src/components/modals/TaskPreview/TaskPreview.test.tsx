@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '../../../test/utils'
 import { describe, it, expect, vi } from 'vitest'
-import TaskPreview from './TaskPreview'
+import { TaskPreview } from './TaskPreview'
 import { baseTask } from './TaskPreview.mockdata'
 
 describe('TaskPreview', () => {

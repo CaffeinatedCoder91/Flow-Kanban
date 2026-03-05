@@ -1,302 +1,23 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
-import styled from '@emotion/styled'
 import { apiFetch } from './lib/api'
 import { useAuth } from './context/AuthContext'
 import { Item, Insight, ProposedTask, STATUS_CONFIG } from './types'
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: ${p => p.theme.zIndex.modal};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`
-
-const ModalContainer = styled.div<{ wide?: boolean }>`
-  background: ${p => p.theme.colors.surface};
-  border-radius: ${p => p.theme.borderRadius.xl};
-  box-shadow: ${p => p.theme.shadows.xl};
-  width: ${p => (p.wide ? 'min(860px, 92vw)' : '560px')};
-  max-width: ${p => (p.wide ? 'unset' : 'calc(100vw - 2rem)')};
-  display: flex;
-  flex-direction: column;
-
-  @media (max-width: 900px) {
-    ${p => p.wide && 'width: min(860px, 96vw);'}
-  }
-  @media (max-width: 767px) {
-    ${p => p.wide
-      ? 'width: calc(100vw - 1rem);'
-      : 'max-width: calc(100vw - 1rem); border-radius: 8px;'}
-  }
-`
-
-const ModalHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid ${p => p.theme.colors.border};
-
-  h2 { margin: 0; font-size: 1.1rem; font-weight: 700; color: ${p => p.theme.colors.text}; }
-
-  @media (max-width: 767px) { padding-left: 1rem; padding-right: 1rem; }
-`
-
-const ModalClose = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  color: ${p => p.theme.colors.textTertiary};
-  cursor: pointer;
-  padding: 0;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: ${p => p.theme.borderRadius.md};
-  transition: background 0.15s, color 0.15s;
-
-  &:hover { background: ${p => p.theme.colors.background}; color: ${p => p.theme.colors.textSecondary}; }
-`
-
-const ModalBody = styled.div<{ preview?: boolean }>`
-  padding: 1.25rem 1.5rem;
-  ${p => p.preview && 'padding-bottom: 0;'}
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-
-  @media (max-width: 767px) { padding-left: 1rem; padding-right: 1rem; }
-`
-
-const ModalHint = styled.p`
-  margin: 0;
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  color: ${p => p.theme.colors.textSecondary};
-`
-
-const ModalTextarea = styled.textarea`
-  width: 100%;
-  height: clamp(120px, 25vh, 200px);
-  padding: 0.75rem;
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  font-family: inherit;
-  color: ${p => p.theme.colors.text};
-  border: 1px solid ${p => p.theme.colors.borderSubtle};
-  border-radius: ${p => p.theme.borderRadius.lg};
-  resize: vertical;
-  outline: none;
-  box-sizing: border-box;
-  line-height: 1.5;
-  transition: border-color 0.15s, box-shadow 0.15s;
-
-  &:focus {
-    border-color: ${p => p.theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
-  }
-`
-
-const ExtractError = styled.p`
-  margin-top: 0.625rem;
-  font-size: 0.8125rem;
-  color: ${p => p.theme.colors.dangerDark};
-`
-
-const SpinnerRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${p => p.theme.spacing[2]};
-  margin-top: 0.75rem;
-`
-
-const Spinner = styled.span<{ inline?: boolean }>`
-  display: inline-block;
-  width: ${p => (p.inline ? '13px' : '16px')};
-  height: ${p => (p.inline ? '13px' : '16px')};
-  ${p => p.inline && 'margin-right: 0.4rem; vertical-align: middle;'}
-  flex-shrink: 0;
-  border: 2px solid #e0d7f7;
-  border-top-color: ${p => p.theme.colors.primary};
-  border-radius: ${p => p.theme.borderRadius.full};
-  animation: modal-spin 0.7s linear infinite;
-
-  @keyframes modal-spin { to { transform: rotate(360deg); } }
-`
-
-const SpinnerLabel = styled.span`
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  color: ${p => p.theme.colors.primary};
-`
-
-const ModalFooter = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid ${p => p.theme.colors.border};
-
-  @media (max-width: 767px) {
-    flex-direction: row;
-    gap: 0.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-`
-
-const FileBtnLabel = styled.label`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.875rem;
-  border: 1px solid ${p => p.theme.colors.border};
-  border-radius: ${p => p.theme.borderRadius.md};
-  background: ${p => p.theme.colors.surface};
-  color: ${p => p.theme.colors.textSecondary};
-  font-size: 0.8125rem;
-  font-family: inherit;
-  font-weight: ${p => p.theme.typography.fontWeight.medium};
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-
-  &:hover { background: ${p => p.theme.colors.background}; border-color: #c4c8d8; }
-`
-
-const FileHint = styled.span`
-  font-size: ${p => p.theme.typography.fontSize.xs};
-  color: ${p => p.theme.colors.textTertiary};
-  white-space: nowrap;
-  flex: 1;
-`
-
-const FileSource = styled.p`
-  margin: 0;
-  font-size: 0.8125rem;
-  color: ${p => p.theme.colors.textSecondary};
-
-  strong { color: ${p => p.theme.colors.text}; }
-`
-
-const PreviewCount = styled.p`
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  color: #555;
-  margin: 0 0 0.875rem;
-`
-
-const PreviewList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 0.75rem;
-  max-height: 60vh;
-  overflow-y: auto;
-  padding-bottom: 1rem;
-
-  @media (max-width: 767px) { grid-template-columns: 1fr; max-height: 55vh; }
-`
-
-const CancelBtn = styled.button`
-  padding: 0.5rem 1rem;
-  border: 1px solid ${p => p.theme.colors.border};
-  border-radius: ${p => p.theme.borderRadius.md};
-  background: ${p => p.theme.colors.surface};
-  color: ${p => p.theme.colors.textSecondary};
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  font-family: inherit;
-  font-weight: ${p => p.theme.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: background 0.15s;
-
-  &:hover { background: ${p => p.theme.colors.background}; }
-
-  @media (max-width: 767px) { flex: 1; text-align: center; }
-`
-
-const ProcessBtn = styled.button`
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: ${p => p.theme.borderRadius.md};
-  background: ${p => p.theme.colors.primary};
-  color: white;
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  font-family: inherit;
-  font-weight: ${p => p.theme.typography.fontWeight.semibold};
-  cursor: pointer;
-  transition: background 0.15s;
-
-  &:hover { background: ${p => p.theme.colors.primaryDark}; }
-  &:disabled { background: ${p => p.theme.colors.borderSubtle}; cursor: not-allowed; }
-
-  @media (max-width: 767px) { flex: 1; text-align: center; }
-`
-
-const Toast = styled.div<{ error?: boolean }>`
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  background: ${p => (p.error ? '#1c1917' : '#1a1a2e')};
-  color: #fff;
-  font-size: ${p => p.theme.typography.fontSize.sm};
-  font-weight: ${p => p.theme.typography.fontWeight.medium};
-  padding: 0.75rem 1.125rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-  z-index: ${p => p.theme.zIndex.toast};
-  pointer-events: ${p => (p.error ? 'auto' : 'none')};
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  animation: toast-in 0.2s ease${p => p.error ? ', shake 0.18s ease 0.12s' : ', toast-out 0.3s ease 2.7s forwards'};
-
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes toast-out {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(4px); }
-  }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    18%       { transform: translateX(-5px); }
-    36%       { transform: translateX(5px); }
-    54%       { transform: translateX(-4px); }
-    72%       { transform: translateX(4px); }
-    90%       { transform: translateX(-2px); }
-  }
-`
-
-const ToastRetryBtn = styled.button`
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.25);
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: ${p => p.theme.typography.fontWeight.semibold};
-  font-family: inherit;
-  padding: 0.25rem 0.7rem;
-  border-radius: 5px;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-left: 0.25rem;
-  transition: background 0.15s;
-
-  &:hover { background: rgba(255,255,255,0.22); }
-`
-import KanbanBoard from './components/board/KanbanBoard'
-import InsightCard from './components/panels/InsightCard'
-import SpotlightCard from './components/panels/SpotlightCard'
-import AssistantPanel from './components/panels/AssistantPanel'
-import TaskPreview from './components/modals/TaskPreview'
-import SummaryView from './components/panels/SummaryView'
-import NarrativeWidget from './components/panels/NarrativeWidget'
-import DeadlineNegotiationModal from './components/modals/DeadlineNegotiationModal'
-import WelcomeModal, { hasSeenWelcome } from './components/modals/WelcomeModal'
-import HelpModal from './components/modals/HelpModal'
+import {
+  ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
+  ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel, ModalFooter,
+  FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList, Toast, ToastRetryBtn,
+} from './App.styles'
+import { Button } from './components/ui/Button'
+import { KanbanBoard } from './components/board/KanbanBoard'
+import { InsightCard } from './components/panels/InsightCard'
+import { SpotlightCard } from './components/panels/SpotlightCard'
+import { AssistantPanel } from './components/panels/AssistantPanel'
+import { TaskPreview } from './components/modals/TaskPreview'
+import { SummaryView } from './components/panels/SummaryView'
+import { NarrativeWidget } from './components/panels/NarrativeWidget'
+import { DeadlineNegotiationModal } from './components/modals/DeadlineNegotiationModal'
+import { WelcomeModal, hasSeenWelcome } from './components/modals/WelcomeModal'
+import { HelpModal } from './components/modals/HelpModal'
 
 interface Recommendation {
   recommendedItemId: string
@@ -1058,10 +779,10 @@ function App() {
                     <input type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} style={{ display: 'none' }} />
                   </FileBtnLabel>
                   <FileHint>.txt · .pdf · .docx · max 5MB</FileHint>
-                  <CancelBtn onClick={closeImportModal} disabled={isExtracting}>Cancel</CancelBtn>
-                  <ProcessBtn onClick={handleExtractTasks} disabled={!importText.trim() || isExtracting}>
+                  <Button variant="secondary" onClick={closeImportModal} disabled={isExtracting}>Cancel</Button>
+                  <Button variant="primary" onClick={handleExtractTasks} disabled={!importText.trim() || isExtracting} loading={isExtracting}>
                     {isExtracting ? 'Analysing...' : 'Process'}
-                  </ProcessBtn>
+                  </Button>
                 </ModalFooter>
               </>
             ) : (
@@ -1086,10 +807,10 @@ function App() {
                   {extractError && <ExtractError>{extractError}</ExtractError>}
                 </ModalBody>
                 <ModalFooter>
-                  <CancelBtn onClick={() => { setExtractedTasks([]); setExtractError(null) }} disabled={isConfirming}>Back</CancelBtn>
-                  <ProcessBtn onClick={handleConfirmAll} disabled={isConfirming || extractedTasks.length === 0}>
-                    {isConfirming ? <><Spinner inline /> Adding...</> : `Confirm All (${extractedTasks.length})`}
-                  </ProcessBtn>
+                  <Button variant="secondary" onClick={() => { setExtractedTasks([]); setExtractError(null) }} disabled={isConfirming}>Back</Button>
+                  <Button variant="primary" onClick={handleConfirmAll} disabled={isConfirming || extractedTasks.length === 0} loading={isConfirming}>
+                    {isConfirming ? 'Adding...' : `Confirm All (${extractedTasks.length})`}
+                  </Button>
                 </ModalFooter>
               </>
             )}

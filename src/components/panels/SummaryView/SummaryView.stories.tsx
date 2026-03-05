@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import SummaryView from './SummaryView'
+import { SummaryView } from './SummaryView'
 
 const meta: Meta<typeof SummaryView> = {
   title: 'Components/SummaryView',

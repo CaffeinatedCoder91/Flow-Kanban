@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '../../../test/utils'
 import { describe, it, expect, vi } from 'vitest'
-import SpotlightCard from './SpotlightCard'
+import { SpotlightCard } from './SpotlightCard'
 import { recommendation, item } from './SpotlightCard.mockdata'
 
 describe('SpotlightCard', () => {

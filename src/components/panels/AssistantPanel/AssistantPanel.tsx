@@ -1,4 +1,4 @@
-import { useState, FormEvent, useRef, useEffect } from 'react'
+import React, { useState, FormEvent, useRef, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
 import ReactMarkdown from 'react-markdown'
 import { AssistantPanelProps, Message } from './AssistantPanel.types'
@@ -16,10 +16,10 @@ const SUGGESTIONS = [
   'Summarize my week',
 ]
 
-export default function AssistantPanel({
+export const AssistantPanel = ({
   isOpen, onClose, onRefresh, prefillMessage, onPrefillConsumed,
   proactiveMessages, onProactiveConsumed,
-}: AssistantPanelProps) {
+}: AssistantPanelProps): React.ReactElement => {
   const [inputValue, setInputValue] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)

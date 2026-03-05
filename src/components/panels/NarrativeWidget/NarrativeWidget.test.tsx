@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, act } from '../../../test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import NarrativeWidget from './NarrativeWidget'
+import { NarrativeWidget } from './NarrativeWidget'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

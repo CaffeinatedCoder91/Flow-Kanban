@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import TaskPreview from './TaskPreview'
+import { TaskPreview } from './TaskPreview'
 import { baseTask } from './TaskPreview.mockdata'
 
 const meta: Meta<typeof TaskPreview> = {

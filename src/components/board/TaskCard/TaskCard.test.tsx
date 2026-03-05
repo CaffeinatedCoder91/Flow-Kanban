@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '../../../test/utils'
 import { describe, it, expect, vi } from 'vitest'
-import TaskCard from './TaskCard'
+import { TaskCard } from './TaskCard'
 import { mockItem } from './TaskCard.mockdata'
 import { DndContext } from '@dnd-kit/core'
 

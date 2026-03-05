@@ -1,3 +1,4 @@
+import React from 'react'
 import { ProposedTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../../types'
 
 const COLOR_PALETTE = [
@@ -30,7 +31,7 @@ interface TaskPreviewProps {
   onRemove: () => void
 }
 
-export default function TaskPreview({ task, onChange, onRemove }: TaskPreviewProps) {
+export const TaskPreview = ({ task, onChange, onRemove }: TaskPreviewProps): React.ReactElement => {
   const statusColor = STATUS_CONFIG.find(s => s.key === task.status)?.color ?? '#8B5CF6'
 
   const set = <K extends keyof ProposedTask>(key: K, value: ProposedTask[K]) =>

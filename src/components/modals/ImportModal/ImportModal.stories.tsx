@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
 import { theme } from '../../../theme'
-import ImportModal from './ImportModal'
+import { ImportModal } from './ImportModal'
 
 const meta: Meta<typeof ImportModal> = {
   title: 'Components/ImportModal',

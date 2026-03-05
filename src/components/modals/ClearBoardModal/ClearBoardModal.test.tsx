@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '../../../test/utils'
-import ClearBoardModal from './ClearBoardModal'
+import { ClearBoardModal } from './ClearBoardModal'
 
 describe('ClearBoardModal', () => {
   it('renders with item count', () => {

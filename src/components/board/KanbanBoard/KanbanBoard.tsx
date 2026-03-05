@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -13,10 +13,10 @@ import {
 } from '@dnd-kit/core'
 import { STATUS_CONFIG } from '../../../types'
 import { KanbanBoardProps } from './KanbanBoard.types'
-import Column from '../Column'
+import { Column } from '../Column'
 import { DragOverlayCard } from '../TaskCard'
 
-export default function KanbanBoard({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps) {
+export const KanbanBoard = ({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps): React.ReactElement => {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(

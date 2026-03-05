@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
 import { DeadlineNegotiationModalProps } from './DeadlineNegotiationModal.types'
 
@@ -36,7 +36,7 @@ const PRIORITY_LABEL: Record<string, string> = {
   low:      'Low',
 }
 
-export default function DeadlineNegotiationModal({ item, onClose, onDone }: DeadlineNegotiationModalProps) {
+export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNegotiationModalProps): React.ReactElement => {
   const [screen, setScreen]     = useState<Screen>('home')
   const [newDate, setNewDate]   = useState(item.due_date ?? '')
   type SplitRow = { title: string; description: string; estimated_priority: string }

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '../../../test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import AssistantPanel from './AssistantPanel'
+import { AssistantPanel } from './AssistantPanel'
 
 const defaultProps = {
   isOpen: true,

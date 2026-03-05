@@ -1,2 +1,2 @@
-export { default } from './HelpModal'
+export { HelpModal } from './HelpModal'
 export type { HelpModalProps } from './HelpModal.types'

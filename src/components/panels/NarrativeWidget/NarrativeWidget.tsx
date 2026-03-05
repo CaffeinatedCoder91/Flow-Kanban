@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
 import type { NarrativeWidgetProps } from './NarrativeWidget.types'
 
@@ -20,7 +20,7 @@ const SENTIMENT_LABEL: Record<WidgetData['sentiment'], string> = {
   critical: 'Critical',
 }
 
-export default function NarrativeWidget({ onViewFullReport, hasItems }: NarrativeWidgetProps) {
+export const NarrativeWidget = ({ onViewFullReport, hasItems }: NarrativeWidgetProps): React.ReactElement | null => {
   const [data, setData] = useState<WidgetData | null>(null)
   const [loading, setLoading] = useState(hasItems)
 

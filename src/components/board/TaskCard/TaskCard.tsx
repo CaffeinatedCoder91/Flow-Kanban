@@ -1,4 +1,4 @@
-import { forwardRef, useState, useRef } from 'react'
+import React, { forwardRef, useState, useRef } from 'react'
 import { useTheme } from '@emotion/react'
 import { createPortal } from 'react-dom'
 import { useSortable } from '@dnd-kit/sortable'
@@ -324,14 +324,14 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
 
 TaskCardInner.displayName = 'TaskCardInner'
 
-export function DragOverlayCard(props: TaskCardProps) {
+export const DragOverlayCard = (props: TaskCardProps): React.ReactElement => {
   return <TaskCardInner {...props} isDragOverlay />
 }
 
-export default function TaskCard({
+export const TaskCard = ({
   item, columnColor, highlighted, onDelete, onUpdateStatus, onUpdatePriority,
   onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate,
-}: TaskCardProps) {
+}: TaskCardProps): React.ReactElement => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
   const style: React.CSSProperties = {

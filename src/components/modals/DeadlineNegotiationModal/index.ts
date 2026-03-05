@@ -1,2 +1,2 @@
-export { default } from './DeadlineNegotiationModal'
+export { DeadlineNegotiationModal } from './DeadlineNegotiationModal'
 export type { DeadlineNegotiationModalProps } from './DeadlineNegotiationModal.types'

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
 
 type Period = 'last_week' | 'last_30_days' | 'this_month'
@@ -81,7 +81,7 @@ function ScoreRing({ score, color }: { score: number; color: string }) {
   )
 }
 
-export default function SummaryView() {
+export const SummaryView = (): React.ReactElement => {
   const [period, setPeriod] = useState<Period>('last_week')
   const [data, setData] = useState<NarrativeData | null>(null)
   const [loading, setLoading] = useState(false)

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import NarrativeWidget from './NarrativeWidget'
+import { NarrativeWidget } from './NarrativeWidget'
 
 const meta: Meta<typeof NarrativeWidget> = {
   title: 'Components/NarrativeWidget',

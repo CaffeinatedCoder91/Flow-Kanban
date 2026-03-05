@@ -335,6 +335,8 @@ function App() {
   const [negotiationItem, setNegotiationItem] = useState<Item | null>(null)
   const [isBoardLoading, setIsBoardLoading] = useState(true)
   const [insightsFetched, setInsightsFetched] = useState(false)
+  const [allClearDismissed, setAllClearDismissed] = useState(false)
+  const allClearTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [boardLoadError, setBoardLoadError] = useState(false)
   const [isInsightsLoading, setIsInsightsLoading] = useState(false)
   const [insightsError, setInsightsError] = useState(false)
@@ -527,6 +529,7 @@ function App() {
       console.log('Insights:', [...newInsights, ...deadlineInsights])
       setInsights([...newInsights, ...deadlineInsights])
       setInsightsFetched(true)
+      setAllClearDismissed(false)
 
       let newRecommendation: Recommendation | null = null
       if (isManual) {
@@ -569,6 +572,16 @@ function App() {
     insightsTimeoutRef.current = setTimeout(fetchInsightsNow, 500)
     return () => clearTimeout(insightsTimeoutRef.current)
   }, [items])
+
+  // Auto-dismiss "all clear" after 5 seconds
+  const isAllClear = insightsFetched && !isInsightsLoading && visibleInsights.length === 0
+    && (!recommendation || recommendationDismissed) && !insightsError && !refreshMessage && !allClearDismissed
+
+  useEffect(() => {
+    if (!isAllClear) { clearTimeout(allClearTimerRef.current); return }
+    allClearTimerRef.current = setTimeout(() => setAllClearDismissed(true), 5000)
+    return () => clearTimeout(allClearTimerRef.current)
+  }, [isAllClear])
 
   const showError = (message: string, onRetry?: () => void) => {
     setErrorToast({ message, onRetry })
@@ -858,14 +871,19 @@ function App() {
       ) : (
         <>
           <NarrativeWidget onViewFullReport={() => setView('summary')} hasItems={items.length > 0} />
-          {((!recommendationDismissed && recommendation) || visibleInsights.length > 0 || refreshMessage || insightsError || insightsFetched) && (
+          {((!recommendationDismissed && recommendation) || visibleInsights.length > 0 || refreshMessage || insightsError || isAllClear) && (
             <div className="insights-bar">
-              {insightsFetched && !isInsightsLoading && visibleInsights.length === 0 && (!recommendation || recommendationDismissed) && !insightsError && !refreshMessage && (
+              {isAllClear && (
                 <div className="insights-clear">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   All clear — no issues detected
+                  <button className="insights-clear-dismiss" onClick={() => setAllClearDismissed(true)} aria-label="Dismiss">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
                 </div>
               )}
               {insightsError && (

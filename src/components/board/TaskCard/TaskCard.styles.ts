@@ -61,7 +61,7 @@ export const Card = styled.div<{
 export const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: ${p => p.theme.spacing[2]};
 `
 
@@ -318,30 +318,76 @@ export const CardFooter = styled.div`
   gap: ${p => p.theme.spacing[2]};
 `
 
-export const PrioritySelect = styled.select<{ priority: string }>`
-  font-size: 0.75rem;
-  padding: 0.28rem 0.55rem;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: ${p => p.theme.typography.fontWeight.semibold};
-  font-family: inherit;
-  outline: none;
-  background: ${p => p.theme.priority[p.priority]?.bg ?? '#e5e7eb'};
-  color: ${p => p.theme.priority[p.priority]?.text ?? p.theme.colors.textSecondary};
+export const DropdownWrapper = styled.div`
+  position: relative;
+  display: inline-block;
 `
 
-export const StatusSelect = styled.select`
+export const DropdownTrigger = styled.button<{ bg: string; fgColor: string }>`
   font-size: 0.75rem;
   padding: 0.28rem 0.55rem;
   border: none;
   border-radius: 12px;
-  background: ${p => p.theme.colors.primaryLight};
-  color: ${p => p.theme.colors.primary};
   cursor: pointer;
   font-weight: ${p => p.theme.typography.fontWeight.semibold};
   font-family: inherit;
   outline: none;
+  background: ${p => p.bg};
+  color: ${p => p.fgColor};
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  transition: filter 0.12s;
 
-  &:hover { background: #e4deff; }
+  &:hover { filter: brightness(0.95); }
+
+  svg { flex-shrink: 0; opacity: 0.7; }
+`
+
+export const DropdownMenu = styled.div<{ top?: number; left?: number }>`
+  position: fixed;
+  top: ${p => p.top ?? 0}px;
+  left: ${p => p.left ?? 0}px;
+  z-index: 9999;
+  background: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-radius: ${p => p.theme.borderRadius.lg};
+  box-shadow: ${p => p.theme.shadows.lg};
+  min-width: 140px;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+`
+
+export const DropdownOption = styled.button<{ active?: boolean; optBg?: string; optColor?: string }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.6rem;
+  border: none;
+  border-radius: ${p => p.theme.borderRadius.md};
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: ${p => p.theme.typography.fontWeight.semibold};
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  background: ${p => p.active && p.optBg ? p.optBg : 'transparent'};
+  color: ${p => p.active && p.optColor ? p.optColor : p.theme.colors.text};
+  transition: background 0.1s;
+
+  &:hover {
+    background: ${p => p.optBg ?? p.theme.colors.background};
+    color: ${p => p.optColor ?? p.theme.colors.text};
+  }
+`
+
+export const DropdownDot = styled.span<{ dotColor: string }>`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${p => p.dotColor};
+  flex-shrink: 0;
 `

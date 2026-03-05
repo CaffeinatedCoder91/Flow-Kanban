@@ -1,4 +1,6 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef, useState, useRef } from 'react'
+import { useTheme } from '@emotion/react'
+import { createPortal } from 'react-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { DraggableAttributes } from '@dnd-kit/core'
@@ -10,7 +12,8 @@ import {
   ColorPicker, ColorPickerGrid, ColorOption, ColorClear, DoneCheck,
   CardText, Description, DescriptionEdit, Meta, DueDateWrapper, DueDateLabel,
   DueDateText, DueDateInput, NegotiateBtn, AssigneeDisplay, AssigneeText,
-  AssigneeInput, CardFooter, PrioritySelect, StatusSelect,
+  AssigneeInput, CardFooter, DropdownWrapper, DropdownTrigger, DropdownMenu,
+  DropdownOption, DropdownDot,
 } from './TaskCard.styles'
 
 const COLOR_PALETTE = [
@@ -52,12 +55,25 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
   onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor,
   onNegotiate, style, listeners, attributes, isDragging, isDragOverlay,
 }, ref) => {
+  const theme = useTheme()
   const accentColor = columnColor || '#8B5CF6'
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(item.description || '')
   const [editingAssignee, setEditingAssignee] = useState(false)
   const [assigneeDraft, setAssigneeDraft] = useState(item.assignee || '')
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false)
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
+  const priorityTriggerRef = useRef<HTMLButtonElement>(null)
+  const statusTriggerRef = useRef<HTMLButtonElement>(null)
+
+  const openMenu = (which: 'priority' | 'status', triggerRef: React.RefObject<HTMLButtonElement | null>) => {
+    const rect = triggerRef.current?.getBoundingClientRect()
+    if (rect) setMenuPos({ top: rect.bottom + 5, left: rect.left })
+    if (which === 'priority') { setShowPriorityMenu(true); setShowStatusMenu(false) }
+    else { setShowStatusMenu(true); setShowPriorityMenu(false) }
+  }
 
   const handleDueDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onUpdateDueDate(item.id, e.target.value || null)
@@ -225,24 +241,82 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
         )}
       </Meta>
 
-      <CardFooter>
-        <PrioritySelect
-          priority={item.priority}
-          value={item.priority}
-          onChange={e => onUpdatePriority(item.id, e.target.value)}
-          aria-label="Change priority"
-          onPointerDown={e => e.stopPropagation()}
+      <CardFooter onPointerDown={e => e.stopPropagation()}>
+        {/* Priority dropdown */}
+        <DropdownWrapper
+          onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowPriorityMenu(false) }}
         >
-          {PRIORITY_CONFIG.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-        </PrioritySelect>
-        <StatusSelect
-          value={item.status}
-          onChange={e => onUpdateStatus(item.id, e.target.value)}
-          aria-label="Change status"
-          onPointerDown={e => e.stopPropagation()}
+          <DropdownTrigger
+            ref={priorityTriggerRef}
+            bg={theme.priority[item.priority]?.bg ?? '#e5e7eb'}
+            fgColor={theme.priority[item.priority]?.text ?? '#374151'}
+            onClick={() => showPriorityMenu ? setShowPriorityMenu(false) : openMenu('priority', priorityTriggerRef)}
+            aria-label="Change priority"
+            tabIndex={0}
+          >
+            {PRIORITY_CONFIG.find(p => p.key === item.priority)?.label ?? item.priority}
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </DropdownTrigger>
+          {showPriorityMenu && menuPos && createPortal(
+            <DropdownMenu top={menuPos.top} left={menuPos.left}>
+              {PRIORITY_CONFIG.map(p => (
+                <DropdownOption
+                  key={p.key}
+                  active={item.priority === p.key}
+                  optBg={theme.priority[p.key]?.bg}
+                  optColor={theme.priority[p.key]?.text}
+                  tabIndex={0}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { onUpdatePriority(item.id, p.key); setShowPriorityMenu(false) }}
+                >
+                  <DropdownDot dotColor={theme.priority[p.key]?.text ?? '#6b7280'} />
+                  {p.label}
+                </DropdownOption>
+              ))}
+            </DropdownMenu>,
+            document.body
+          )}
+        </DropdownWrapper>
+
+        {/* Status dropdown */}
+        <DropdownWrapper
+          onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setShowStatusMenu(false) }}
         >
-          {STATUS_CONFIG.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-        </StatusSelect>
+          <DropdownTrigger
+            ref={statusTriggerRef}
+            bg={(STATUS_CONFIG.find(s => s.key === item.status)?.color ?? '#8B5CF6') + '20'}
+            fgColor={STATUS_CONFIG.find(s => s.key === item.status)?.color ?? '#8B5CF6'}
+            onClick={() => showStatusMenu ? setShowStatusMenu(false) : openMenu('status', statusTriggerRef)}
+            aria-label="Change status"
+            tabIndex={0}
+          >
+            {STATUS_CONFIG.find(s => s.key === item.status)?.label ?? item.status}
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </DropdownTrigger>
+          {showStatusMenu && menuPos && createPortal(
+            <DropdownMenu top={menuPos.top} left={menuPos.left}>
+              {STATUS_CONFIG.map(s => (
+                <DropdownOption
+                  key={s.key}
+                  active={item.status === s.key}
+                  optBg={s.color + '20'}
+                  optColor={s.color}
+                  tabIndex={0}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { onUpdateStatus(item.id, s.key); setShowStatusMenu(false) }}
+                >
+                  <DropdownDot dotColor={s.color} />
+                  {s.label}
+                </DropdownOption>
+              ))}
+            </DropdownMenu>,
+            document.body
+          )}
+        </DropdownWrapper>
       </CardFooter>
     </Card>
   )

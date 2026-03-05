@@ -16,7 +16,7 @@ describe('SpotlightCard', () => {
 
   it('falls back to Task #id when item is undefined', () => {
     render(<SpotlightCard recommendation={recommendation} item={undefined} onDismiss={vi.fn()} onStartWorking={vi.fn()} />)
-    expect(screen.getByText('Task #5')).toBeInTheDocument()
+    expect(screen.getByText('Task #mock-5')).toBeInTheDocument()
   })
 
   it('renders "Recommended next task" label', () => {
@@ -35,6 +35,6 @@ describe('SpotlightCard', () => {
     const onStartWorking = vi.fn()
     render(<SpotlightCard recommendation={recommendation} item={item} onDismiss={vi.fn()} onStartWorking={onStartWorking} />)
     fireEvent.click(screen.getByText('Start working'))
-    expect(onStartWorking).toHaveBeenCalledWith(5)
+    expect(onStartWorking).toHaveBeenCalledWith('mock-5')
   })
 })

@@ -129,7 +129,7 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
         <CardHeaderLeft>
           <ColorTag onPointerDown={e => e.stopPropagation()}>
             <ColorCircle
-              style={{ backgroundColor: item.color || '#E5E7EB' }}
+              accentColor={item.color || '#E5E7EB'}
               onClick={() => setShowColorPicker(!showColorPicker)}
               aria-label="Change color"
             />
@@ -139,7 +139,7 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
                   {COLOR_PALETTE.map(({ name, value }) => (
                     <ColorOption
                       key={value}
-                      style={{ backgroundColor: value }}
+                      accentColor={value}
                       onClick={() => handleColorSelect(value)}
                       aria-label={name}
                       title={name}
@@ -264,6 +264,7 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
               {PRIORITY_CONFIG.map(p => (
                 <DropdownOption
                   key={p.key}
+                  data-testid={`priority-option-${p.key}`}
                   active={item.priority === p.key}
                   optBg={theme.priority[p.key]?.bg}
                   optColor={theme.priority[p.key]?.text}
@@ -302,6 +303,7 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
               {STATUS_CONFIG.map(s => (
                 <DropdownOption
                   key={s.key}
+                  data-testid={`status-option-${s.key}`}
                   active={item.status === s.key}
                   optBg={s.color + '20'}
                   optColor={s.color}

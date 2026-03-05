@@ -117,7 +117,7 @@ export const MsgAvatar = styled.div`
 `
 
 export const MessageBubble = styled.div<{ role: MsgType['role'] }>`
-  padding: 0.875rem 1rem;
+  padding: 1rem;
   border-radius: ${p => p.theme.borderRadius.lg};
   max-width: 85%;
   border: 1px solid transparent;
@@ -210,6 +210,36 @@ export const InlineContent = styled.div`
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
+`
+
+export const ErrorContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  font-size: 0.9rem;
+`
+
+export const ErrorRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`
+
+export const ActionIcon = styled.svg`
+  color: #10b981;
+  flex-shrink: 0;
+`
+
+export const ErrorIcon = styled.svg`
+  color: #ef4444;
+  flex-shrink: 0;
+`
+
+export const UserMessageText = styled.p`
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.875rem;
 `
 
 export const RetryBtn = styled.button`

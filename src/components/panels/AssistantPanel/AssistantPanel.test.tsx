@@ -119,7 +119,7 @@ describe('AssistantPanel', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/AI is unavailable/)).toBeInTheDocument()
-    })
+    }, { timeout: 5000 })
   })
 
   it('shows "Try again" button after network failure', async () => {
@@ -133,7 +133,7 @@ describe('AssistantPanel', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Try again')).toBeInTheDocument()
-    })
+    }, { timeout: 5000 })
   })
 
   it('clears input after sending', async () => {

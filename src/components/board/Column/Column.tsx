@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { ColumnProps } from './Column.types'
 import { TaskCard } from '../TaskCard'
+import { ColumnDot } from './Column.styles'
 
 export const Column = ({
   statusKey, label, color, items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate
@@ -29,7 +30,7 @@ export const Column = ({
   return (
     <div className={`kanban-column${isOver ? ' column-over' : ''}`}>
       <div className="column-header">
-        <span className="column-dot" style={{ backgroundColor: color }}></span>
+        <ColumnDot className="column-dot" accentColor={color} />
         <span className="column-label">{label}</span>
         <span className="column-count">{items.length}</span>
       </div>

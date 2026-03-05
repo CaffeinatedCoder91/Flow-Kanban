@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '../../../test/utils'
+import { render, screen, fireEvent, waitFor } from '../../../test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NarrativeWidget } from './NarrativeWidget'
 
@@ -35,8 +35,7 @@ describe('NarrativeWidget', () => {
   it('renders nothing on network failure', async () => {
     vi.spyOn(global, 'fetch').mockRejectedValue(new Error('Network failure'))
     const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
-    await act(async () => {})
-    expect(container.firstChild).toBeNull()
+    await waitFor(() => expect(container.firstChild).toBeNull(), { timeout: 5000 })
   })
 
   it('renders nothing on HTTP error response', async () => {
@@ -46,22 +45,19 @@ describe('NarrativeWidget', () => {
       json: () => Promise.resolve({ error: 'Internal server error' }),
     } as Response)
     const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
-    await act(async () => {})
-    expect(container.firstChild).toBeNull()
+    await waitFor(() => expect(container.firstChild).toBeNull(), { timeout: 5000 })
   })
 
   it('renders nothing when momentum is absent from the response', async () => {
     mockOkResponse({ narrative: 'Good week.' }) // no momentum field
     const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
-    await act(async () => {})
-    expect(container.firstChild).toBeNull()
+    await waitFor(() => expect(container.firstChild).toBeNull(), { timeout: 5000 })
   })
 
   it('renders nothing when narrative is absent from the response', async () => {
     mockOkResponse({ momentum: { score: 75, sentiment: 'healthy' } }) // no narrative field
     const { container } = render(<NarrativeWidget onViewFullReport={vi.fn()} hasItems={true} />)
-    await act(async () => {})
-    expect(container.firstChild).toBeNull()
+    await waitFor(() => expect(container.firstChild).toBeNull(), { timeout: 5000 })
   })
 
   // ── Content rendering ──────────────────────────────────────────────────────

@@ -76,7 +76,7 @@ export const ColorTag = styled.div`
   position: relative;
 `
 
-export const ColorCircle = styled.button`
+export const ColorCircle = styled.button<{ accentColor?: string }>`
   width: 16px;
   height: 16px;
   border-radius: ${p => p.theme.borderRadius.full};
@@ -85,6 +85,7 @@ export const ColorCircle = styled.button`
   padding: 0;
   flex-shrink: 0;
   margin-top: 2px;
+  background: ${p => p.accentColor ?? '#E5E7EB'};
 
   &:hover { border-color: rgba(0,0,0,0.2); }
 `
@@ -108,13 +109,14 @@ export const ColorPickerGrid = styled.div`
   margin-bottom: ${p => p.theme.spacing[2]};
 `
 
-export const ColorOption = styled.button`
+export const ColorOption = styled.button<{ accentColor?: string }>`
   width: 28px;
   height: 28px;
   border-radius: ${p => p.theme.borderRadius.full};
   border: 2px solid transparent;
   cursor: pointer;
   padding: 0;
+  background: ${p => p.accentColor};
   transition: border-color 0.15s;
 
   &:hover { border-color: rgba(0,0,0,0.3); }

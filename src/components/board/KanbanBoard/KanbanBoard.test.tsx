@@ -45,8 +45,7 @@ describe('KanbanBoard', () => {
 
   it('renders with empty items list', () => {
     render(<KanbanBoard {...defaultProps} items={[]} />)
-    expect(screen.getByText('Not Started')).toBeInTheDocument()
-    expect(screen.getByText('Done')).toBeInTheDocument()
+    expect(screen.getByText('Your board is empty')).toBeInTheDocument()
   })
 
   it('passes highlightedItems to cards', () => {

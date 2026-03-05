@@ -6,6 +6,7 @@ import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
   ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel, ModalFooter,
   FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList, Toast, ToastRetryBtn,
+  ColumnDot, SkeletonLineVar, NoMarginSpinner, SignOutBtn, HiddenFileInput,
 } from './App.styles'
 import { Button } from './components/ui/Button'
 import { KanbanBoard } from './components/board/KanbanBoard'
@@ -569,16 +570,15 @@ function App() {
           >
             ?
           </button>
-          <button
+          <SignOutBtn
             className="view-btn"
             aria-label="Sign out"
             data-tooltip={user?.email ?? 'Sign out'}
             data-tooltip-pos="below"
             onClick={signOut}
-            style={{ fontSize: '0.8rem' }}
           >
             ↪
-          </button>
+          </SignOutBtn>
         </div>
       </div>
       {sampleIds.length > 0 && (
@@ -629,7 +629,7 @@ function App() {
               )}
               <button className="insights-refresh" onClick={() => fetchInsightsNow(true)} aria-label="Refresh insights" data-tooltip="Proactive suggestions from AI" disabled={isInsightsLoading}>
                 {isInsightsLoading
-                  ? <span className="modal-spinner modal-spinner-inline" style={{ marginRight: 0 }} />
+                  ? <NoMarginSpinner className="modal-spinner modal-spinner-inline" />
                   : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
                       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -644,16 +644,16 @@ function App() {
               {STATUS_CONFIG.map(col => (
                 <div key={col.key} className="kanban-column">
                   <div className="column-header">
-                    <span className="column-dot" style={{ backgroundColor: col.color }} />
+                    <ColumnDot className="column-dot" accentColor={col.color} />
                     <span className="column-label">{col.label}</span>
                     <span className="skeleton skeleton-count" />
                   </div>
                   <div className="column-body">
                     {[0, 1, 2].map(i => (
                       <div key={i} className="skeleton-card">
-                        <div className="skeleton skeleton-line" style={{ width: `${72 - i * 10}%` }} />
-                        <div className="skeleton skeleton-line skeleton-line-sm" style={{ width: '48%' }} />
-                        <div className="skeleton skeleton-line skeleton-line-xs" style={{ width: '60%' }} />
+                        <SkeletonLineVar className="skeleton skeleton-line" $width={`${72 - i * 10}%`} />
+                        <SkeletonLineVar className="skeleton skeleton-line skeleton-line-sm" $width="48%" />
+                        <SkeletonLineVar className="skeleton skeleton-line skeleton-line-xs" $width="60%" />
                       </div>
                     ))}
                   </div>
@@ -776,7 +776,7 @@ function App() {
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                     Upload file
-                    <input type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} style={{ display: 'none' }} />
+                    <HiddenFileInput type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} />
                   </FileBtnLabel>
                   <FileHint>.txt · .pdf · .docx · max 5MB</FileHint>
                   <Button variant="secondary" onClick={closeImportModal} disabled={isExtracting}>Cancel</Button>

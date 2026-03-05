@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
+import { ProgressCircle, SentimentChip, SentimentDot, TrendIndicator, MutedText, StatValueSpan } from './SummaryView.styles'
 
 type Period = 'last_week' | 'last_30_days' | 'this_month'
 
@@ -44,7 +45,7 @@ function ScoreRing({ score, color }: { score: number; color: string }) {
       {/* Track */}
       <circle cx="80" cy="80" r={RADIUS} fill="none" stroke="#e5e7eb" strokeWidth="13" />
       {/* Progress */}
-      <circle
+      <ProgressCircle
         cx="80" cy="80" r={RADIUS}
         fill="none"
         stroke={color}
@@ -53,7 +54,6 @@ function ScoreRing({ score, color }: { score: number; color: string }) {
         strokeDasharray={CIRCUMFERENCE}
         strokeDashoffset={offset}
         transform="rotate(-90 80 80)"
-        style={{ transition: 'stroke-dashoffset 0.7s cubic-bezier(0.4,0,0.2,1)' }}
       />
       {/* Score number */}
       <text
@@ -178,15 +178,15 @@ export const SummaryView = (): React.ReactElement => {
                 <div className="summary-ring-wrapper">
                   <ScoreRing score={momentum.score} color={color} />
                 </div>
-                <div className="summary-sentiment-chip" style={{ background: color + '22', color }}>
-                  <span className="summary-sentiment-dot" style={{ background: color }} />
+                <SentimentChip className="summary-sentiment-chip" accentColor={color}>
+                  <SentimentDot className="summary-sentiment-dot" accentColor={color} />
                   {sentimentLabel}
-                </div>
+                </SentimentChip>
                 {trendArrow && (
-                  <div className="summary-trend" style={{ color: trendColor }}>
+                  <TrendIndicator className="summary-trend" accentColor={trendColor}>
                     <span className="summary-trend-arrow">{trendArrow}</span>
                     <span className="summary-trend-label">{trendLabel}</span>
-                  </div>
+                  </TrendIndicator>
                 )}
                 <p className="summary-reasoning">{momentum.reasoning}</p>
               </>
@@ -196,7 +196,7 @@ export const SummaryView = (): React.ReactElement => {
                   <circle cx="80" cy="80" r={RADIUS} fill="none" stroke="#e5e7eb" strokeWidth="13" strokeDasharray="6 6" />
                   <text x="80" y="80" textAnchor="middle" dominantBaseline="central" fontSize="28" fill="#9ca3af" fontFamily="inherit">—</text>
                 </svg>
-                <p className="summary-reasoning" style={{ color: '#9ca3af' }}>Score unavailable</p>
+                <MutedText className="summary-reasoning">Score unavailable</MutedText>
               </div>
             )}
           </div>
@@ -229,7 +229,7 @@ export const SummaryView = (): React.ReactElement => {
 function Stat({ value, label, color }: { value: number; label: string; color?: string }) {
   return (
     <div className="summary-stat">
-      <span className="summary-stat-value" style={color ? { color } : undefined}>{value}</span>
+      <StatValueSpan className="summary-stat-value" accentColor={color}>{value}</StatValueSpan>
       <span className="summary-stat-label">{label}</span>
     </div>
   )

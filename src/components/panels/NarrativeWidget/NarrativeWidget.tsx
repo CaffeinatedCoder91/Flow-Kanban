@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { apiFetch } from '../../../lib/api'
 import type { NarrativeWidgetProps } from './NarrativeWidget.types'
+import { WidgetBadge, WidgetDot, SkeletonLineWide, SkeletonLineNarrow } from './NarrativeWidget.styles'
 
 interface WidgetData {
   score: number
@@ -51,8 +52,8 @@ export const NarrativeWidget = ({ onViewFullReport, hasItems }: NarrativeWidgetP
     <div className="narrative-widget narrative-widget-skeleton">
       <div className="skeleton skeleton-badge" />
       <div className="narrative-skeleton-lines">
-        <div className="skeleton skeleton-line" style={{ width: '82%' }} />
-        <div className="skeleton skeleton-line skeleton-line-sm" style={{ width: '55%' }} />
+        <SkeletonLineWide className="skeleton skeleton-line" />
+        <SkeletonLineNarrow className="skeleton skeleton-line skeleton-line-sm" />
       </div>
     </div>
   )
@@ -63,11 +64,11 @@ export const NarrativeWidget = ({ onViewFullReport, hasItems }: NarrativeWidgetP
 
   return (
     <div className="narrative-widget">
-      <div className="narrative-widget-badge" style={{ background: color + '18', color }}>
+      <WidgetBadge className="narrative-widget-badge" accentColor={color}>
         <span className="narrative-widget-score">{data.score}</span>
-        <span className="narrative-widget-dot" style={{ background: color }} />
+        <WidgetDot className="narrative-widget-dot" accentColor={color} />
         <span className="narrative-widget-sentiment">{SENTIMENT_LABEL[data.sentiment]}</span>
-      </div>
+      </WidgetBadge>
       <p className="narrative-widget-text">{data.narrative}</p>
       <button className="narrative-widget-link" onClick={onViewFullReport}>
         View full report

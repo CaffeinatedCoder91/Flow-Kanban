@@ -128,7 +128,7 @@ describe('DeadlineNegotiationModal', () => {
   })
 
   it('PATCHes the item with the new due_date on save', async () => {
-    const fetchSpy = mockOkFetch({ id: 42 })
+    const fetchSpy = mockOkFetch({ id: 'mock-42' })
     const onDone = vi.fn()
     const onClose = vi.fn()
     render(<DeadlineNegotiationModal item={makeItem()} onClose={onClose} onDone={onDone} />)
@@ -139,7 +139,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/items/42',
+        '/api/items/mock-42',
         expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ due_date: '2026-03-15' }) })
       )
     )
@@ -218,7 +218,7 @@ describe('DeadlineNegotiationModal', () => {
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
         '/api/suggest-reschedule',
-        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 42 }) })
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 'mock-42' }) })
       )
     )
   })
@@ -390,7 +390,7 @@ describe('DeadlineNegotiationModal', () => {
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
         '/api/suggest-split',
-        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 42 }) })
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 'mock-42' }) })
       )
     )
   })
@@ -432,7 +432,7 @@ describe('DeadlineNegotiationModal', () => {
     await waitFor(() => expect(screen.getByText('Create 1 subtask')).not.toBeDisabled())
     fireEvent.click(screen.getByText('Create 1 subtask'))
     await waitFor(() =>
-      expect(fetchSpy).toHaveBeenCalledWith('/api/items/42', expect.objectContaining({ method: 'DELETE' }))
+      expect(fetchSpy).toHaveBeenCalledWith('/api/items/mock-42', expect.objectContaining({ method: 'DELETE' }))
     )
   })
 
@@ -447,7 +447,7 @@ describe('DeadlineNegotiationModal', () => {
     await waitFor(() => expect(screen.getByText('Create 1 subtask')).not.toBeDisabled())
     fireEvent.click(screen.getByText('Create 1 subtask'))
     await waitFor(() => expect(fetchSpy).toHaveBeenCalledWith('/api/items', expect.anything()))
-    expect(fetchSpy).not.toHaveBeenCalledWith('/api/items/42', expect.anything())
+    expect(fetchSpy).not.toHaveBeenCalledWith('/api/items/mock-42', expect.anything())
   })
 
   // ── Deprioritize screen ──────────────────────────────────────────────────────
@@ -470,7 +470,7 @@ describe('DeadlineNegotiationModal', () => {
   })
 
   it('PATCHes with stepped-down priority and removed due date by default', async () => {
-    const fetchSpy = mockOkFetch({ id: 42 })
+    const fetchSpy = mockOkFetch({ id: 'mock-42' })
     const onDone = vi.fn()
     render(<DeadlineNegotiationModal item={makeItem({ priority: 'high', due_date: TOMORROW })} onClose={vi.fn()} onDone={onDone} />)
 
@@ -479,7 +479,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/items/42',
+        '/api/items/mock-42',
         expect.objectContaining({
           method: 'PATCH',
           body: JSON.stringify({ priority: 'medium', due_date: null }),
@@ -503,7 +503,7 @@ describe('DeadlineNegotiationModal', () => {
   // ── Deprioritize screen – smart options ──────────────────────────────────────
 
   it('PATCHes with extended due date when "Extend by 7 days" is selected', async () => {
-    const fetchSpy = mockOkFetch({ id: 42 })
+    const fetchSpy = mockOkFetch({ id: 'mock-42' })
     render(<DeadlineNegotiationModal item={makeItem({ priority: 'high', due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
     fireEvent.click(screen.getByText('Deprioritize'))
@@ -513,7 +513,7 @@ describe('DeadlineNegotiationModal', () => {
     const expectedDate = localAddDays(7)
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/items/42',
+        '/api/items/mock-42',
         expect.objectContaining({
           method: 'PATCH',
           body: expect.stringContaining(`"due_date":"${expectedDate}"`),
@@ -543,7 +543,7 @@ describe('DeadlineNegotiationModal', () => {
   })
 
   it('includes status: not_started in PATCH when stuck item reset is checked', async () => {
-    const fetchSpy = mockOkFetch({ id: 42 })
+    const fetchSpy = mockOkFetch({ id: 'mock-42' })
     render(<DeadlineNegotiationModal item={makeItem({ status: 'stuck', priority: 'high', due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
     fireEvent.click(screen.getByText('Deprioritize'))
@@ -552,7 +552,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/items/42',
+        '/api/items/mock-42',
         expect.objectContaining({
           method: 'PATCH',
           body: expect.stringContaining('"status":"not_started"'),
@@ -601,7 +601,7 @@ describe('DeadlineNegotiationModal', () => {
   // ── Action recording ─────────────────────────────────────────────────────────
 
   it('POSTs to /api/deadline-actions after a successful reschedule', async () => {
-    const fetchSpy = mockOkFetch({ id: 42 })
+    const fetchSpy = mockOkFetch({ id: 'mock-42' })
     render(<DeadlineNegotiationModal item={makeItem({ due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
     fireEvent.click(screen.getByText('Reschedule'))
@@ -614,7 +614,7 @@ describe('DeadlineNegotiationModal', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({
-            item_id: 42,
+            item_id: 'mock-42',
             action_type: 'reschedule',
             original_due_date: TOMORROW,
             new_due_date: '2026-03-15',

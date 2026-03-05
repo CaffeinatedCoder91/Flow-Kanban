@@ -1,5 +1,6 @@
 import React from 'react'
 import { ProposedTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../../types'
+import { PreviewCard, ColorSwatch, PaletteBtn } from './TaskPreview.styles'
 
 const COLOR_PALETTE = [
   { name: 'Red', value: '#EF4444' },
@@ -38,10 +39,10 @@ export const TaskPreview = ({ task, onChange, onRemove }: TaskPreviewProps): Rea
     onChange({ ...task, [key]: value })
 
   return (
-    <div className="task-preview-card" style={{ borderLeftColor: statusColor }}>
+    <PreviewCard className="task-preview-card" accentColor={statusColor}>
       {/* Title */}
       <div className="task-preview-title-row">
-        <div className="card-color-circle task-preview-color-swatch" style={{ backgroundColor: task.color ?? '#E5E7EB' }} />
+        <ColorSwatch className="card-color-circle task-preview-color-swatch" accentColor={task.color ?? '#E5E7EB'} />
         <input
           className="task-preview-title-input"
           value={task.title}
@@ -57,10 +58,10 @@ export const TaskPreview = ({ task, onChange, onRemove }: TaskPreviewProps): Rea
         <span className="task-preview-label">Color</span>
         <div className="task-preview-color-palette">
           {COLOR_PALETTE.map(({ name, value }) => (
-            <button
+            <PaletteBtn
               key={value}
               className={`card-color-option${task.color === value ? ' selected' : ''}`}
-              style={{ backgroundColor: value }}
+              accentColor={value}
               onClick={() => set('color', value)}
               aria-label={name}
               title={name}
@@ -153,6 +154,6 @@ export const TaskPreview = ({ task, onChange, onRemove }: TaskPreviewProps): Rea
           <ConfidenceBadge score={task.confidence?.assignee} />
         </div>
       </div>
-    </div>
+    </PreviewCard>
   )
 }

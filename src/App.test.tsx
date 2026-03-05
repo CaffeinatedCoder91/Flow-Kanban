@@ -4,10 +4,30 @@ import App from './App'
 
 // NarrativeWidget makes its own /api/narrative fetch; stub it out so it doesn't
 // interfere with the fetch mock sequences used by App tests.
-vi.mock('./components/panels/NarrativeWidget', () => ({ default: () => null }))
+vi.mock('./components/panels/NarrativeWidget', () => ({ NarrativeWidget: () => null }))
+
+// Bypass the Supabase token step in apiFetch so fetch mocks are consumed in
+// a deterministic order (no async getToken() race between concurrent calls).
+vi.mock('./lib/api', () => ({
+  apiFetch: (url: string, options: RequestInit = {}) => fetch(url, options),
+}))
+
+// Bypass Supabase auth — App calls useAuth() to get user + signOut.
+vi.mock('./context/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user', email: 'test@example.com' },
+    session: null,
+    loading: false,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+}))
 
 const mockItems = [{
-  id: 1,
+  id: '1',
+  user_id: 'test-user',
   title: 'Test item',
   description: null,
   status: 'not_started',
@@ -65,7 +85,7 @@ describe('App', () => {
     vi.spyOn(global, 'fetch')
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
-        id: 2, title: 'New item', description: null, status: 'not_started',
+        id: '2', user_id: 'test-user', title: 'New item', description: null, status: 'not_started',
         priority: 'medium', color: null, assignee: null, due_date: null,
         position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [],
       }) } as Response)
@@ -236,8 +256,8 @@ describe('Import modal', () => {
         ok: true,
         json: () => Promise.resolve({
           items: [
-            { id: 10, title: 'Task A', description: null, status: 'not_started', priority: 'low', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
-            { id: 11, title: 'Task B', description: null, status: 'not_started', priority: 'low', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+            { id: '10', user_id: 'test-user', title: 'Task A', description: null, status: 'not_started', priority: 'low', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
+            { id: '11', user_id: 'test-user', title: 'Task B', description: null, status: 'not_started', priority: 'low', color: null, assignee: null, due_date: null, position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [] },
           ],
         }),
       } as Response)
@@ -628,15 +648,11 @@ describe('Error handling', () => {
   })
 
   it('retry button on board error triggers reload and shows items', async () => {
-    // fetchWithRetry makes 3 attempts by default, so we need 3 rejections to trigger the error state
     vi.spyOn(global, 'fetch')
-      .mockRejectedValueOnce(new Error('network'))
-      .mockRejectedValueOnce(new Error('network'))
       .mockRejectedValueOnce(new Error('network'))
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
 
     render(<App />)
-    // Use a longer timeout to account for exponential backoff delays (~900–1100ms total)
     await waitFor(() => expect(screen.getByText(/Couldn't load your tasks/)).toBeInTheDocument(), { timeout: 5000 })
     fireEvent.click(screen.getByText('Try again'))
     await waitFor(() => expect(screen.getByText('Test item')).toBeInTheDocument(), { timeout: 3000 })
@@ -663,7 +679,7 @@ describe('Error handling', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({
-          id: 5, title: 'New task', description: null, status: 'not_started',
+          id: '5', user_id: 'test-user', title: 'New task', description: null, status: 'not_started',
           priority: 'medium', color: null, assignee: null, due_date: null,
           position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [],
         }),
@@ -733,7 +749,7 @@ describe('Optimistic updates', () => {
     await waitFor(() => expect(screen.getByText('Quick task')).toBeInTheDocument())
 
     d.resolve({ ok: true, json: () => Promise.resolve({
-      id: 99, title: 'Quick task', description: null, status: 'not_started',
+      id: '99', user_id: 'test-user', title: 'Quick task', description: null, status: 'not_started',
       priority: 'medium', color: null, assignee: null, due_date: null,
       position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [],
     }) } as Response)
@@ -765,7 +781,7 @@ describe('Optimistic updates', () => {
     vi.spyOn(global, 'fetch')
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
-        id: 42, title: 'ID task', description: null, status: 'not_started',
+        id: '42', user_id: 'test-user', title: 'ID task', description: null, status: 'not_started',
         priority: 'medium', color: null, assignee: null, due_date: null,
         position: 0, created_at: '2026-01-01', last_modified: '2026-01-01', history: [],
       }) } as Response)
@@ -809,11 +825,12 @@ describe('Optimistic updates', () => {
     render(<App />)
     await waitFor(() => expect(screen.getByText('Test item')).toBeInTheDocument())
 
-    expect(screen.getByLabelText('Change status')).toHaveValue('not_started')
-    fireEvent.change(screen.getByLabelText('Change status'), { target: { value: 'in_progress' } })
+    // Status dropdown is a custom button (not a <select>) — open it and pick "In Progress"
+    fireEvent.click(screen.getByLabelText('Change status'))
+    fireEvent.click(screen.getByTestId('status-option-in_progress'))
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Change status')).toHaveValue('not_started')
+      expect(screen.getByLabelText('Change status')).toHaveTextContent('Not Started')
       expect(screen.getByText(/Failed to update task status/)).toBeInTheDocument()
     })
   })

@@ -143,6 +143,10 @@ export const ModalFooter = styled.div`
   }
 `
 
+export const HiddenFileInput = styled.input`
+  display: none;
+`
+
 export const FileBtnLabel = styled.label`
   display: inline-flex;
   align-items: center;

@@ -231,6 +231,26 @@ export const Toast = styled.div<{ error?: boolean }>`
   }
 `
 
+export const ColumnDot = styled.span<{ accentColor: string }>`
+  background-color: ${p => p.accentColor};
+`
+
+export const SkeletonLineVar = styled.div<{ $width: string }>`
+  width: ${p => p.$width};
+`
+
+export const NoMarginSpinner = styled.span`
+  margin-right: 0;
+`
+
+export const SignOutBtn = styled.button`
+  font-size: 0.8rem;
+`
+
+export const HiddenFileInput = styled.input`
+  display: none;
+`
+
 export const ToastRetryBtn = styled.button`
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.25);

@@ -31,35 +31,37 @@ describe('TaskCard', () => {
     expect(screen.getByText('Add description...')).toBeInTheDocument()
   })
 
-  it('renders the priority select with correct value', () => {
+  it('renders the priority trigger with correct label', () => {
     wrap(<TaskCard item={mockItem} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    expect(screen.getByDisplayValue('High')).toBeInTheDocument()
+    expect(screen.getByLabelText('Change priority')).toHaveTextContent('High')
   })
 
-  it('renders the status select with correct value', () => {
+  it('renders the status trigger with correct label', () => {
     wrap(<TaskCard item={mockItem} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    expect(screen.getByDisplayValue('In Progress')).toBeInTheDocument()
+    expect(screen.getByLabelText('Change status')).toHaveTextContent('In Progress')
   })
 
   it('calls onDelete when delete button is clicked', () => {
     const onDelete = vi.fn()
     wrap(<TaskCard item={mockItem} onDelete={onDelete} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    fireEvent.click(screen.getByTestId('delete-1'))
-    expect(onDelete).toHaveBeenCalledWith(1)
+    fireEvent.click(screen.getByTestId('delete-mock-1'))
+    expect(onDelete).toHaveBeenCalledWith('mock-1')
   })
 
-  it('calls onUpdatePriority when priority select changes', () => {
+  it('calls onUpdatePriority when priority option is selected', () => {
     const onUpdatePriority = vi.fn()
     wrap(<TaskCard item={mockItem} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={onUpdatePriority} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    fireEvent.change(screen.getByDisplayValue('High'), { target: { value: 'critical' } })
-    expect(onUpdatePriority).toHaveBeenCalledWith(1, 'critical')
+    fireEvent.click(screen.getByLabelText('Change priority'))
+    fireEvent.click(screen.getByTestId('priority-option-critical'))
+    expect(onUpdatePriority).toHaveBeenCalledWith('mock-1', 'critical')
   })
 
-  it('calls onUpdateStatus when status select changes', () => {
+  it('calls onUpdateStatus when status option is selected', () => {
     const onUpdateStatus = vi.fn()
     wrap(<TaskCard item={mockItem} onDelete={noop} onUpdateStatus={onUpdateStatus} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />)
-    fireEvent.change(screen.getByDisplayValue('In Progress'), { target: { value: 'done' } })
-    expect(onUpdateStatus).toHaveBeenCalledWith(1, 'done')
+    fireEvent.click(screen.getByLabelText('Change status'))
+    fireEvent.click(screen.getByTestId('status-option-done'))
+    expect(onUpdateStatus).toHaveBeenCalledWith('mock-1', 'done')
   })
 
   it('switches description to edit mode on click', () => {
@@ -75,21 +77,21 @@ describe('TaskCard', () => {
     const textarea = screen.getByDisplayValue('The login form throws a 500 error.')
     fireEvent.change(textarea, { target: { value: 'Updated description' } })
     fireEvent.blur(textarea)
-    expect(onUpdateDescription).toHaveBeenCalledWith(1, 'Updated description')
+    expect(onUpdateDescription).toHaveBeenCalledWith('mock-1', 'Updated description')
   })
 
   it('applies highlighted attribute when highlighted prop is true', () => {
     const { container } = wrap(
       <TaskCard item={mockItem} highlighted onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />
     )
-    expect(container.querySelector('[data-item-id="1"]')).toHaveAttribute('data-highlighted', 'true')
+    expect(container.querySelector('[data-item-id="mock-1"]')).toHaveAttribute('data-highlighted', 'true')
   })
 
   it('sets data-item-id attribute', () => {
     const { container } = wrap(
       <TaskCard item={mockItem} onDelete={noop} onUpdateStatus={noop} onUpdatePriority={noop} onUpdateDescription={noop} onUpdateDueDate={noop} onUpdateAssignee={noop} onUpdateColor={noop} />
     )
-    expect(container.querySelector('[data-item-id="1"]')).toBeInTheDocument()
+    expect(container.querySelector('[data-item-id="mock-1"]')).toBeInTheDocument()
   })
 
   function relDate(n: number): string {

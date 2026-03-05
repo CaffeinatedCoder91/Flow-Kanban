@@ -6,7 +6,7 @@ import { ImportModalProps } from './ImportModal.types'
 import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody,
   ModalHint, ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel,
-  ModalFooter, FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList,
+  ModalFooter, HiddenFileInput, FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList,
   CancelBtn, ProcessBtn,
 } from './ImportModal.styles'
 
@@ -142,7 +142,7 @@ export const ImportModal = ({ onClose, onImported }: ImportModalProps): React.Re
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
                 Upload file
-                <input type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} style={{ display: 'none' }} />
+                <HiddenFileInput type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} />
               </FileBtnLabel>
               <FileHint>.txt · .pdf · .docx · max 5MB</FileHint>
               <CancelBtn onClick={onClose} disabled={isExtracting}>Cancel</CancelBtn>

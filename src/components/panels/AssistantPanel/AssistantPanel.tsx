@@ -5,6 +5,7 @@ import { AssistantPanelProps, Message } from './AssistantPanel.types'
 import {
   Overlay, Panel, Header, HeaderIdentity, Avatar, Title, CloseBtn,
   Messages, AiRow, MsgAvatar, MessageBubble, Markdown, InlineContent,
+  ErrorContent, ErrorRow, ActionIcon, ErrorIcon, UserMessageText,
   RetryBtn, TypingDot, TypingIndicator, Suggestions, SuggestionsLabel,
   SuggestionChip, InputArea, Input, SendBtn,
 } from './AssistantPanel.styles'
@@ -137,23 +138,23 @@ export const AssistantPanel = ({
               <MessageBubble key={index} role={message.role}>
                 {message.role === 'action' ? (
                   <InlineContent>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#10b981', flexShrink: 0 }}>
+                    <ActionIcon width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    </ActionIcon>
                     <span>{message.content}</span>
                   </InlineContent>
                 ) : message.role === 'error' ? (
-                  <InlineContent style={{ alignItems: 'flex-start', flexDirection: 'column', gap: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ef4444', flexShrink: 0 }}>
+                  <ErrorContent>
+                    <ErrorRow>
+                      <ErrorIcon width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                      </svg>
+                      </ErrorIcon>
                       <span>{message.content}</span>
-                    </div>
+                    </ErrorRow>
                     {message.onRetry && <RetryBtn onClick={message.onRetry}>Try again</RetryBtn>}
-                  </InlineContent>
+                  </ErrorContent>
                 ) : (
-                  <p style={{ margin: 0, lineHeight: 1.5, fontSize: '0.875rem' }}>{message.content}</p>
+                  <UserMessageText>{message.content}</UserMessageText>
                 )}
               </MessageBubble>
             )
@@ -161,7 +162,7 @@ export const AssistantPanel = ({
           {isLoading && (
             <AiRow>
               <MsgAvatar>✦</MsgAvatar>
-              <MessageBubble role="assistant" style={{ padding: '1rem' }}>
+              <MessageBubble role="assistant">
                 <TypingIndicator>
                   <TypingDot /><TypingDot /><TypingDot />
                 </TypingIndicator>

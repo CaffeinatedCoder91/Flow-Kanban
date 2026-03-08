@@ -133,3 +133,43 @@ export const FooterLink = styled.button`
 
   &:hover { text-decoration: underline; }
 `
+
+export const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  color: ${p => p.theme.colors.textTertiary};
+  font-size: ${p => p.theme.typography.fontSize.sm};
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: ${p => p.theme.colors.border};
+  }
+`
+
+export const GoogleBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.7rem 1rem;
+  background: ${p => p.theme.colors.surface};
+  color: ${p => p.theme.colors.text};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-radius: ${p => p.theme.borderRadius.lg};
+  font-size: ${p => p.theme.typography.fontSize.sm};
+  font-family: inherit;
+  font-weight: ${p => p.theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: ${p => p.theme.colors.backgroundAlt};
+    border-color: ${p => p.theme.colors.borderSubtle};
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+`

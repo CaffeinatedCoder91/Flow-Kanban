@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { ExtractTasksSchema } from '../lib/validation'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -50,12 +51,12 @@ export default withCors(async (req: Req, res: Res) => {
   if (!userId) return unauthorized(res)
 
   try {
-    const body = req.body as { text?: string }
-    if (!body?.text || typeof body.text !== 'string' || body.text.trim().length < 10) {
-      return badRequest(res, 'text must be at least 10 characters')
+    const parsed = ExtractTasksSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
     }
 
-    const tasks = await extractTasksFromText(body.text)
+    const tasks = await extractTasksFromText(parsed.data.text)
 
     if (tasks.length === 0) {
       return res.status(200).json({

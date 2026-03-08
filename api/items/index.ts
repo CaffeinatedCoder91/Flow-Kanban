@@ -4,6 +4,8 @@
 
 import { getItems, createItem, getItemHistory } from '../../lib/db'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils'
+import { CreateItemSchema } from '../../lib/validation'
+import { sanitizeItemFields } from '../../lib/sanitize'
 
 export default withCors(async (req: Req, res: Res) => {
   const userId = await getUserId(req)
@@ -25,20 +27,21 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     if (req.method === 'POST') {
-      const body = req.body as Record<string, unknown>
-
-      if (!body?.title || typeof body.title !== 'string') {
-        return badRequest(res, 'title is required')
+      const parsed = CreateItemSchema.safeParse(req.body)
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
       }
 
+      const { status, priority, due_date, ...textFields } = parsed.data
+      const clean = sanitizeItemFields(textFields)
       const item = await createItem(userId, {
-        title:       body.title,
-        description: typeof body.description === 'string' ? body.description : null,
-        status:      typeof body.status   === 'string' ? body.status   : 'not_started',
-        priority:    typeof body.priority === 'string' ? body.priority : 'medium',
-        color:       typeof body.color    === 'string' ? body.color    : null,
-        assignee:    typeof body.assignee === 'string' ? body.assignee : null,
-        due_date:    typeof body.due_date === 'string' ? body.due_date : null,
+        title:       clean.title!,
+        description: clean.description ?? null,
+        status:      status   ?? 'not_started',
+        priority:    priority ?? 'medium',
+        color:       clean.color    ?? null,
+        assignee:    clean.assignee ?? null,
+        due_date:    due_date ?? null,
       })
 
       return res.status(201).json({ ...item, history: [] })

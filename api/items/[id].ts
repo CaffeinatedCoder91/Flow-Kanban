@@ -5,6 +5,8 @@
 import { updateItem, deleteItem, getItemHistory } from '../../lib/db'
 import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from '../_utils'
 import type { Item } from '../../lib/supabase'
+import { UpdateItemSchema } from '../../lib/validation'
+import { sanitizeItemFields } from '../../lib/sanitize'
 
 export default withCors(async (req: Req, res: Res) => {
   const userId = await getUserId(req)
@@ -16,19 +18,12 @@ export default withCors(async (req: Req, res: Res) => {
 
   try {
     if (req.method === 'PATCH') {
-      const body = req.body as Partial<Item>
-
-      const allowedFields = [
-        'title', 'description', 'status', 'priority',
-        'color', 'assignee', 'due_date', 'position',
-      ] as const
-
-      const patch: Partial<Item> = {}
-      for (const field of allowedFields) {
-        if (body[field] !== undefined) {
-          ;(patch as Record<string, unknown>)[field] = body[field]
-        }
+      const parsed = UpdateItemSchema.safeParse(req.body)
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
       }
+
+      const patch = sanitizeItemFields(parsed.data) as Partial<Item>
 
       if (Object.keys(patch).length === 0) {
         return badRequest(res, 'No valid fields provided')

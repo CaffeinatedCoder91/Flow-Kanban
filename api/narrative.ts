@@ -7,6 +7,7 @@ import { getItems } from '../lib/db'
 import { supabaseAdmin } from '../lib/supabase'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
 import type { ItemHistory } from '../lib/supabase'
+import { NarrativeSchema } from '../lib/validation'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -48,13 +49,12 @@ export default withCors(async (req: Req, res: Res) => {
   if (!userId) return unauthorized(res)
 
   try {
-    const body = req.body as { period?: string }
-    const period = body?.period as Period | undefined
-
-    const validPeriods: Period[] = ['last_week', 'last_30_days', 'this_month', 'previous_7_days']
-    if (!period || !validPeriods.includes(period)) {
-      return badRequest(res, `period must be one of: ${validPeriods.join(', ')}`)
+    const parsed = NarrativeSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
     }
+
+    const period = parsed.data.period as Period
 
     const { start, end } = getPeriodBounds(period)
 

@@ -6,6 +6,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
 import type { Item } from '../lib/supabase'
+import { ChatSchema } from '../lib/validation'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -75,12 +76,12 @@ export default withCors(async (req: Req, res: Res) => {
   if (!userId) return unauthorized(res)
 
   try {
-    const body = req.body as { message?: string; items?: Item[] }
-    if (!body?.message || !Array.isArray(body?.items)) {
-      return badRequest(res, 'message and items are required')
+    const parsed = ChatSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
     }
 
-    const { message, items } = body
+    const { message, items = [] } = parsed.data
     const actions: string[] = []
     const errors: string[] = []
 

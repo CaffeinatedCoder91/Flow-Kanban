@@ -5,8 +5,8 @@ import { z } from 'zod'
 const ItemSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title too long').trim(),
   description: z.string().max(5000, 'Description too long').optional().nullable(),
-  status: z.enum(['not_started', 'in_progress', 'done', 'stuck']),
-  priority: z.enum(['low', 'medium', 'high', 'critical']),
+  status: z.enum(['not_started', 'in_progress', 'done', 'stuck']).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   color: z.string().max(50).optional().nullable(),
   assignee: z.string().max(255).optional().nullable(),
   due_date: z

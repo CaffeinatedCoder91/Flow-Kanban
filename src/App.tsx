@@ -6,7 +6,7 @@ import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
   ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel, ModalFooter,
   FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList, Toast, ToastRetryBtn,
-  ColumnDot, SkeletonLineVar, NoMarginSpinner, SignOutBtn, HiddenFileInput,
+  ColumnDot, SkeletonLineVar, NoMarginSpinner, SignOutBtn, HiddenFileInput, UserAvatar,
 } from './App.styles'
 import { Button } from './components/ui/Button'
 import { KanbanBoard } from './components/board/KanbanBoard'
@@ -19,6 +19,9 @@ import { NarrativeWidget } from './components/panels/NarrativeWidget'
 import { DeadlineNegotiationModal } from './components/modals/DeadlineNegotiationModal'
 import { WelcomeModal, hasSeenWelcome } from './components/modals/WelcomeModal'
 import { HelpModal } from './components/modals/HelpModal'
+import { AddTaskModal } from './components/modals/AddTaskModal'
+import { OnboardingChecklist } from './components/panels/OnboardingChecklist'
+import { Confetti } from './components/ui/Confetti'
 
 interface Recommendation {
   recommendedItemId: string
@@ -27,10 +30,23 @@ interface Recommendation {
 
 function App() {
   const { user, signOut } = useAuth()
+
+  const userInitials = (() => {
+    const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
+    if (name) {
+      const parts = name.trim().split(/\s+/)
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0].slice(0, 2).toUpperCase()
+    }
+    return (user?.email ?? '?').slice(0, 2).toUpperCase()
+  })()
   const [items, setItems] = useState<Item[]>([])
   const [text, setText] = useState('')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [insights, setInsights] = useState<Insight[]>([])
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
+  const [addTaskInitialTitle, setAddTaskInitialTitle] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [importText, setImportText] = useState('')
   const [importFileName, setImportFileName] = useState<string | null>(null)
@@ -62,7 +78,11 @@ function App() {
   const [boardLoadError, setBoardLoadError] = useState(false)
   const [isInsightsLoading, setIsInsightsLoading] = useState(false)
   const [insightsError, setInsightsError] = useState(false)
-  const [showWelcome, setShowWelcome] = useState(() => !hasSeenWelcome())
+  const [showWelcome, setShowWelcome]       = useState(() => !hasSeenWelcome())
+  const [hasTriedAI, setHasTriedAI]         = useState(() => localStorage.getItem('flow-tried-ai') === 'true')
+  const [hasImportedTasks, setHasImportedTasks] = useState(() => localStorage.getItem('flow-imported-tasks') === 'true')
+  const [showConfetti, setShowConfetti]     = useState(false)
+  const prevItemsLengthRef                  = useRef(0)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [sampleIds, setSampleIds] = useState<string[]>(() => {
     try {
@@ -171,6 +191,16 @@ function App() {
   }, [])
 
   useEffect(() => { init() }, [])
+
+  // Fire confetti the first time a task is created (board goes 0 → 1)
+  useEffect(() => {
+    const prev = prevItemsLengthRef.current
+    prevItemsLengthRef.current = items.length
+    if (prev === 0 && items.length === 1 && !localStorage.getItem('flow-first-celebration-done')) {
+      localStorage.setItem('flow-first-celebration-done', 'true')
+      setShowConfetti(true)
+    }
+  }, [items.length])
 
   const insightsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -320,8 +350,36 @@ function App() {
   const addItem = async (e: FormEvent) => {
     e.preventDefault()
     if (!text.trim()) return
+    if (items.length === 0) {
+      setAddTaskInitialTitle(text)
+      setIsAddTaskOpen(true)
+      return
+    }
     await addItemWithStatus(text, 'not_started')
     setText('')
+  }
+
+  const handleAddTaskModalSubmit = async (title: string, description: string | null, priority: string) => {
+    const tempId = `temp-${Date.now()}`
+    const tempItem: Item = {
+      id: tempId, title, description, status: 'not_started', priority,
+      color: null, assignee: null, due_date: null, position: 0,
+      created_at: new Date().toISOString(), last_modified: new Date().toISOString(), history: [],
+    }
+    setItems(prev => [...prev, tempItem])
+    setText('')
+    try {
+      const res = await apiFetch('/api/items', {
+        method: 'POST',
+        body: JSON.stringify({ title, description, status: 'not_started', priority }),
+      })
+      if (!res.ok) throw new Error('create-task')
+      const item: Item = await res.json()
+      setItems(prev => prev.map(t => t.id === tempId ? item : t))
+    } catch {
+      setItems(prev => prev.filter(t => t.id !== tempId))
+      showError('Failed to create task', () => handleAddTaskModalSubmit(title, description, priority))
+    }
   }
 
   const addItemWithStatus = async (title: string, status: string) => {
@@ -461,6 +519,7 @@ function App() {
       setItems(prev => [...prev, ...data.items.map((item: Item) => ({ ...item, history: [] }))])
       closeImportModal()
       setImportSuccessMessage(`✓ Added ${count} task${count !== 1 ? 's' : ''} from imported text`)
+      if (!hasImportedTasks) { localStorage.setItem('flow-imported-tasks', 'true'); setHasImportedTasks(true) }
       clearTimeout(importSuccessTimerRef.current)
       importSuccessTimerRef.current = setTimeout(() => setImportSuccessMessage(null), 3000)
     } catch {
@@ -539,7 +598,7 @@ function App() {
             <span>📋</span>
             Import Tasks
           </button>
-          <button className="ai-btn" onClick={() => setIsAssistantOpen(!isAssistantOpen)} aria-label="AI Assistant" data-tooltip="Ask AI to manage your tasks" data-tooltip-pos="below">
+          <button className="ai-btn" onClick={() => { setIsAssistantOpen(!isAssistantOpen); if (!hasTriedAI) { localStorage.setItem('flow-tried-ai', 'true'); setHasTriedAI(true) } }} aria-label="AI Assistant" data-tooltip="Ask AI to manage your tasks" data-tooltip-pos="below">
             <span className="ai-sparkle">✨</span>
             AI Assistant
           </button>
@@ -573,12 +632,18 @@ function App() {
           <SignOutBtn
             className="view-btn"
             aria-label="Sign out"
-            data-tooltip={user?.email ?? 'Sign out'}
+            data-tooltip="Sign out"
             data-tooltip-pos="below"
             onClick={signOut}
           >
             ↪
           </SignOutBtn>
+          <UserAvatar
+            data-tooltip={user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? ''}
+            data-tooltip-pos="below"
+          >
+            {userInitials}
+          </UserAvatar>
         </div>
       </div>
       {sampleIds.length > 0 && (
@@ -718,6 +783,19 @@ function App() {
         onPrefillConsumed={() => setPrefillMessage('')}
         proactiveMessages={proactiveMessages}
         onProactiveConsumed={() => setProactiveMessages([])}
+      />
+      {isAddTaskOpen && (
+        <AddTaskModal
+          initialTitle={addTaskInitialTitle}
+          onClose={() => setIsAddTaskOpen(false)}
+          onAdd={handleAddTaskModalSubmit}
+        />
+      )}
+      {showConfetti && <Confetti onDone={() => setShowConfetti(false)} />}
+      <OnboardingChecklist
+        hasAddedTask={items.length > 0}
+        hasTriedAI={hasTriedAI}
+        hasImportedTasks={hasImportedTasks}
       />
       {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
       {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}

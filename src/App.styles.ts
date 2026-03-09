@@ -247,6 +247,23 @@ export const SignOutBtn = styled.button`
   font-size: 0.8rem;
 `
 
+export const UserAvatar = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: ${p => p.theme.colors.primary};
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+  cursor: default;
+  user-select: none;
+`
+
 export const HiddenFileInput = styled.input`
   display: none;
 `

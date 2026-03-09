@@ -7,6 +7,7 @@
 import multer from 'multer'
 import { extractTasksFromText } from './extract-tasks'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { checkRateLimit } from '../lib/rateLimit'
 
 // Disable Vercel's automatic body parsing for this route
 export const config = { api: { bodyParser: false } }
@@ -63,6 +64,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  if (!await checkRateLimit(res, userId)) return
 
   try {
     try {

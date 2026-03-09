@@ -5,6 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { checkRateLimit } from '../lib/rateLimit'
 import type { Item } from '../lib/supabase'
 import { ChatSchema } from '../lib/validation'
 
@@ -74,6 +75,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  if (!await checkRateLimit(res, userId)) return
 
   try {
     const parsed = ChatSchema.safeParse(req.body)

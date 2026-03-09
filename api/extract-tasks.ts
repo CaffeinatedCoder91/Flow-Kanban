@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { checkRateLimit } from '../lib/rateLimit'
 import { ExtractTasksSchema } from '../lib/validation'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -49,6 +50,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  if (!await checkRateLimit(res, userId)) return
 
   try {
     const parsed = ExtractTasksSchema.safeParse(req.body)

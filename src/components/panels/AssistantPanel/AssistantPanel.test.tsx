@@ -118,7 +118,7 @@ describe('AssistantPanel', () => {
     fireEvent.submit(screen.getByPlaceholderText('Ask me anything about your tasks...').closest('form')!)
 
     await waitFor(() => {
-      expect(screen.getByText(/AI is unavailable/)).toBeInTheDocument()
+      expect(screen.getByText(/Connection lost/)).toBeInTheDocument()
     }, { timeout: 5000 })
   })
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
 import { apiFetch } from './lib/api'
+import { ERROR_MESSAGES, getApiErrorMessage } from './lib/errors'
 import { useAuth } from './context/AuthContext'
 import { useTheme } from './context/ThemeContext'
 import { Item, Insight, ProposedTask, STATUS_CONFIG } from './types'
@@ -466,11 +467,11 @@ function App() {
     const allowedExts = ['.txt', '.pdf', '.docx']
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!allowedExts.includes(ext)) {
-      setExtractError('Unsupported file type. Please upload a .txt, .pdf, or .docx file.')
+      setExtractError(ERROR_MESSAGES.FILE_TYPE)
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setExtractError('File is too large. Maximum size is 5MB.')
+      setExtractError(ERROR_MESSAGES.FILE_SIZE)
       return
     }
 
@@ -484,7 +485,7 @@ function App() {
       const res = await apiFetch('/api/extract-from-file', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) {
-        setExtractError(data.error ?? 'Failed to process file.')
+        setExtractError(getApiErrorMessage(res.status, data.error))
         setImportFileName(null)
         return
       }
@@ -494,7 +495,7 @@ function App() {
         setImportFileName(null)
       }
     } catch {
-      setExtractError('Failed to reach the server. Please try again.')
+      setExtractError(ERROR_MESSAGES.SERVER)
       setImportFileName(null)
     } finally {
       setIsExtracting(false)
@@ -517,7 +518,7 @@ function App() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setExtractError(data.error ?? 'Failed to add tasks. Please try again.')
+        setExtractError(getApiErrorMessage(res.status, data.error))
         return
       }
       const count = data.items.length
@@ -528,7 +529,7 @@ function App() {
       clearTimeout(importSuccessTimerRef.current)
       importSuccessTimerRef.current = setTimeout(() => setImportSuccessMessage(null), 3000)
     } catch {
-      setExtractError('Failed to reach the server. Please try again.')
+      setExtractError(ERROR_MESSAGES.SERVER)
     } finally {
       setIsConfirming(false)
     }
@@ -544,7 +545,7 @@ function App() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setExtractError(data.error ?? 'Something went wrong.')
+        setExtractError(getApiErrorMessage(res.status, data.error))
         return
       }
       setExtractedTasks(data.tasks ?? [])
@@ -552,7 +553,7 @@ function App() {
         setExtractError(data.message)
       }
     } catch {
-      setExtractError('Failed to reach the server. Please try again.')
+      setExtractError(ERROR_MESSAGES.SERVER)
     } finally {
       setIsExtracting(false)
     }

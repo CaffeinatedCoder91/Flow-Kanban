@@ -1,8 +1,8 @@
 // api/_utils.ts
 // Shared helpers for all Vercel serverless functions.
 
-import { supabaseAdmin } from '../lib/supabase'
-import { captureException } from './_lib/sentry'
+import { supabaseAdmin } from '../lib/supabase.js'
+import { captureException } from './_lib/sentry.js'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

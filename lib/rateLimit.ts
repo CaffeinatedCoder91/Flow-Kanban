@@ -4,7 +4,7 @@
 
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
-import type { Res } from '../api/_utils'
+import type { Res } from '../api/_utils.js'
 
 const configured = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
 

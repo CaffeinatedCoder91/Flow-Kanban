@@ -3,10 +3,10 @@
 // Body: { type: 'reschedule' | 'split', itemId: string }
 
 import Anthropic from '@anthropic-ai/sdk'
-import { getItemById, getItems } from '../lib/db'
-import { supabaseAdmin } from '../lib/supabase'
-import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils'
-import { checkRateLimit } from '../lib/rateLimit'
+import { getItemById, getItems } from '../lib/db.js'
+import { supabaseAdmin } from '../lib/supabase.js'
+import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit } from '../lib/rateLimit.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 

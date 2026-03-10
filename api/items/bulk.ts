@@ -1,8 +1,8 @@
 // api/items/bulk.ts
 // POST /api/items/bulk — insert multiple items atomically
 
-import { createItem } from '../../lib/db'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils'
+import { createItem } from '../../lib/db.js'
+import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils.js'
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') {

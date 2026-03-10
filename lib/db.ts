@@ -4,7 +4,7 @@
 // Uses supabaseAdmin (service role) so RLS is bypassed — userId filtering
 // is enforced explicitly in every query.
 
-import { supabaseAdmin, Item, ItemHistory } from './supabase'
+import { supabaseAdmin, Item, ItemHistory } from './supabase.js'
 
 // ─── Items ────────────────────────────────────────────────────────────────────
 

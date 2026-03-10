@@ -2,8 +2,8 @@
 // POST /api/check-deadline-risks — scan for tasks at risk of missing their deadline.
 // Pure server-side logic; no AI call.
 
-import { getItems } from '../lib/db'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils'
+import { getItems } from '../lib/db.js'
+import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })

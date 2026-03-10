@@ -5,9 +5,9 @@
 // The multer middleware is applied manually inside the handler.
 
 import multer from 'multer'
-import { extractTasksFromText } from './extract-tasks'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
-import { checkRateLimit } from '../lib/rateLimit'
+import { extractTasksFromText } from './extract-tasks.js'
+import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit } from '../lib/rateLimit.js'
 
 // Disable Vercel's automatic body parsing for this route
 export const config = { api: { bodyParser: false } }

@@ -2,10 +2,10 @@
 // GET /api/items  — fetch all items for the authenticated user (with history)
 // POST /api/items — create a new item
 
-import { getItems, createItem, getItemHistory } from '../../lib/db'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from '../_utils'
-import { CreateItemSchema } from '../../lib/validation'
-import { sanitizeItemFields } from '../../lib/sanitize'
+import { getItems, createItem, getItemHistory } from '../../lib/db.js'
+import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from '../_utils.js'
+import { CreateItemSchema } from '../../lib/validation.js'
+import { sanitizeItemFields } from '../../lib/sanitize.js'
 
 export default withCors(async (req: Req, res: Res) => {
   const userId = await getUserId(req)

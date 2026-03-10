@@ -3,12 +3,12 @@
 // Queries items and item_history directly from Supabase (scoped to userId).
 
 import Anthropic from '@anthropic-ai/sdk'
-import { getItems } from '../lib/db'
-import { supabaseAdmin } from '../lib/supabase'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils'
-import { checkRateLimit } from '../lib/rateLimit'
-import type { ItemHistory } from '../lib/supabase'
-import { NarrativeSchema } from '../lib/validation'
+import { getItems } from '../lib/db.js'
+import { supabaseAdmin } from '../lib/supabase.js'
+import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit } from '../lib/rateLimit.js'
+import type { ItemHistory } from '../lib/supabase.js'
+import { NarrativeSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 

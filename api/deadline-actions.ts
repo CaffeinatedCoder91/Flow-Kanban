@@ -2,8 +2,8 @@
 // POST /api/deadline-actions — record a deadline action (reschedule/deprioritize/split).
 // Requires the deadline_actions table in Supabase (see db/supabase-schema.sql).
 
-import { supabaseAdmin } from '../lib/supabase'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { supabaseAdmin } from '../lib/supabase.js'
+import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 
 const VALID_ACTION_TYPES = ['reschedule', 'deprioritize', 'split'] as const
 type ActionType = (typeof VALID_ACTION_TYPES)[number]

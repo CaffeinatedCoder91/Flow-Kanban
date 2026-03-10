@@ -2,11 +2,11 @@
 // PATCH /api/items/:id — update fields on an item
 // DELETE /api/items/:id — delete an item
 
-import { updateItem, deleteItem, getItemHistory } from '../../lib/db'
-import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from '../_utils'
-import type { Item } from '../../lib/supabase'
-import { UpdateItemSchema } from '../../lib/validation'
-import { sanitizeItemFields } from '../../lib/sanitize'
+import { updateItem, deleteItem, getItemHistory } from '../../lib/db.js'
+import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from '../_utils.js'
+import type { Item } from '../../lib/supabase.js'
+import { UpdateItemSchema } from '../../lib/validation.js'
+import { sanitizeItemFields } from '../../lib/sanitize.js'
 
 export default withCors(async (req: Req, res: Res) => {
   const userId = await getUserId(req)

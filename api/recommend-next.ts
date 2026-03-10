@@ -2,9 +2,9 @@
 // POST /api/recommend-next — ask Claude to pick the single highest-priority task.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
-import { checkRateLimit } from '../lib/rateLimit'
-import type { Item } from '../lib/supabase'
+import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit } from '../lib/rateLimit.js'
+import type { Item } from '../lib/supabase.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 

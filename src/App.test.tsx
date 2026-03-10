@@ -83,7 +83,9 @@ describe('App', () => {
 
   it('adds a new item via top form', async () => {
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      // Initial load returns an existing item so the board is non-empty
+      // (empty board opens AddTaskModal instead of creating directly)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
         id: '2', user_id: 'test-user', title: 'New item', description: null, status: 'not_started',
         priority: 'medium', color: null, assignee: null, due_date: null,
@@ -660,10 +662,12 @@ describe('Error handling', () => {
 
   it('shows error toast when task creation fails', async () => {
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({}) } as Response)
 
     render(<App />)
+    // Wait for items to load so board is non-empty before submitting
+    await waitFor(() => expect(screen.getByText('Test item')).toBeInTheDocument())
     const input = screen.getByTestId('todo-input')
     fireEvent.change(input, { target: { value: 'New task' } })
     fireEvent.submit(input.closest('form')!)
@@ -674,7 +678,7 @@ describe('Error handling', () => {
 
   it('task creation retry succeeds and item appears', async () => {
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({}) } as Response)
       .mockResolvedValueOnce({
         ok: true,
@@ -686,6 +690,8 @@ describe('Error handling', () => {
       } as Response)
 
     render(<App />)
+    // Wait for items to load so board is non-empty before submitting
+    await waitFor(() => expect(screen.getByText('Test item')).toBeInTheDocument())
     const input = screen.getByTestId('todo-input')
     fireEvent.change(input, { target: { value: 'New task' } })
     fireEvent.submit(input.closest('form')!)
@@ -737,7 +743,7 @@ describe('Optimistic updates', () => {
   it('temp card appears in board before POST resolves', async () => {
     const d = deferred<Response>()
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockReturnValueOnce(d.promise)
 
     render(<App />)
@@ -758,7 +764,7 @@ describe('Optimistic updates', () => {
   it('temp card removed and error toast shown when POST fails', async () => {
     const d = deferred<Response>()
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockReturnValueOnce(d.promise)
 
     render(<App />)
@@ -779,7 +785,7 @@ describe('Optimistic updates', () => {
 
   it('card shows server-assigned id after POST resolves', async () => {
     vi.spyOn(global, 'fetch')
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockItems) } as Response)
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({
         id: '42', user_id: 'test-user', title: 'ID task', description: null, status: 'not_started',
         priority: 'medium', color: null, assignee: null, due_date: null,

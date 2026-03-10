@@ -1,10 +1,9 @@
 import { render as rtlRender, RenderOptions } from '@testing-library/react'
-import { ThemeProvider } from '@emotion/react'
-import { theme } from '../theme'
+import { ThemeContextProvider } from '../context/ThemeContext'
 
 function render(ui: React.ReactElement, options?: RenderOptions) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <ThemeProvider theme={theme}>{children}</ThemeProvider>
+    <ThemeContextProvider>{children}</ThemeContextProvider>
   )
   return rtlRender(ui, { wrapper: Wrapper, ...options })
 }

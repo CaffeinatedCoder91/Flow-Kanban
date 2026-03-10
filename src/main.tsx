@@ -5,6 +5,7 @@ import * as Sentry from '@sentry/react'
 import { ThemeProvider } from '@emotion/react'
 import App from './App'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeContextProvider } from './context/ThemeContext'
 import { SignIn } from './components/Auth/SignIn'
 import { SignUp } from './components/Auth/SignUp'
 import { theme } from './theme'
@@ -50,12 +51,12 @@ const ErrorFallback = (): React.ReactElement => (
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
-      <ThemeProvider theme={theme}>
+      <ThemeContextProvider>
         <GlobalStyles />
         <AuthProvider>
           <Root />
         </AuthProvider>
-      </ThemeProvider>
+      </ThemeContextProvider>
     </Sentry.ErrorBoundary>
   </StrictMode>,
 )

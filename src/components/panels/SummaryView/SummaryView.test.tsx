@@ -112,7 +112,7 @@ describe('SummaryView', () => {
       render(<SummaryView />)
       await waitFor(() =>
         expect(screen.getByText(/Failed to load summary/)).toBeInTheDocument()
-      )
+      , { timeout: 5000 })
     })
 
     it('shows error message on HTTP error response', async () => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
 import { apiFetch } from './lib/api'
 import { useAuth } from './context/AuthContext'
+import { useTheme } from './context/ThemeContext'
 import { Item, Insight, ProposedTask, STATUS_CONFIG } from './types'
 import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
@@ -30,6 +31,11 @@ interface Recommendation {
 
 function App() {
   const { user, signOut } = useAuth()
+  const { mode, setMode } = useTheme()
+  const cycleTheme = () => {
+    const next = mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light'
+    setMode(next)
+  }
 
   const userInitials = (() => {
     const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
@@ -628,6 +634,15 @@ function App() {
             data-tooltip-pos="below"
           >
             ?
+          </button>
+          <button
+            className="view-btn"
+            onClick={cycleTheme}
+            aria-label="Toggle theme"
+            data-tooltip={mode === 'light' ? 'Switch to dark' : mode === 'dark' ? 'Switch to system' : 'Switch to light'}
+            data-tooltip-pos="below"
+          >
+            {mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '💻'}
           </button>
           <SignOutBtn
             className="view-btn"

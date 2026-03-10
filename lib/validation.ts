@@ -26,7 +26,7 @@ export const UpdateItemSchema = ItemSchema.partial()
 
 export const ChatSchema = z.object({
   message: z.string().min(1, 'Message is required').max(5000, 'Message too long'),
-  items: z.array(z.record(z.unknown())).optional(),
+  items: z.array(z.record(z.string(), z.unknown())).optional(),
 })
 
 // ─── Extract Tasks Schema ──────────────────────────────────────────────────────

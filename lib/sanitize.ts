@@ -37,7 +37,8 @@ export function sanitizePlainText(value: string | null | undefined): string {
   if (typeof window !== 'undefined') {
     // Browser: use DOMPurify with no allowed tags
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const DOMPurify = require('dompurify') as typeof import('dompurify')
+    const mod = require('dompurify')
+    const DOMPurify = mod.default ?? mod
     return (DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) as string).trim()
   }
 
@@ -59,7 +60,8 @@ export function sanitizeHtml(value: string | null | undefined): string {
 
   if (typeof window !== 'undefined') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const DOMPurify = require('dompurify') as typeof import('dompurify')
+    const mod = require('dompurify')
+    const DOMPurify = mod.default ?? mod
     return DOMPurify.sanitize(value, {
       ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre'],
       ALLOWED_ATTR: ['href', 'target', 'rel'],

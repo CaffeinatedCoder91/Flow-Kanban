@@ -3,7 +3,7 @@
 // POST /api/items — create a new item
 
 import { getItems, createItem, getItemHistory } from '../../lib/db'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils'
+import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from '../_utils'
 import { CreateItemSchema } from '../../lib/validation'
 import { sanitizeItemFields } from '../../lib/sanitize'
 

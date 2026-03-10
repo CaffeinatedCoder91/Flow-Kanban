@@ -2,7 +2,7 @@
 // POST /api/extract-tasks — extract actionable tasks from freeform text.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils'
+import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils'
 import { checkRateLimit } from '../lib/rateLimit'
 import { ExtractTasksSchema } from '../lib/validation'
 

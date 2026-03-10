@@ -12,10 +12,10 @@ import {
 } from './AssistantPanel.styles'
 
 const SUGGESTIONS = [
-  'Show me high priority tasks',
-  'Create a task from this email',
   'What should I work on next?',
-  'Summarize my week',
+  'Any blocked or overdue tasks?',
+  'Summarize my progress this week',
+  'Help me break down a large task',
 ]
 
 export const AssistantPanel = ({

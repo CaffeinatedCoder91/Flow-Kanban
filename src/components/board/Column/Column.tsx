@@ -55,10 +55,15 @@ export const Column = ({
         </SortableContext>
         {items.length === 0 && !adding && (
           <div className="column-empty">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="3" strokeDasharray="4 3"/>
             </svg>
-            <span>No tasks here</span>
+            <span>
+              {statusKey === 'not_started' && 'Nothing queued yet'}
+              {statusKey === 'in_progress' && 'Nothing in progress'}
+              {statusKey === 'done' && 'No completed tasks yet'}
+              {statusKey === 'stuck' && 'Nothing blocked — nice!'}
+            </span>
           </div>
         )}
         {adding ? (

@@ -781,8 +781,8 @@ function App() {
                 <line x1="35" y1="47" x2="35" y2="57" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
                 <line x1="30" y1="52" x2="40" y2="52" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
-              <h3>No tasks yet</h3>
-              <p>Create one above or import from email</p>
+              <h3>Your board is empty</h3>
+              <p>Add your first task above, or import from email, notes, or a doc.</p>
               <div className="empty-board-actions">
                 <button className="empty-action-btn empty-action-primary" onClick={() => inputRef.current?.focus()}>
                   Add a task

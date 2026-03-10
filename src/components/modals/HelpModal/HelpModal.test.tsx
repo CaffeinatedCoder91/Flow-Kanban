@@ -3,10 +3,9 @@ import { describe, it, expect, vi } from 'vitest'
 import { HelpModal } from './HelpModal'
 
 describe('HelpModal', () => {
-  it('renders the dialog with correct aria attributes', () => {
+  it('renders the page title', () => {
     render(<HelpModal onClose={vi.fn()} />)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('dialog')).toHaveAttribute('aria-label', 'Help')
+    expect(screen.getByText('Help & shortcuts')).toBeInTheDocument()
   })
 
   it('renders the "Getting started" section heading', () => {
@@ -32,24 +31,10 @@ describe('HelpModal', () => {
     expect(screen.getByText('Tab')).toBeInTheDocument()
   })
 
-  it('calls onClose when the close button is clicked', () => {
+  it('calls onClose when the Back button is clicked', () => {
     const onClose = vi.fn()
     render(<HelpModal onClose={onClose} />)
-    fireEvent.click(screen.getByLabelText('Close'))
+    fireEvent.click(screen.getByLabelText('Back to board'))
     expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
-  it('calls onClose when the overlay is clicked', () => {
-    const onClose = vi.fn()
-    render(<HelpModal onClose={onClose} />)
-    fireEvent.click(screen.getByRole('dialog'))
-    expect(onClose).toHaveBeenCalledTimes(1)
-  })
-
-  it('does not call onClose when modal content is clicked', () => {
-    const onClose = vi.fn()
-    render(<HelpModal onClose={onClose} />)
-    fireEvent.click(screen.getByText('Help & shortcuts'))
-    expect(onClose).not.toHaveBeenCalled()
   })
 })

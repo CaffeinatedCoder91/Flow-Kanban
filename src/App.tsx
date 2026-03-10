@@ -69,7 +69,7 @@ function App() {
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null)
   const refreshMessageTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [highlightedItems, setHighlightedItems] = useState<Set<string>>(new Set())
-  const [view, setView] = useState<'board' | 'summary'>('board')
+  const [view, setView] = useState<'board' | 'summary' | 'help'>('board')
   const [prefillMessage, setPrefillMessage] = useState('')
   const [proactiveMessages, setProactiveMessages] = useState<string[]>([])
   const alertedItemIdsRef = useRef<Set<string>>(new Set())
@@ -87,7 +87,6 @@ function App() {
   const [hasImportedTasks, setHasImportedTasks] = useState(() => localStorage.getItem('flow-imported-tasks') === 'true')
   const [showConfetti, setShowConfetti]     = useState(false)
   const prevItemsLengthRef                  = useRef(0)
-  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [isClearingSample, setIsClearingSample] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [sampleIds, setSampleIds] = useState<string[]>(() => {
@@ -639,9 +638,9 @@ function App() {
             </svg>
           </button>
           <button
-            className="view-btn help-btn"
+            className={`view-btn help-btn${view === 'help' ? ' active' : ''}`}
             aria-label="Help"
-            onClick={() => setIsHelpOpen(true)}
+            onClick={() => setView(view === 'help' ? 'board' : 'help')}
             data-tooltip="Help & shortcuts"
             data-tooltip-pos="below"
           >
@@ -682,7 +681,9 @@ function App() {
           </button>
         </div>
       )}
-      {view === 'summary' ? (
+      {view === 'help' ? (
+        <HelpModal onClose={() => setView('board')} />
+      ) : view === 'summary' ? (
         <SummaryView />
       ) : (
         <>
@@ -828,7 +829,6 @@ function App() {
         hasImportedTasks={hasImportedTasks}
       />
       {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
-      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
       {importSuccessMessage && <Toast>{importSuccessMessage}</Toast>}
       {toastMessage && <Toast>{toastMessage}</Toast>}
       {errorToast && (

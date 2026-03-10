@@ -26,6 +26,7 @@ export const Card = styled.div<{
   isDragging?: boolean
   isDragOverlay?: boolean
   highlighted?: boolean
+  donePulse?: boolean
 }>`
   background: ${p => p.theme.colors.surface};
   border: 1px solid ${p => p.theme.colors.border};
@@ -37,12 +38,23 @@ export const Card = styled.div<{
   transition: box-shadow 0.15s, transform 0.15s;
   opacity: ${p => (p.isDragging ? 0.3 : 1)};
 
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes done-pulse {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  animation: ${p => p.donePulse ? 'done-pulse 0.35s ease' : 'card-in 0.18s ease'};
+
   ${p => p.isDragOverlay && `box-shadow: ${p.theme.shadows.lg};`}
 
   ${p => !p.isDragging && !p.isDragOverlay && `
     &:hover {
       box-shadow: ${p.theme.shadows.md};
-      transform: translateY(-1px) scale(1.015);
+      transform: translateY(-1px) scale(1.02);
     }
     &:hover ${DeleteBtn} { opacity: 1; }
   `}
@@ -361,6 +373,13 @@ export const DropdownMenu = styled.div<{ top?: number; left?: number }>`
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  transform-origin: top left;
+
+  @keyframes menu-in {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  animation: menu-in 0.12s ease;
 `
 
 export const DropdownOption = styled.button<{ active?: boolean; optBg?: string; optColor?: string }>`

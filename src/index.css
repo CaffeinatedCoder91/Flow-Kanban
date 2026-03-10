@@ -274,6 +274,7 @@ body {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--c-border) transparent;
+  transition: background 0.2s ease;
 }
 .column-over .column-body {
   background: var(--c-primary-light);
@@ -2084,4 +2085,14 @@ kbd {
   background: #252660;
   border-color: var(--c-primary);
   color: var(--c-text);
+}
+
+/* ── Accessibility: reduced motion ─────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

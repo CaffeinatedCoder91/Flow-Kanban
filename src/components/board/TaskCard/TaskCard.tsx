@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useRef } from 'react'
+import React, { forwardRef, useState, useRef, useEffect } from 'react'
 import { useTheme } from '@emotion/react'
 import { createPortal } from 'react-dom'
 import { useSortable } from '@dnd-kit/sortable'
@@ -83,6 +83,17 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
   const showNegotiate = !!item.due_date && item.status !== 'done'
   const isDone = item.status === 'done'
 
+  const prevIsDoneRef = useRef(isDone)
+  const [donePulse, setDonePulse] = useState(false)
+  useEffect(() => {
+    if (!prevIsDoneRef.current && isDone) {
+      setDonePulse(true)
+      const t = setTimeout(() => setDonePulse(false), 400)
+      return () => clearTimeout(t)
+    }
+    prevIsDoneRef.current = isDone
+  }, [isDone])
+
   const handleAssigneeBlur = () => {
     setEditingAssignee(false)
     const trimmed = assigneeDraft.trim()
@@ -121,6 +132,7 @@ const TaskCardInner = forwardRef<HTMLDivElement, TaskCardProps & {
       isDragging={isDragging}
       isDragOverlay={isDragOverlay}
       highlighted={highlighted}
+      donePulse={donePulse}
       style={style}
       {...attributes}
       {...listeners}

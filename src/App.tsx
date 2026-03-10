@@ -209,6 +209,18 @@ function App() {
     }
   }, [items.length])
 
+  // Fire confetti the first time any task is moved to Done
+  const prevDoneCountRef = useRef(0)
+  useEffect(() => {
+    const doneCount = items.filter(i => i.status === 'done').length
+    const prev = prevDoneCountRef.current
+    prevDoneCountRef.current = doneCount
+    if (prev === 0 && doneCount === 1 && !localStorage.getItem('flow-first-done')) {
+      localStorage.setItem('flow-first-done', 'true')
+      setShowConfetti(true)
+    }
+  }, [items])
+
   const insightsTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
 
   const fetchInsightsNow = async (isManual = false) => {

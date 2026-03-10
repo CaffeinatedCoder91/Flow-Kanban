@@ -10,7 +10,9 @@ export const ButtonRoot = styled.button<{ variant: ButtonVariant; size: ButtonSi
   font-family: inherit;
   font-weight: ${p => p.theme.typography.fontWeight.semibold};
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.08s;
+
+  &:active:not(:disabled) { transform: scale(0.97); }
   white-space: nowrap;
   line-height: 1;
 

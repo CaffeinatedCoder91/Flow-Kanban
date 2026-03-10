@@ -197,7 +197,7 @@ export const PreviewList = styled.div`
 
 export const Toast = styled.div<{ error?: boolean }>`
   position: fixed;
-  bottom: 1.5rem;
+  top: 5rem;
   right: 1.5rem;
   background: ${p => (p.error ? '#1c1917' : '#1a1a2e')};
   color: #fff;
@@ -211,15 +211,15 @@ export const Toast = styled.div<{ error?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  animation: toast-in 0.2s ease${p => p.error ? ', shake 0.18s ease 0.12s' : ', toast-out 0.3s ease 2.7s forwards'};
+  animation: toast-in 0.22s ease${p => p.error ? ', shake 0.18s ease 0.12s' : ', toast-out 0.3s ease 2.7s forwards'};
 
   @keyframes toast-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateX(calc(100% + 2rem)); }
+    to   { opacity: 1; transform: translateX(0); }
   }
   @keyframes toast-out {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(4px); }
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(calc(100% + 2rem)); }
   }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }

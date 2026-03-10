@@ -7,8 +7,9 @@ import { supabase } from '../../lib/supabaseBrowser'
 import {
   Page, Card, Logo, LogoDot, LogoText,
   Title, Subtitle, Field, Label, Input,
-  ErrorMsg, SubmitBtn, Divider, GoogleBtn, Footer, FooterLink,
+  ErrorMsg, SubmitBtn, Divider, GoogleBtn, GuestBtn, Footer, FooterLink,
 } from './SignIn.styles'
+import { signInAsGuest } from '../../lib/guestLogin'
 
 interface SignInProps {
   onSwitchToSignUp: () => void
@@ -23,10 +24,23 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
       options: { redirectTo: window.location.origin },
     })
   }
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState<string | null>(null)
-  const [loading, setLoading]   = useState(false)
+  const [email, setEmail]             = useState('')
+  const [password, setPassword]       = useState('')
+  const [error, setError]             = useState<string | null>(null)
+  const [loading, setLoading]         = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
+
+  const handleGuestLogin = async () => {
+    setGuestLoading(true)
+    setError(null)
+    const { error } = await signInAsGuest()
+    if (error) {
+      console.error('Guest login error:', error.message)
+      setError(`Demo login failed: ${error.message}`)
+      setGuestLoading(false)
+    }
+    // On success, AuthContext picks up the new session automatically.
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -100,6 +114,10 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
           </svg>
           Continue with Google
         </GoogleBtn>
+
+        <GuestBtn type="button" onClick={handleGuestLogin} disabled={guestLoading || loading}>
+          {guestLoading ? 'Loading…' : '▶ Try demo'}
+        </GuestBtn>
 
         <Footer>
           Don't have an account?{' '}

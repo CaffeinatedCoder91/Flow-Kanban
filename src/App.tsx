@@ -8,7 +8,8 @@ import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
   ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel, ModalFooter,
   FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList, Toast, ToastRetryBtn,
-  ColumnDot, SkeletonLineVar, NoMarginSpinner, SignOutBtn, HiddenFileInput, UserAvatar,
+  ColumnDot, SkeletonLineVar, NoMarginSpinner, HiddenFileInput,
+  AvatarWrapper, UserAvatar, AvatarMenu, AvatarMenuUser, AvatarMenuDivider, AvatarMenuBtn,
 } from './App.styles'
 import { Button } from './components/ui/Button'
 import { KanbanBoard } from './components/board/KanbanBoard'
@@ -91,6 +92,19 @@ function App() {
   const prevItemsLengthRef                  = useRef(0)
   const [isClearingSample, setIsClearingSample] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false)
+  const avatarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showAvatarMenu) return
+    const onOutside = (e: MouseEvent) => {
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        setShowAvatarMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', onOutside)
+    return () => document.removeEventListener('mousedown', onOutside)
+  }, [showAvatarMenu])
   const [sampleIds, setSampleIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('flow-sample-ids')
@@ -626,11 +640,11 @@ function App() {
         <div className="toolbar-right">
           <button className="ai-btn" onClick={() => { resetImportState(); setIsImportOpen(true) }} aria-label="Import Tasks" data-tooltip="Paste emails or meeting notes" data-tooltip-pos="below">
             <span>📋</span>
-            Import Tasks
+            <span className="ai-btn-label">Import Tasks</span>
           </button>
           <button className="ai-btn" onClick={() => { setIsAssistantOpen(!isAssistantOpen); if (!hasTriedAI) { localStorage.setItem('flow-tried-ai', 'true'); setHasTriedAI(true) } }} aria-label="AI Assistant" data-tooltip="Ask AI to manage your tasks" data-tooltip-pos="below">
             <span className="ai-sparkle">✨</span>
-            AI Assistant
+            <span className="ai-btn-label">AI Assistant</span>
           </button>
           <button
             className={`view-btn${view === 'board' ? ' active' : ''}`}
@@ -668,22 +682,33 @@ function App() {
           >
             {mode === 'dark' ? '☀️' : '🌙'}
           </button>
-          <SignOutBtn
-            className="view-btn"
-            aria-label="Sign out"
-            data-tooltip="Sign out"
-            data-tooltip-pos="below"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-          >
-            {isSigningOut ? '…' : '↪'}
-          </SignOutBtn>
-          <UserAvatar
-            data-tooltip={user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? ''}
-            data-tooltip-pos="below"
-          >
-            {userInitials}
-          </UserAvatar>
+          <AvatarWrapper ref={avatarRef}>
+            <UserAvatar
+              onClick={() => setShowAvatarMenu(v => !v)}
+              aria-label="Account menu"
+              aria-expanded={showAvatarMenu}
+            >
+              {userInitials}
+            </UserAvatar>
+            {showAvatarMenu && (
+              <AvatarMenu>
+                <AvatarMenuUser>
+                  <strong>{user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? 'User'}</strong>
+                  <span>{user?.email}</span>
+                </AvatarMenuUser>
+                <AvatarMenuDivider />
+                <AvatarMenuBtn
+                  onClick={() => { setShowAvatarMenu(false); handleSignOut() }}
+                  disabled={isSigningOut}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                  {isSigningOut ? 'Signing out…' : 'Sign out'}
+                </AvatarMenuBtn>
+              </AvatarMenu>
+            )}
+          </AvatarWrapper>
         </div>
       </div>
       {sampleIds.length > 0 && (

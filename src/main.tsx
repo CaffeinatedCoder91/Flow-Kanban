@@ -1,5 +1,5 @@
 import './instrument'
-import { StrictMode, useState } from 'react'
+import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -8,6 +8,7 @@ import { SignIn } from './components/Auth/SignIn'
 import { SignUp } from './components/Auth/SignUp'
 import { GlobalStyles } from './components/GlobalStyles'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { DemoBanner } from './components/DemoBanner'
 import { LoadingRoot, LoadingSpinner } from './main.styles'
 import './index.css'
 
@@ -17,6 +18,14 @@ import './index.css'
 function Root() {
   const { user, loading } = useAuth()
   const [authView, setAuthView] = useState<'signin' | 'signup'>('signin')
+
+  // DemoBanner dispatches this event when the guest clicks "Create a free account"
+  // after signing out, so we land directly on the sign-up form.
+  useEffect(() => {
+    const handler = () => setAuthView('signup')
+    document.addEventListener('flow:show-signup', handler)
+    return () => document.removeEventListener('flow:show-signup', handler)
+  }, [])
 
   if (loading) {
     return (
@@ -32,7 +41,12 @@ function Root() {
       : <SignUp onSwitchToSignIn={() => setAuthView('signin')} />
   }
 
-  return <App />
+  return (
+    <>
+      <DemoBanner />
+      <App />
+    </>
+  )
 }
 
 // ─── Mount ────────────────────────────────────────────────────────────────────

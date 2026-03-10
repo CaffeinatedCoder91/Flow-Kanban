@@ -173,3 +173,29 @@ export const GoogleBtn = styled.button`
   }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `
+
+export const GuestBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  margin-top: 0.5rem;
+  background: transparent;
+  color: ${p => p.theme.colors.textSecondary};
+  border: 1px dashed ${p => p.theme.colors.borderSubtle};
+  border-radius: ${p => p.theme.borderRadius.lg};
+  font-size: ${p => p.theme.typography.fontSize.sm};
+  font-family: inherit;
+  font-weight: ${p => p.theme.typography.fontWeight.medium};
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: ${p => p.theme.colors.background};
+    border-color: ${p => p.theme.colors.primary};
+    color: ${p => p.theme.colors.primary};
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+`

@@ -326,10 +326,18 @@ body {
     margin-left: auto;
   }
 
-  .ai-btn span:not(.ai-sparkle) {
-    display: none; /* hide emoji on very small screens to save space */
+  /* Hide text labels on ai-btns, keep icons */
+  .ai-btn-label {
+    display: none;
   }
 
+}
+
+/* Tiny screens — hide Import/AI buttons to prevent toolbar overflow */
+@media (max-width: 540px) {
+  .ai-btn {
+    display: none;
+  }
 }
 
 /* ── Narrative widget (compact health check above the board) ─────────────── */

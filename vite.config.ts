@@ -27,6 +27,9 @@ export default defineConfig({
     sourcemap: true,
   },
   server: {
+    hmr: {
+      port: 24678,
+    },
     proxy: {
       '/api': 'http://localhost:3000'
     }

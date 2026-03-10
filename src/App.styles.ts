@@ -243,11 +243,12 @@ export const NoMarginSpinner = styled.span`
   margin-right: 0;
 `
 
-export const SignOutBtn = styled.button`
-  font-size: 0.8rem;
+export const AvatarWrapper = styled.div`
+  position: relative;
+  flex-shrink: 0;
 `
 
-export const UserAvatar = styled.div`
+export const UserAvatar = styled.button`
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -259,9 +260,86 @@ export const UserAvatar = styled.div`
   align-items: center;
   justify-content: center;
   letter-spacing: 0.03em;
-  flex-shrink: 0;
-  cursor: default;
+  cursor: pointer;
   user-select: none;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, opacity 0.15s;
+  padding: 0;
+
+  &:hover { border-color: rgba(255,255,255,0.5); opacity: 0.9; }
+`
+
+export const AvatarMenu = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: ${p => p.theme.zIndex.panel};
+  background: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-radius: ${p => p.theme.borderRadius.lg};
+  box-shadow: ${p => p.theme.shadows.lg};
+  min-width: 210px;
+  padding: 0.3rem;
+  transform-origin: top right;
+
+  @keyframes avatar-menu-in {
+    from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  animation: avatar-menu-in 0.12s ease;
+`
+
+export const AvatarMenuUser = styled.div`
+  padding: 0.6rem 0.75rem 0.5rem;
+
+  strong {
+    display: block;
+    font-size: ${p => p.theme.typography.fontSize.sm};
+    font-weight: ${p => p.theme.typography.fontWeight.semibold};
+    color: ${p => p.theme.colors.text};
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    display: block;
+    font-size: ${p => p.theme.typography.fontSize.xs};
+    color: ${p => p.theme.colors.textTertiary};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`
+
+export const AvatarMenuDivider = styled.div`
+  height: 1px;
+  background: ${p => p.theme.colors.border};
+  margin: 0.2rem 0;
+`
+
+export const AvatarMenuBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: ${p => p.theme.borderRadius.md};
+  font-size: ${p => p.theme.typography.fontSize.sm};
+  font-family: inherit;
+  color: ${p => p.theme.colors.textSecondary};
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover:not(:disabled) {
+    background: ${p => p.theme.colors.background};
+    color: ${p => p.theme.colors.text};
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 `
 
 export const HiddenFileInput = styled.input`

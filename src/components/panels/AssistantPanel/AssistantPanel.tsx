@@ -14,7 +14,7 @@ import {
 const SUGGESTIONS = [
   'What should I work on next?',
   'Any blocked or overdue tasks?',
-  'Summarize my progress this week',
+  'Summarise my progress this week',
   'Help me break down a large task',
 ]
 

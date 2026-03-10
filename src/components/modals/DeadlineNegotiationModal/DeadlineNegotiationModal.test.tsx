@@ -208,7 +208,7 @@ describe('DeadlineNegotiationModal', () => {
     expect(document.querySelector('.dnm-suggestions')).not.toBeInTheDocument()
   })
 
-  it('POSTs to /api/suggest-reschedule with the correct itemId', async () => {
+  it('POSTs to /api/suggest with type=reschedule and the correct itemId', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
@@ -217,8 +217,8 @@ describe('DeadlineNegotiationModal', () => {
     fireEvent.click(screen.getByText('Reschedule'))
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/suggest-reschedule',
-        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 'mock-42' }) })
+        '/api/suggest',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ type: 'reschedule', itemId: 'mock-42' }) })
       )
     )
   })
@@ -380,7 +380,7 @@ describe('DeadlineNegotiationModal', () => {
     expect(screen.getByLabelText('Remove subtask 1')).toBeDisabled()
   })
 
-  it('POSTs to /api/suggest-split with the correct itemId', async () => {
+  it('POSTs to /api/suggest with type=split and the correct itemId', async () => {
     const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ suggestions: [] }),
@@ -389,8 +389,8 @@ describe('DeadlineNegotiationModal', () => {
     fireEvent.click(screen.getByText('Split Task'))
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/suggest-split',
-        expect.objectContaining({ method: 'POST', body: JSON.stringify({ itemId: 'mock-42' }) })
+        '/api/suggest',
+        expect.objectContaining({ method: 'POST', body: JSON.stringify({ type: 'split', itemId: 'mock-42' }) })
       )
     )
   })

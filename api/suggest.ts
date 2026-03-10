@@ -1,5 +1,6 @@
-// api/suggest-reschedule.ts
-// POST /api/suggest-reschedule — suggest 2–3 new due dates for an at-risk task.
+// api/suggest.ts
+// POST /api/suggest — AI suggestions for task rescheduling or splitting.
+// Body: { type: 'reschedule' | 'split', itemId: string }
 
 import Anthropic from '@anthropic-ai/sdk'
 import { getItemById, getItems } from '../lib/db'
@@ -17,13 +18,44 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
-    const body = req.body as { itemId?: string }
+    const body = req.body as { type?: string; itemId?: string }
     if (!body?.itemId) return badRequest(res, 'itemId is required')
+    if (body.type !== 'reschedule' && body.type !== 'split') return badRequest(res, 'type must be reschedule or split')
 
     const item = await getItemById(userId, body.itemId)
     if (!item) return notFound(res, `Item ${body.itemId} not found`)
 
-    // ── Upcoming workload context ─────────────────────────────────────────
+    // ── Split ─────────────────────────────────────────────────────────────
+    if (body.type === 'split') {
+      const aiRes = await anthropic.messages.create({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 512,
+        messages: [
+          {
+            role: 'user',
+            content: `Break this task into 2–4 concrete, actionable subtasks.
+
+Task: ${item.title}
+${item.description ? `Description: ${item.description}` : ''}
+
+Return ONLY a JSON array:
+[{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}, ...]`,
+          },
+          { role: 'assistant', content: '[' },
+        ],
+      })
+
+      const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
+      const suggestions = JSON.parse(text) as Array<{
+        title: string
+        description: string
+        estimated_priority: string
+      }>
+
+      return res.status(200).json({ suggestions })
+    }
+
+    // ── Reschedule ────────────────────────────────────────────────────────
     const today = new Date()
     const twoWeeksOut = new Date(today); twoWeeksOut.setDate(today.getDate() + 14)
 
@@ -38,13 +70,11 @@ export default withCors(async (req: Req, res: Res) => {
       )
       .slice(0, 10)
 
-    // ── Recent completions (effort context) ───────────────────────────────
     const recentDone = allItems
       .filter((i) => i.status === 'done')
       .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())
       .slice(0, 5)
 
-    // ── Pattern detection (deadline_actions table) ────────────────────────
     let pattern: { days: number; count: number } | null = null
     try {
       const { data } = await supabaseAdmin
@@ -64,15 +94,12 @@ export default withCors(async (req: Req, res: Res) => {
           .sort(([, a], [, b]) => b - a)[0]
           .map(Number) as [number, number]
 
-        if (topCount >= 2) {
-          pattern = { days: topDays, count: topCount }
-        }
+        if (topCount >= 2) pattern = { days: topDays, count: topCount }
       }
     } catch {
-      // deadline_actions table may not exist yet — pattern detection is optional
+      // deadline_actions table may not exist yet
     }
 
-    // ── Build prompt ──────────────────────────────────────────────────────
     const todayStr = today.toISOString().split('T')[0]
     const upcomingText = upcoming.length
       ? upcoming.map((i) => `  - ${i.title} (due ${i.due_date}, ${i.priority})`).join('\n')
@@ -110,15 +137,13 @@ Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. 
     const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
     const aiSuggestions = JSON.parse(text) as Array<{ date: string; label: string }>
 
-    // Prepend pattern suggestion if applicable
     const suggestions: Array<{ date: string; label: string; isPattern?: true }> = []
     if (pattern) {
       const patternDate = new Date(today)
       patternDate.setDate(today.getDate() + pattern.days)
-      const patternDateStr = patternDate.toISOString().split('T')[0]
       suggestions.push({
-        date: patternDateStr,
-        label: `${patternDateStr} — your usual +${pattern.days} days (used ${pattern.count} times)`,
+        date: patternDate.toISOString().split('T')[0],
+        label: `${patternDate.toISOString().split('T')[0]} — your usual +${pattern.days} days (used ${pattern.count} times)`,
         isPattern: true,
       })
     }

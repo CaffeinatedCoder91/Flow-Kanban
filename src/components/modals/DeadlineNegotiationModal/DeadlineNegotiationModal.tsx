@@ -71,9 +71,9 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
     if (screen !== 'reschedule') return
     setSuggestions(null)
     setSuggestionsLoading(true)
-    apiFetch('/api/suggest-reschedule', {
+    apiFetch('/api/suggest', {
       method: 'POST',
-      body: JSON.stringify({ itemId: item.id }),
+      body: JSON.stringify({ type: 'reschedule', itemId: item.id }),
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => setSuggestions(data.suggestions ?? []))
@@ -84,9 +84,9 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
   useEffect(() => {
     if (screen !== 'split') return
     setSplitLoading(true)
-    apiFetch('/api/suggest-split', {
+    apiFetch('/api/suggest', {
       method: 'POST',
-      body: JSON.stringify({ itemId: item.id }),
+      body: JSON.stringify({ type: 'split', itemId: item.id }),
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {

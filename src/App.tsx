@@ -24,6 +24,7 @@ import { HelpModal } from './components/modals/HelpModal'
 import { AddTaskModal } from './components/modals/AddTaskModal'
 import { OnboardingChecklist } from './components/panels/OnboardingChecklist'
 import { Confetti } from './components/ui/Confetti'
+import { NotFound } from './pages/NotFound'
 
 interface Recommendation {
   recommendedItemId: string
@@ -685,6 +686,8 @@ function App() {
         <HelpModal onClose={() => setView('board')} />
       ) : view === 'summary' ? (
         <SummaryView />
+      ) : view !== 'board' ? (
+        <NotFound onBack={() => setView('board')} />
       ) : (
         <>
           <NarrativeWidget onViewFullReport={() => setView('summary')} hasItems={items.length > 0} />

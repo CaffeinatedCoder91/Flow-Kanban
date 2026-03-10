@@ -58,6 +58,8 @@ export function ThemeContextProvider({ children }: { children: ReactNode }) {
 
   const setMode = (next: ThemeMode) => {
     try { localStorage.setItem(STORAGE_KEY, next) } catch { /* ignore */ }
+    document.documentElement.classList.add('theme-switching')
+    setTimeout(() => document.documentElement.classList.remove('theme-switching'), 300)
     setModeState(next)
   }
 

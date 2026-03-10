@@ -71,7 +71,6 @@ export const AssistantPanel = ({
         body: JSON.stringify({ message: userMessage, items: boardState }),
       })
       const data = await response.json()
-      console.log('AI Response:', data)
       if (data.errors?.length > 0) {
         setMessages(prev => [...prev, ...data.errors.map((e: string) => ({ role: 'error' as const, content: e }))])
       }

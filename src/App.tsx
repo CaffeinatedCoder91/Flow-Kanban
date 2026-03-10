@@ -311,7 +311,6 @@ function App() {
         }
       }
 
-      console.log('Insights:', [...newInsights, ...deadlineInsights])
       setInsights([...newInsights, ...deadlineInsights])
       setInsightsFetched(true)
       setAllClearDismissed(false)

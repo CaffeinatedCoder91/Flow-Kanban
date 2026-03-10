@@ -32,10 +32,7 @@ interface Recommendation {
 function App() {
   const { user, signOut } = useAuth()
   const { mode, setMode } = useTheme()
-  const cycleTheme = () => {
-    const next = mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light'
-    setMode(next)
-  }
+  const toggleTheme = () => setMode(mode === 'dark' ? 'light' : 'dark')
 
   const userInitials = (() => {
     const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
@@ -90,6 +87,8 @@ function App() {
   const [showConfetti, setShowConfetti]     = useState(false)
   const prevItemsLengthRef                  = useRef(0)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isClearingSample, setIsClearingSample] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const [sampleIds, setSampleIds] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('flow-sample-ids')
@@ -562,10 +561,22 @@ function App() {
   const updateItemColor = (id: string, color: string | null) => patchItem(id, { color }, 'color')
 
   const handleClearSample = async () => {
-    await Promise.all(sampleIds.map(id => apiFetch(`/api/items/${id}`, { method: 'DELETE' })))
-    localStorage.removeItem('flow-sample-ids')
-    setItems(prev => prev.filter(t => !sampleIds.includes(t.id)))
-    setSampleIds([])
+    if (isClearingSample) return
+    setIsClearingSample(true)
+    try {
+      await Promise.all(sampleIds.map(id => apiFetch(`/api/items/${id}`, { method: 'DELETE' })))
+      localStorage.removeItem('flow-sample-ids')
+      setItems(prev => prev.filter(t => !sampleIds.includes(t.id)))
+      setSampleIds([])
+    } finally {
+      setIsClearingSample(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return
+    setIsSigningOut(true)
+    await signOut()
   }
 
   const handleNegotiationDone = (message: string) => {
@@ -637,21 +648,22 @@ function App() {
           </button>
           <button
             className="view-btn"
-            onClick={cycleTheme}
-            aria-label="Toggle theme"
-            data-tooltip={mode === 'light' ? 'Switch to dark' : mode === 'dark' ? 'Switch to system' : 'Switch to light'}
+            onClick={toggleTheme}
+            aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            data-tooltip={mode === 'dark' ? 'Switch to light' : 'Switch to dark'}
             data-tooltip-pos="below"
           >
-            {mode === 'dark' ? '🌙' : mode === 'light' ? '☀️' : '💻'}
+            {mode === 'dark' ? '☀️' : '🌙'}
           </button>
           <SignOutBtn
             className="view-btn"
             aria-label="Sign out"
             data-tooltip="Sign out"
             data-tooltip-pos="below"
-            onClick={signOut}
+            onClick={handleSignOut}
+            disabled={isSigningOut}
           >
-            ↪
+            {isSigningOut ? '…' : '↪'}
           </SignOutBtn>
           <UserAvatar
             data-tooltip={user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? ''}
@@ -664,7 +676,9 @@ function App() {
       {sampleIds.length > 0 && (
         <div className="sample-banner">
           <span>This is sample data to help you explore.</span>
-          <button onClick={handleClearSample}>Clear and start fresh →</button>
+          <button onClick={handleClearSample} disabled={isClearingSample}>
+            {isClearingSample ? 'Clearing…' : 'Clear and start fresh →'}
+          </button>
         </div>
       )}
       {view === 'summary' ? (

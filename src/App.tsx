@@ -25,6 +25,7 @@ import { AddTaskModal } from './components/modals/AddTaskModal'
 import { OnboardingChecklist } from './components/panels/OnboardingChecklist'
 import { Confetti } from './components/ui/Confetti'
 import { NotFound } from './pages/NotFound'
+import { NavbarLogo } from './components/ui/Logo/NavbarLogo'
 
 interface Recommendation {
   recommendedItemId: string
@@ -594,8 +595,7 @@ function App() {
     <div className="app">
       <div className="toolbar">
         <div className="toolbar-left">
-          <span className="board-indicator"></span>
-          <span className="board-name" onClick={() => setView('board')}>Flow</span>
+          <NavbarLogo onClick={() => setView('board')} />
         </div>
         <form className="toolbar-center" onSubmit={addItem}>
           <svg className="toolbar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

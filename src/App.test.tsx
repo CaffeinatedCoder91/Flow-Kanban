@@ -61,7 +61,7 @@ describe('App', () => {
   it('renders the app title', async () => {
     mockFetchItems([])
     render(<App />)
-    expect(document.querySelector('.board-name')?.textContent).toBe('Flow')
+    expect(screen.getByLabelText('Go to board')).toBeInTheDocument()
   })
 
   it('renders kanban columns', async () => {

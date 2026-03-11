@@ -37,7 +37,7 @@ export default withCors(async (req: Req, res: Res) => {
     const today = new Date().toISOString().split('T')[0]
 
     const aiRes = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 256,
       messages: [
         {

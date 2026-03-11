@@ -29,7 +29,7 @@ export default withCors(async (req: Req, res: Res) => {
     // ── Split ─────────────────────────────────────────────────────────────
     if (body.type === 'split') {
       const aiRes = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 512,
         messages: [
           {
@@ -123,7 +123,7 @@ Suggest 2–3 realistic new due dates for this task. Consider workload spacing a
 Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. Friday (3 days out)"}, ...]`
 
     const aiRes = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 256,
       messages: [
         { role: 'user', content: prompt },

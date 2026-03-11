@@ -1,7 +1,7 @@
 // api/items/bulk.ts
 // POST /api/items/bulk — insert multiple items atomically
 
-import { createItem } from '../../lib/db.js'
+import { createItems } from '../../lib/db.js'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils.js'
 import { CreateItemSchema } from '../../lib/validation.js'
 import { sanitizeItemFields } from '../../lib/sanitize.js'
@@ -34,23 +34,23 @@ export default withCors(async (req: Req, res: Res) => {
       return badRequest(res, `${failures.length} item(s) failed validation`)
     }
 
-    const items = await Promise.all(
-      validated.map((r) => {
-        const { status, priority, due_date, ...textFields } = r.data!
-        const clean = sanitizeItemFields(textFields)
-        return createItem(userId, {
-          title:       clean.title!,
-          description: clean.description ?? null,
-          status:      status   ?? 'not_started',
-          priority:    priority ?? 'medium',
-          color:       clean.color    ?? null,
-          assignee:    clean.assignee ?? null,
-          due_date:    due_date ?? null,
-          position:    typeof (r.data as Record<string, unknown>).position === 'number'
-                         ? (r.data as Record<string, unknown>).position as number : 0,
-        })
-      })
-    )
+    const rows = validated.map((r) => {
+      const { status, priority, due_date, ...textFields } = r.data!
+      const clean = sanitizeItemFields(textFields)
+      return {
+        title:       clean.title!,
+        description: clean.description ?? null,
+        status:      status   ?? 'not_started',
+        priority:    priority ?? 'medium',
+        color:       clean.color    ?? null,
+        assignee:    clean.assignee ?? null,
+        due_date:    due_date ?? null,
+        position:    typeof (r.data as Record<string, unknown>).position === 'number'
+                       ? (r.data as Record<string, unknown>).position as number : 0,
+      }
+    })
+
+    const items = await createItems(userId, rows)
 
     res.status(201).json({ items: items.map((item) => ({ ...item, history: [] })) })
   } catch (err) {

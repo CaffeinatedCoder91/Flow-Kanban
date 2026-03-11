@@ -4,6 +4,7 @@
 
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, standardRateLimit } from '../lib/rateLimit.js'
 
 const VALID_ACTION_TYPES = ['reschedule', 'deprioritize', 'split'] as const
 type ActionType = (typeof VALID_ACTION_TYPES)[number]
@@ -13,6 +14,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  if (!await checkRateLimit(res, userId, standardRateLimit)) return
 
   try {
     const body = req.body as {

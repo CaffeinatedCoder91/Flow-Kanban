@@ -18,6 +18,7 @@ import { DragOverlayCard } from '../TaskCard'
 
 export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps): React.ReactElement => {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [pendingColumn, setPendingColumn] = useState<{ id: string; column: string } | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -34,23 +35,20 @@ export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelet
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string)
+    setPendingColumn(null)
   }
 
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event
-    if (!over) return
-
-    const activeColumn = findColumn(active.id)
+    if (!over) { setPendingColumn(null); return }
     const overColumn = findColumn(over.id)
-
-    if (activeColumn && overColumn && activeColumn !== overColumn) {
-      onUpdateStatus(active.id as string, overColumn)
-    }
+    if (overColumn) setPendingColumn({ id: active.id as string, column: overColumn })
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
     setActiveId(null)
+    setPendingColumn(null)
 
     if (!over) return
 
@@ -65,12 +63,15 @@ export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelet
 
   function handleDragCancel() {
     setActiveId(null)
+    setPendingColumn(null)
   }
 
   const grouped = useMemo(() => STATUS_CONFIG.map(col => ({
     ...col,
-    items: items.filter(t => t.status === col.key),
-  })), [items])
+    items: items
+      .map(t => pendingColumn?.id === t.id ? { ...t, status: pendingColumn.column } : t)
+      .filter(t => t.status === col.key),
+  })), [items, pendingColumn])
 
   if (items.length === 0) {
     return (

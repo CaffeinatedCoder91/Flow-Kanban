@@ -94,6 +94,49 @@ export async function createItem(userId: string, data: Partial<Item>): Promise<I
 }
 
 /**
+ * Create multiple items for a user in a single atomic DB insert.
+ * Batch-inserts history entries for all created items in one additional query.
+ */
+export async function createItems(userId: string, rows: Partial<Item>[]): Promise<Item[]> {
+  if (rows.length === 0) return []
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('items')
+      .insert(rows.map(r => ({
+        user_id:     userId,
+        title:       r.title       ?? 'Untitled',
+        description: r.description ?? null,
+        status:      r.status      ?? 'not_started',
+        priority:    r.priority    ?? 'medium',
+        color:       r.color       ?? null,
+        assignee:    r.assignee    ?? null,
+        due_date:    r.due_date    ?? null,
+        position:    r.position    ?? 0,
+      })))
+      .select()
+
+    if (error) throw new Error(`createItems failed: ${error.message}`)
+
+    const items = (data ?? []) as Item[]
+
+    const historyRows = items.map(item => ({
+      item_id:   item.id,
+      field:     'created',
+      old_value: null as string | null,
+      new_value: item.title,
+    }))
+    const { error: histErr } = await supabaseAdmin.from('item_history').insert(historyRows)
+    if (histErr) console.error('[db] bulk history insert failed:', histErr.message)
+
+    return items
+  } catch (err) {
+    console.error('[db] createItems error:', err)
+    throw err
+  }
+}
+
+/**
  * Update fields on an item scoped to the user.
  * Creates a history entry for each changed field.
  */

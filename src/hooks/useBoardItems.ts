@@ -70,10 +70,15 @@ export function useBoardItems({ showError }: UseBoardItemsParams) {
   useEffect(() => { init() }, [])
 
   const fetchItems = useCallback(async () => {
-    const res = await apiFetch('/api/items')
-    const data = await res.json()
-    setItems(data)
-  }, [])
+    try {
+      const res = await apiFetch('/api/items')
+      if (!res.ok) throw new Error('refresh-failed')
+      const data: Item[] = await res.json()
+      setItems(data)
+    } catch {
+      showError('Failed to refresh tasks', fetchItems)
+    }
+  }, [showError])
 
   const addItemWithStatus = useCallback(async (title: string, status: string) => {
     const tempId = `temp-${Date.now()}`

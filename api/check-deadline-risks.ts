@@ -4,12 +4,14 @@
 
 import { getItems } from '../lib/db.js'
 import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, standardRateLimit } from '../lib/rateLimit.js'
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  if (!await checkRateLimit(res, userId, standardRateLimit)) return
 
   try {
     const items = await getItems(userId)

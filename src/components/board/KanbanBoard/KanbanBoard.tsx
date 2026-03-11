@@ -42,22 +42,24 @@ export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelet
     const { active, over } = event
     if (!over) { setPendingColumn(null); return }
     const overColumn = findColumn(over.id)
-    if (overColumn) setPendingColumn({ id: active.id as string, column: overColumn })
+    if (overColumn) {
+      setPendingColumn(prev =>
+        prev?.id === active.id && prev?.column === overColumn ? prev : { id: active.id as string, column: overColumn }
+      )
+    }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
+    const targetColumn = pendingColumn?.column ?? (over ? findColumn(over.id) : undefined)
     setActiveId(null)
     setPendingColumn(null)
 
-    if (!over) return
+    if (!targetColumn) return
 
-    const overColumn = findColumn(over.id)
-    if (overColumn) {
-      const currentItem = items.find(t => t.id === active.id)
-      if (currentItem && currentItem.status !== overColumn) {
-        onUpdateStatus(active.id as string, overColumn)
-      }
+    const currentItem = items.find(t => t.id === active.id)
+    if (currentItem && currentItem.status !== targetColumn) {
+      onUpdateStatus(active.id as string, targetColumn)
     }
   }
 
@@ -68,10 +70,8 @@ export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelet
 
   const grouped = useMemo(() => STATUS_CONFIG.map(col => ({
     ...col,
-    items: items
-      .map(t => pendingColumn?.id === t.id ? { ...t, status: pendingColumn.column } : t)
-      .filter(t => t.status === col.key),
-  })), [items, pendingColumn])
+    items: items.filter(t => t.status === col.key),
+  })), [items])
 
   if (items.length === 0) {
     return (

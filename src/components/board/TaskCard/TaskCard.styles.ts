@@ -47,7 +47,7 @@ export const Card = styled.div<{
     40%  { transform: scale(1.04); }
     100% { transform: scale(1); }
   }
-  animation: ${p => p.donePulse ? 'done-pulse 0.35s ease' : 'card-in 0.18s ease'};
+  animation: ${p => p.isDragging ? 'none' : p.donePulse ? 'done-pulse 0.35s ease' : 'card-in 0.18s ease'};
 
   ${p => p.isDragOverlay && `box-shadow: ${p.theme.shadows.lg};`}
 

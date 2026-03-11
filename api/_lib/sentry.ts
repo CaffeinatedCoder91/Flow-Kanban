@@ -10,8 +10,7 @@ export function initSentry(): void {
   Sentry.init({
     dsn,
     environment: process.env.NODE_ENV ?? 'development',
-    release: '0.0.1',
-    sendDefaultPii: true,
+    release: process.env.npm_package_version,
     tracesSampleRate: 0.1,
     sampleRate: 1.0,
   })

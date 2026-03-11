@@ -20,7 +20,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   try {
     const parsed = SuggestSchema.safeParse(req.body)
-    if (!parsed.success) return badRequest(res, parsed.error.errors[0]?.message ?? 'Invalid request body')
+    if (!parsed.success) return badRequest(res, parsed.error.issues[0]?.message ?? 'Invalid request body')
     const { type, itemId } = parsed.data
 
     const item = await getItemById(userId, itemId)

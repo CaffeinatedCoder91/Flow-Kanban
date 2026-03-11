@@ -16,7 +16,7 @@ export default withCors(async (req: Req, res: Res) => {
 
   try {
     const parsed = DeadlineActionSchema.safeParse(req.body)
-    if (!parsed.success) return badRequest(res, parsed.error.errors[0]?.message ?? 'Invalid request body')
+    if (!parsed.success) return badRequest(res, parsed.error.issues[0]?.message ?? 'Invalid request body')
     const { action_type, item_id, original_due_date, new_due_date } = parsed.data
 
     let daysExtended: number | null = null

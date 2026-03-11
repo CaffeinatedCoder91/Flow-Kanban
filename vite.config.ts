@@ -51,6 +51,15 @@ export default defineConfig({
       },
       {
         extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          globals: true,
+          include: ['{api,lib}/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
         plugins: [
           // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
           storybookTest({ configDir: path.join(dirname, '.storybook') }),

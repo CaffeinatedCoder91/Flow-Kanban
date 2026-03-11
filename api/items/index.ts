@@ -2,7 +2,7 @@
 // GET /api/items  — fetch all items for the authenticated user (with history)
 // POST /api/items — create a new item
 
-import { getItems, createItem, getItemHistory } from '../../lib/db.js'
+import { getItems, createItem, getHistoryForItems } from '../../lib/db.js'
 import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from '../_utils.js'
 import { CreateItemSchema } from '../../lib/validation.js'
 import { sanitizeItemFields } from '../../lib/sanitize.js'
@@ -15,13 +15,12 @@ export default withCors(async (req: Req, res: Res) => {
     if (req.method === 'GET') {
       const items = await getItems(userId)
 
-      // Attach history to each item
-      const itemsWithHistory = await Promise.all(
-        items.map(async (item) => {
-          const history = await getItemHistory(userId, item.id)
-          return { ...item, history }
-        })
-      )
+      // Batch-fetch all history in a single query (avoids N+1)
+      const historyByItem = await getHistoryForItems(items.map(i => i.id))
+      const itemsWithHistory = items.map(item => ({
+        ...item,
+        history: historyByItem[item.id] ?? [],
+      }))
 
       return res.status(200).json(itemsWithHistory)
     }

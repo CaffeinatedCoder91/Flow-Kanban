@@ -233,3 +233,34 @@ export async function getItemHistory(
     throw err
   }
 }
+
+/**
+ * Fetch history for multiple items in a single query, grouped by item_id.
+ * Skips the per-item ownership check since the caller already verified
+ * that all itemIds belong to the user (e.g., via getItems).
+ */
+export async function getHistoryForItems(
+  itemIds: string[]
+): Promise<Record<string, ItemHistory[]>> {
+  if (itemIds.length === 0) return {}
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('item_history')
+      .select('*')
+      .in('item_id', itemIds)
+      .order('changed_at', { ascending: false })
+
+    if (error) throw new Error(`getHistoryForItems failed: ${error.message}`)
+
+    const grouped: Record<string, ItemHistory[]> = {}
+    for (const row of (data ?? []) as ItemHistory[]) {
+      if (!grouped[row.item_id]) grouped[row.item_id] = []
+      grouped[row.item_id].push(row)
+    }
+    return grouped
+  } catch (err) {
+    console.error('[db] getHistoryForItems error:', err)
+    throw err
+  }
+}

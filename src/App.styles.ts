@@ -114,7 +114,7 @@ export const Spinner = styled.span`
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  border: 2px solid #e0d7f7;
+  border: 2px solid ${p => p.theme.colors.borderSubtle};
   border-top-color: ${p => p.theme.colors.primary};
   border-radius: ${p => p.theme.borderRadius.full};
   animation: modal-spin 0.7s linear infinite;
@@ -160,7 +160,7 @@ export const FileBtnLabel = styled.label`
   transition: background 0.15s, border-color 0.15s;
   flex-shrink: 0;
 
-  &:hover { background: ${p => p.theme.colors.background}; border-color: #c4c8d8; }
+  &:hover { background: ${p => p.theme.colors.background}; border-color: ${p => p.theme.colors.borderSubtle}; }
 `
 
 export const FileHint = styled.span`
@@ -180,7 +180,7 @@ export const FileSource = styled.p`
 
 export const PreviewCount = styled.p`
   font-size: ${p => p.theme.typography.fontSize.sm};
-  color: #555;
+  color: ${p => p.theme.colors.textSecondary};
   margin: 0 0 0.875rem;
 `
 
@@ -199,8 +199,8 @@ export const Toast = styled.div<{ error?: boolean }>`
   position: fixed;
   top: 5rem;
   right: 1.5rem;
-  background: ${p => (p.error ? '#1c1917' : '#1a1a2e')};
-  color: #fff;
+  background: ${p => (p.error ? '#451a18' : '#1e1b4b')};
+  color: #f8fafc;
   font-size: ${p => p.theme.typography.fontSize.sm};
   font-weight: ${p => p.theme.typography.fontWeight.medium};
   padding: 0.75rem 1.125rem;

@@ -89,8 +89,8 @@ export const Input = styled.input`
 export const ErrorMsg = styled.p`
   margin: 0 0 1rem;
   padding: 0.625rem 0.875rem;
-  background: #fff5f5;
-  border: 1px solid #fecaca;
+  background: ${p => p.theme.semantic.errorBgSubtle};
+  border: 1px solid ${p => p.theme.semantic.errorBorder};
   border-radius: ${p => p.theme.borderRadius.md};
   font-size: ${p => p.theme.typography.fontSize.sm};
   color: ${p => p.theme.colors.dangerDark};
@@ -168,7 +168,7 @@ export const GoogleBtn = styled.button`
   transition: background 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) {
-    background: ${p => p.theme.colors.backgroundAlt};
+    background: ${p => p.theme.colors.backgroundAlt ?? p.theme.colors.background};
     border-color: ${p => p.theme.colors.borderSubtle};
   }
   &:disabled { opacity: 0.6; cursor: not-allowed; }

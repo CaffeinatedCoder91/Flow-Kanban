@@ -6,8 +6,8 @@ export const Card = styled.div`
   gap: ${p => p.theme.spacing[2]};
   padding: 0.625rem 0.875rem;
   border-radius: ${p => p.theme.borderRadius.lg};
-  border: 1px solid #a7f3d0;
-  background: #ecfdf5;
+  border: 1px solid ${p => p.theme.semantic.spotlightBorder};
+  background: ${p => p.theme.semantic.spotlightBg};
 `
 
 export const Icon = styled.span`
@@ -34,14 +34,14 @@ export const TaskLink = styled.button`
   padding: 0;
   font-size: ${p => p.theme.typography.fontSize.sm};
   font-weight: ${p => p.theme.typography.fontWeight.semibold};
-  color: #059669;
+  color: ${p => p.theme.semantic.spotlightLink};
   font-family: inherit;
   cursor: pointer;
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 2px;
 
-  &:hover { color: #047857; }
+  &:hover { color: ${p => p.theme.semantic.spotlightHover}; }
 `
 
 export const Reason = styled.span`

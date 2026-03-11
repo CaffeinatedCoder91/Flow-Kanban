@@ -18,7 +18,7 @@ export const TrendIndicator = styled.div<{ accentColor: string }>`
 `
 
 export const MutedText = styled.p`
-  color: #9ca3af;
+  color: ${p => p.theme.colors.textTertiary};
 `
 
 export const StatValueSpan = styled.span<{ accentColor?: string }>`

@@ -12,6 +12,7 @@ export const theme = {
     danger:        '#EF4444',
     dangerDark:    '#dc2626',
     background:    '#f6f7fb',
+    backgroundAlt: '#f0f1f5',
     surface:       '#ffffff',
     border:        '#e6e9ef',
     borderSubtle:  '#d0d4e4',
@@ -49,6 +50,22 @@ export const theme = {
     medium: { bg: '#fff4e6', border: '#f5d0a9' },
     high:   { bg: '#fef2f2', border: '#fecaca' },
   } as Record<string, { bg: string; border: string }>,
+
+  semantic: {
+    successBg:      '#e6f7ed',
+    successBorder:  '#b3e6c8',
+    errorBg:        '#fef2f2',
+    errorBorder:    '#fecaca',
+    errorBgSubtle:  '#fff5f5',
+    confirmBg:      '#f0fdf4',
+    confirmBorder:  '#bbf7d0',
+    confirmText:    '#166534',
+    codeBg:         '#f3f4f6',
+    spotlightBg:    '#ecfdf5',
+    spotlightBorder:'#a7f3d0',
+    spotlightLink:  '#059669',
+    spotlightHover: '#047857',
+  },
 
   spacing: {
     1: '4px', 2: '8px',  3: '12px', 4: '16px', 5: '20px',

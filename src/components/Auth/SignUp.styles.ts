@@ -89,8 +89,8 @@ export const Input = styled.input`
 export const ErrorMsg = styled.p`
   margin: 0 0 1rem;
   padding: 0.625rem 0.875rem;
-  background: #fff5f5;
-  border: 1px solid #fecaca;
+  background: ${p => p.theme.semantic.errorBgSubtle};
+  border: 1px solid ${p => p.theme.semantic.errorBorder};
   border-radius: ${p => p.theme.borderRadius.md};
   font-size: ${p => p.theme.typography.fontSize.sm};
   color: ${p => p.theme.colors.dangerDark};
@@ -98,11 +98,11 @@ export const ErrorMsg = styled.p`
 
 export const ConfirmBanner = styled.div`
   padding: 1rem;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: ${p => p.theme.semantic.confirmBg};
+  border: 1px solid ${p => p.theme.semantic.confirmBorder};
   border-radius: ${p => p.theme.borderRadius.lg};
   font-size: ${p => p.theme.typography.fontSize.sm};
-  color: #166534;
+  color: ${p => p.theme.semantic.confirmText};
   line-height: 1.5;
 
   strong { display: block; font-weight: 600; margin-bottom: 0.25rem; }

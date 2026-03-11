@@ -145,7 +145,7 @@ export const ColorClear = styled.button`
   cursor: pointer;
   font-family: inherit;
 
-  &:hover { background: #f3f4f6; }
+  &:hover { background: ${p => p.theme.colors.backgroundAlt ?? p.theme.colors.background}; }
 `
 
 export const DoneCheck = styled.svg`
@@ -165,7 +165,7 @@ export const CardText = styled.span<{ done?: boolean }>`
   flex: 1;
   word-break: break-word;
   font-size: ${p => p.theme.typography.fontSize.sm};
-  color: ${p => (p.done ? '#9499ab' : p.theme.colors.text)};
+  color: ${p => (p.done ? p.theme.colors.textTertiary : p.theme.colors.text)};
   font-weight: ${p => p.theme.typography.fontWeight.medium};
   text-decoration: ${p => (p.done ? 'line-through' : 'none')};
   transition: color 0.15s;
@@ -265,7 +265,7 @@ export const NegotiateBtn = styled.button`
   border: none;
   cursor: pointer;
   padding: 2px;
-  color: #c4b5fd;
+  color: ${p => p.theme.colors.primaryBorder};
   line-height: 1;
   border-radius: 3px;
   position: relative;
@@ -280,8 +280,8 @@ export const NegotiateBtn = styled.button`
     bottom: calc(100% + 6px);
     left: 50%;
     transform: translateX(-50%);
-    background: #1e293b;
-    color: #f8fafc;
+    background: var(--c-tooltip-bg);
+    color: var(--c-tooltip-text);
     font-size: 0.68rem;
     white-space: nowrap;
     padding: 4px 8px;

@@ -75,7 +75,7 @@ export const DismissBtn = styled.button`
   transition: background 0.15s, color 0.15s;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.06);
+    background: ${p => p.theme.colors.backgroundAlt ?? p.theme.colors.background};
     color: ${p => p.theme.colors.textSecondary};
   }
 `

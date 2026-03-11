@@ -23,23 +23,27 @@
   --c-primary-border: #d4ccf7;   /* brand tint border              */
   --c-shimmer-1:      #f0f1f5;   /* skeleton shimmer base          */
   --c-shimmer-2:      #e4e6ed;   /* skeleton shimmer highlight     */
+  --c-tooltip-bg:     #1e293b;   /* tooltip background (inverted)  */
+  --c-tooltip-text:   #f8fafc;   /* tooltip text (inverted)        */
 }
 
 html.dark {
-  --c-bg:             #0a0e27;
-  --c-surface:        #141b3a;
-  --c-raised:         #1e2847;
-  --c-border:         #1e2847;
-  --c-border-2:       #2a3658;
-  --c-text:           #e8eaf0;
-  --c-text-2:         #8890b0;
-  --c-text-3:         #545e80;
-  --c-primary:        #818cf8;
-  --c-primary-dark:   #a5b4fc;
-  --c-primary-light:  #1e1f4a;
-  --c-primary-border: #3730a3;
-  --c-shimmer-1:      #1e2847;
-  --c-shimmer-2:      #2a3658;
+  --c-bg:             #0f1219;
+  --c-surface:        #161b26;
+  --c-raised:         #1a1f2e;
+  --c-border:         #2a3040;
+  --c-border-2:       #363d50;
+  --c-text:           #e4e7ec;
+  --c-text-2:         #9ba3b8;
+  --c-text-3:         #636d83;
+  --c-primary:        #a78bfa;
+  --c-primary-dark:   #c4b5fd;
+  --c-primary-light:  #1e1b4b;
+  --c-primary-border: #4c1d95;
+  --c-shimmer-1:      #1a1f2e;
+  --c-shimmer-2:      #2a3040;
+  --c-tooltip-bg:     #363d50;
+  --c-tooltip-text:   #e4e7ec;
 }
 
 /* Smooth theme transition — only active during the toggle, so hover effects stay instant */
@@ -2057,19 +2061,19 @@ kbd {
 
 /* Error card */
 .dark .insights-error-card {
-  background: #1f0a0a;
-  border-color: #3d1414;
+  background: #231520;
+  border-color: #4a2540;
   color: #fca5a5;
 }
 
 /* All-clear badge */
 .dark .insights-clear {
-  background: #0a1f10;
-  border-color: #14532d;
-  color: #34d399;
+  background: #0f2918;
+  border-color: #1a5c30;
+  color: #6ee7b7;
 }
-.dark .insights-clear svg { color: #34d399; }
-.dark .insights-clear-dismiss { color: #34d399; }
+.dark .insights-clear svg { color: #6ee7b7; }
+.dark .insights-clear-dismiss { color: #6ee7b7; }
 
 /* Purple suggestion chips */
 .dark .assistant-suggestion-chip {
@@ -2078,7 +2082,7 @@ kbd {
   color: var(--c-primary-dark);
 }
 .dark .assistant-suggestion-chip:hover {
-  background: #252660;
+  background: #312e81;
   border-color: var(--c-primary);
 }
 
@@ -2090,7 +2094,7 @@ kbd {
 }
 .dark .dnm-suggestion-btn:hover,
 .dark .dnm-suggestion-btn.active {
-  background: #252660;
+  background: #312e81;
   border-color: var(--c-primary);
   color: var(--c-text);
 }

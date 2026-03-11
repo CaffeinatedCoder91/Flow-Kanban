@@ -135,17 +135,17 @@ export const MessageBubble = styled.div<{ role: MsgType['role'] }>`
     border-color: ${p.theme.colors.primaryBorder};
   `}
   ${p => p.role === 'action' && `
-    background: #e6f7ed;
+    background: ${p.theme.semantic.successBg};
     color: ${p.theme.colors.text};
     align-self: flex-start;
-    border-color: #b3e6c8;
+    border-color: ${p.theme.semantic.successBorder};
     padding: 0.6rem 1rem;
   `}
   ${p => p.role === 'error' && `
-    background: #fef2f2;
+    background: ${p.theme.semantic.errorBg};
     color: ${p.theme.colors.text};
     align-self: flex-start;
-    border-color: #fecaca;
+    border-color: ${p.theme.semantic.errorBorder};
     padding: 0.6rem 1rem;
   `}
 `
@@ -173,7 +173,7 @@ export const Markdown = styled.div`
   li { margin: 0.25rem 0; }
 
   code {
-    background: #f3f4f6;
+    background: ${p => p.theme.semantic.codeBg};
     padding: 0.125rem 0.375rem;
     border-radius: ${p => p.theme.borderRadius.sm};
     font-family: ${p => p.theme.typography.fontFamilyMono};
@@ -182,7 +182,7 @@ export const Markdown = styled.div`
   }
 
   pre {
-    background: #f3f4f6;
+    background: ${p => p.theme.semantic.codeBg};
     border: 1px solid ${p => p.theme.colors.border};
     border-radius: ${p => p.theme.borderRadius.md};
     padding: 0.75rem 1rem;
@@ -227,12 +227,12 @@ export const ErrorRow = styled.div`
 `
 
 export const ActionIcon = styled.svg`
-  color: #10b981;
+  color: ${p => p.theme.colors.success};
   flex-shrink: 0;
 `
 
 export const ErrorIcon = styled.svg`
-  color: #ef4444;
+  color: ${p => p.theme.colors.danger};
   flex-shrink: 0;
 `
 
@@ -246,7 +246,7 @@ export const RetryBtn = styled.button`
   display: block;
   margin-top: 0.35rem;
   background: none;
-  border: 1px solid #fca5a5;
+  border: 1px solid ${p => p.theme.semantic.errorBorder};
   color: ${p => p.theme.colors.dangerDark};
   font-size: ${p => p.theme.typography.fontSize.sm};
   font-weight: ${p => p.theme.typography.fontWeight.semibold};
@@ -256,7 +256,7 @@ export const RetryBtn = styled.button`
   cursor: pointer;
   transition: background 0.15s;
 
-  &:hover { background: #fee2e2; }
+  &:hover { background: ${p => p.theme.semantic.errorBg}; }
 `
 
 export const TypingDot = styled.span`
@@ -283,12 +283,12 @@ export const TypingIndicator = styled.div`
 
 export const Suggestions = styled.div`
   padding: 0 1rem 0.875rem;
-  border-top: 1px solid #f0f2f8;
+  border-top: 1px solid ${p => p.theme.colors.border};
 `
 
 export const SuggestionsLabel = styled.p`
   font-size: 0.7rem;
-  color: #9499ab;
+  color: ${p => p.theme.colors.textTertiary};
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0.625rem 0 0.5rem;
@@ -298,9 +298,9 @@ export const SuggestionChip = styled.button`
   display: inline-block;
   margin: 0.25rem 0.3rem 0.25rem 0;
   padding: 0.35rem 0.8rem;
-  background: #f3f0ff;
-  color: #6d28d9;
-  border: 1px solid #ddd6fe;
+  background: ${p => p.theme.colors.primaryLight};
+  color: ${p => p.theme.colors.primary};
+  border: 1px solid ${p => p.theme.colors.primaryBorder};
   border-radius: 20px;
   font-size: ${p => p.theme.typography.fontSize.sm};
   font-family: inherit;
@@ -308,7 +308,7 @@ export const SuggestionChip = styled.button`
   transition: background 0.15s, border-color 0.15s;
   text-align: left;
 
-  &:hover { background: #ede9fe; border-color: #c4b5fd; }
+  &:hover { background: ${p => p.theme.colors.primaryLight}; border-color: ${p => p.theme.colors.primary}; }
   &:disabled { opacity: 0.5; cursor: default; }
 `
 

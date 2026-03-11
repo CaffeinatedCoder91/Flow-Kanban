@@ -24,6 +24,27 @@ function stripTags(value: string): string {
     .trim()
 }
 
+// ─── Lazy DOMPurify loader ─────────────────────────────────────────────────────
+// DOMPurify only works in browser environments (requires a DOM).
+// This module is shared between browser (Vite) and server (Node.js) code,
+// so we load DOMPurify lazily and cache the instance to avoid calling
+// require() on every sanitize invocation.
+//
+// `undefined` = not yet checked; `null` = checked, not available (Node.js).
+
+type DOMPurifyI = { sanitize(v: string, cfg?: Record<string, unknown>): string }
+let _purify: DOMPurifyI | null | undefined
+
+function getPurify(): DOMPurifyI | null {
+  if (_purify !== undefined) return _purify
+  if (typeof window === 'undefined') { _purify = null; return null }
+  // Vite's CJS interop polyfills require() in browser bundles.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require('dompurify') as { default?: DOMPurifyI } & DOMPurifyI
+  _purify = mod.default ?? mod
+  return _purify
+}
+
 // ─── Plain-text sanitizer ──────────────────────────────────────────────────────
 
 /**
@@ -33,15 +54,8 @@ function stripTags(value: string): string {
  */
 export function sanitizePlainText(value: string | null | undefined): string {
   if (!value) return ''
-
-  if (typeof window !== 'undefined') {
-    // Browser: use DOMPurify with no allowed tags
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('dompurify')
-    const DOMPurify = mod.default ?? mod
-    return (DOMPurify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) as string).trim()
-  }
-
+  const purify = getPurify()
+  if (purify) return (purify.sanitize(value, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }) as string).trim()
   return stripTags(value)
 }
 
@@ -57,17 +71,11 @@ export function sanitizePlainText(value: string | null | undefined): string {
  */
 export function sanitizeHtml(value: string | null | undefined): string {
   if (!value) return ''
-
-  if (typeof window !== 'undefined') {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('dompurify')
-    const DOMPurify = mod.default ?? mod
-    return DOMPurify.sanitize(value, {
-      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre'],
-      ALLOWED_ATTR: ['href', 'target', 'rel'],
-    }) as string
-  }
-
+  const purify = getPurify()
+  if (purify) return purify.sanitize(value, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre'],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+  }) as string
   return stripTags(value)
 }
 

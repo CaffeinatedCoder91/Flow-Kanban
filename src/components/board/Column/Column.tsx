@@ -5,7 +5,7 @@ import { ColumnProps } from './Column.types'
 import { TaskCard } from '../TaskCard'
 import { ColumnDot } from './Column.styles'
 
-export const Column = ({
+export const Column = React.memo(({
   statusKey, label, color, items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate
 }: ColumnProps): React.ReactElement => {
   const [adding, setAdding] = useState(false)
@@ -93,4 +93,6 @@ export const Column = ({
       </div>
     </div>
   )
-}
+})
+
+Column.displayName = 'Column'

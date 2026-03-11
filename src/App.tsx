@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { STATUS_CONFIG, Item } from '@/types'
@@ -15,14 +15,20 @@ import { InsightCard } from '@/components/panels/InsightCard'
 import { SpotlightCard } from '@/components/panels/SpotlightCard'
 import { AssistantPanel } from '@/components/panels/AssistantPanel'
 import { TaskPreview } from '@/components/modals/TaskPreview'
-import { SummaryView } from '@/components/panels/SummaryView'
+const SummaryView = React.lazy(() =>
+  import('@/components/panels/SummaryView').then(m => ({ default: m.SummaryView }))
+)
 import { NarrativeWidget } from '@/components/panels/NarrativeWidget'
-import { DeadlineNegotiationModal } from '@/components/modals/DeadlineNegotiationModal'
+const DeadlineNegotiationModal = React.lazy(() =>
+  import('@/components/modals/DeadlineNegotiationModal').then(m => ({ default: m.DeadlineNegotiationModal }))
+)
 import { WelcomeModal } from '@/components/modals/WelcomeModal'
 import { HelpModal } from '@/components/modals/HelpModal'
 import { AddTaskModal } from '@/components/modals/AddTaskModal'
 import { OnboardingChecklist } from '@/components/panels/OnboardingChecklist'
-import { Confetti } from '@/components/ui/Confetti'
+const Confetti = React.lazy(() =>
+  import('@/components/ui/Confetti').then(m => ({ default: m.Confetti }))
+)
 import { NotFound } from '@/pages/NotFound'
 import { NavbarLogo } from '@/components/ui/Logo/NavbarLogo'
 
@@ -37,7 +43,7 @@ function App() {
   const { mode, setMode } = useTheme()
   const toggleTheme = () => setMode(mode === 'dark' ? 'light' : 'dark')
 
-  const userInitials = (() => {
+  const userInitials = useMemo(() => {
     const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
     if (name) {
       const parts = name.trim().split(/\s+/)
@@ -46,7 +52,7 @@ function App() {
         : parts[0].slice(0, 2).toUpperCase()
     }
     return (user?.email ?? '?').slice(0, 2).toUpperCase()
-  })()
+  }, [user])
 
   // --- View & UI state ---
   const [view, setView] = useState<'board' | 'summary' | 'help'>('board')
@@ -214,7 +220,7 @@ function App() {
       {view === 'help' ? (
         <HelpModal onClose={() => setView('board')} />
       ) : view === 'summary' ? (
-        <SummaryView />
+        <Suspense fallback={null}><SummaryView /></Suspense>
       ) : view !== 'board' ? (
         <NotFound onBack={() => setView('board')} />
       ) : (
@@ -356,7 +362,7 @@ function App() {
           onAdd={board.handleAddTaskModalSubmit}
         />
       )}
-      {onboarding.showConfetti && <Confetti onDone={() => onboarding.setShowConfetti(false)} />}
+      {onboarding.showConfetti && <Suspense fallback={null}><Confetti onDone={() => onboarding.setShowConfetti(false)} /></Suspense>}
       <OnboardingChecklist
         hasAddedTask={board.items.length > 0}
         hasTriedAI={onboarding.hasTriedAI}
@@ -379,11 +385,13 @@ function App() {
         </Toast>
       )}
       {negotiationItem && (
-        <DeadlineNegotiationModal
-          item={negotiationItem}
-          onClose={() => setNegotiationItem(null)}
-          onDone={handleNegotiationDone}
-        />
+        <Suspense fallback={null}>
+          <DeadlineNegotiationModal
+            item={negotiationItem}
+            onClose={() => setNegotiationItem(null)}
+            onDone={handleNegotiationDone}
+          />
+        </Suspense>
       )}
       {importTasks.isImportOpen && (
         <ModalOverlay onClick={() => { if (!importTasks.isExtracting && !importTasks.isConfirming) importTasks.closeImportModal() }}>

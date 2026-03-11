@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -16,7 +16,7 @@ import { KanbanBoardProps } from './KanbanBoard.types'
 import { Column } from '../Column'
 import { DragOverlayCard } from '../TaskCard'
 
-export const KanbanBoard = ({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps): React.ReactElement => {
+export const KanbanBoard = React.memo(({ items, highlightedItems, onAdd, onDelete, onUpdateStatus, onUpdatePriority, onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate }: KanbanBoardProps): React.ReactElement => {
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -67,10 +67,10 @@ export const KanbanBoard = ({ items, highlightedItems, onAdd, onDelete, onUpdate
     setActiveId(null)
   }
 
-  const grouped = STATUS_CONFIG.map(col => ({
+  const grouped = useMemo(() => STATUS_CONFIG.map(col => ({
     ...col,
     items: items.filter(t => t.status === col.key),
-  }))
+  })), [items])
 
   if (items.length === 0) {
     return (
@@ -138,4 +138,6 @@ export const KanbanBoard = ({ items, highlightedItems, onAdd, onDelete, onUpdate
       </DragOverlay>
     </DndContext>
   )
-}
+})
+
+KanbanBoard.displayName = 'KanbanBoard'

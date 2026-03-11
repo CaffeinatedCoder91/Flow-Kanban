@@ -342,7 +342,7 @@ export const DragOverlayCard = (props: TaskCardProps): React.ReactElement => {
   return <TaskCardInner {...props} isDragOverlay />
 }
 
-export const TaskCard = ({
+export const TaskCard = React.memo(({
   item, columnColor, highlighted, onDelete, onUpdateStatus, onUpdatePriority,
   onUpdateDescription, onUpdateDueDate, onUpdateAssignee, onUpdateColor, onNegotiate,
 }: TaskCardProps): React.ReactElement => {
@@ -373,4 +373,6 @@ export const TaskCard = ({
       isDragging={isDragging}
     />
   )
-}
+})
+
+TaskCard.displayName = 'TaskCard'

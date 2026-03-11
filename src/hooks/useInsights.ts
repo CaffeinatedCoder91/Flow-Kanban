@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { apiFetch } from '@/lib/api'
 import { Item, Insight } from '@/types'
 
@@ -64,7 +64,7 @@ export function useInsights({
     })
   }, [])
 
-  const visibleInsights = insights.filter(i => !dismissedKeys.has(getInsightKey(i)))
+  const visibleInsights = useMemo(() => insights.filter(i => !dismissedKeys.has(getInsightKey(i))), [insights, dismissedKeys])
 
   const handleStartWorking = useCallback(async (id: string) => {
     const item = items.find(t => t.id === id)

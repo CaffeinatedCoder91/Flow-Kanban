@@ -135,23 +135,29 @@ export function useBoardItems({ showError }: UseBoardItemsParams) {
   }, [text, items.length, addItemWithStatus])
 
   const removeItem = useCallback(async (id: string) => {
-    const snapshot = items.slice()
-    setItems(prev => prev.filter(t => t.id !== id))
+    let snapshot: Item | undefined
+    setItems(prev => {
+      snapshot = prev.find(t => t.id === id)
+      return prev.filter(t => t.id !== id)
+    })
 
     try {
       const res = await apiFetch(`/api/items/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('delete-failed')
     } catch {
-      setItems(snapshot)
+      if (snapshot) setItems(prev => [...prev, snapshot!])
       showError('Failed to delete task')
     }
-  }, [items, showError])
+  }, [showError])
 
   const patchItem = useCallback(async (id: string, patch: Record<string, unknown>, fieldLabel: string) => {
-    const snapshot = items.find(t => t.id === id)
+    let snapshot: Item | undefined
+    setItems(prev => {
+      snapshot = prev.find(t => t.id === id)
+      if (!snapshot) return prev
+      return prev.map(t => t.id === id ? { ...t, ...patch } : t)
+    })
     if (!snapshot) return
-
-    setItems(prev => prev.map(t => t.id === id ? { ...t, ...patch } : t))
 
     try {
       const res = await apiFetch(`/api/items/${id}`, {
@@ -162,10 +168,10 @@ export function useBoardItems({ showError }: UseBoardItemsParams) {
       const updated: Item = await res.json()
       setItems(prev => prev.map(t => t.id === id ? updated : t))
     } catch {
-      setItems(prev => prev.map(t => t.id === id ? snapshot : t))
+      setItems(prev => prev.map(t => t.id === id ? snapshot! : t))
       showError(`Failed to update ${fieldLabel}`, () => patchItem(id, patch, fieldLabel))
     }
-  }, [items, showError])
+  }, [showError])
 
   const updateItemStatus      = useCallback((id: string, status: string)            => patchItem(id, { status },      'task status'), [patchItem])
   const updateItemPriority    = useCallback((id: string, priority: string)          => patchItem(id, { priority },    'priority'), [patchItem])

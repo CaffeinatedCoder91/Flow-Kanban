@@ -1,5 +1,5 @@
 import { render as rtlRender, RenderOptions } from '@testing-library/react'
-import { ThemeContextProvider } from '../context/ThemeContext'
+import { ThemeContextProvider } from '@/context/ThemeContext'
 
 function render(ui: React.ReactElement, options?: RenderOptions) {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (

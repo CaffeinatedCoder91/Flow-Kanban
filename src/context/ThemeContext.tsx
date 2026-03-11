@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { ThemeProvider as EmotionThemeProvider } from '@emotion/react'
-import { lightTheme, darkTheme } from '../styles/themes'
+import { lightTheme, darkTheme } from '@/styles/themes'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

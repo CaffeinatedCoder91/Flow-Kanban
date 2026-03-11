@@ -1,4 +1,4 @@
-import { ProposedTask } from '../../../types'
+import { ProposedTask } from '@/types'
 
 export interface TaskPreviewProps {
   task: ProposedTask

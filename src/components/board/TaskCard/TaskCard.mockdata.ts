@@ -1,4 +1,4 @@
-import { Item } from '../../../types'
+import { Item } from '@/types'
 
 export const mockItem: Item = {
   id: 'mock-1',

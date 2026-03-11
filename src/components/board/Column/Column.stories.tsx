@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
 import { DndContext } from '@dnd-kit/core'
-import { theme } from '../../../theme'
+import { theme } from '@/theme'
 import { Column } from './Column'
 import { mockItems } from './Column.mockdata'
 

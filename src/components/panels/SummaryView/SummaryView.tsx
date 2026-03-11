@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { apiFetch } from '../../../lib/api'
+import { apiFetch } from '@/lib/api'
 import { ProgressCircle, SentimentChip, SentimentDot, TrendIndicator, MutedText, StatValueSpan } from './SummaryView.styles'
 
 type Period = 'last_week' | 'last_30_days' | 'this_month'

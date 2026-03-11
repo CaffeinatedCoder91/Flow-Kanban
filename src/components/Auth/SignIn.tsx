@@ -2,14 +2,14 @@
 // Email + password sign-in form using Supabase auth.
 
 import React, { useState, type FormEvent } from 'react'
-import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabaseBrowser'
+import { useAuth } from '@/context/AuthContext'
+import { supabase } from '@/lib/supabaseBrowser'
 import {
   Page, Card, Logo, LogoDot, LogoText,
   Title, Subtitle, Field, Label, Input,
   ErrorMsg, SubmitBtn, Divider, GoogleBtn, GuestBtn, Footer, FooterLink,
 } from './SignIn.styles'
-import { signInAsGuest } from '../../lib/guestLogin'
+import { signInAsGuest } from '@/lib/guestLogin'
 
 interface SignInProps {
   onSwitchToSignUp: () => void

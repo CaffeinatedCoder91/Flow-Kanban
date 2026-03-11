@@ -1,5 +1,5 @@
 import React from 'react'
-import { ProposedTask, STATUS_CONFIG, PRIORITY_CONFIG } from '../../../types'
+import { ProposedTask, STATUS_CONFIG, PRIORITY_CONFIG } from '@/types'
 import { PreviewCard, ColorSwatch, PaletteBtn } from './TaskPreview.styles'
 
 const COLOR_PALETTE = [

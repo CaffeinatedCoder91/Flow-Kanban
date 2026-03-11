@@ -1,4 +1,4 @@
-import type { Item } from '../../../types'
+import type { Item } from '@/types'
 import type { Recommendation } from './SpotlightCard.types'
 
 export const recommendation: Recommendation = {

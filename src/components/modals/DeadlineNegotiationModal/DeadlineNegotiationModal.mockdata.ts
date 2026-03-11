@@ -1,4 +1,4 @@
-import { Item } from '../../../types'
+import { Item } from '@/types'
 
 function localAddDays(n: number): string {
   const d = new Date()

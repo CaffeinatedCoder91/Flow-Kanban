@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from '@emotion/styled'
-import { useAuth } from '../context/AuthContext'
-import { DEMO_EMAIL } from '../lib/guestLogin'
+import { useAuth } from '@/context/AuthContext'
+import { DEMO_EMAIL } from '@/lib/guestLogin'
 
 export const DemoBanner = (): React.ReactElement | null => {
   const { user, signOut } = useAuth()

@@ -1,4 +1,4 @@
-import { render } from '../../test/utils'
+import { render } from '@/test/utils'
 import { describe, it, expect } from 'vitest'
 import { GlobalStyles } from './GlobalStyles'
 

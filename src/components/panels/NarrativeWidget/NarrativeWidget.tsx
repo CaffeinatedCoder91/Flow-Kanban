@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { apiFetch } from '../../../lib/api'
+import { apiFetch } from '@/lib/api'
 import type { NarrativeWidgetProps } from './NarrativeWidget.types'
 import { WidgetBadge, WidgetDot, SkeletonLineWide, SkeletonLineNarrow } from './NarrativeWidget.styles'
 

@@ -11,7 +11,7 @@ import {
   useSensors,
   closestCorners,
 } from '@dnd-kit/core'
-import { STATUS_CONFIG } from '../../../types'
+import { STATUS_CONFIG } from '@/types'
 import { KanbanBoardProps } from './KanbanBoard.types'
 import { Column } from '../Column'
 import { DragOverlayCard } from '../TaskCard'

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '../../../test/utils'
+import { render, screen, fireEvent } from '@/test/utils'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { WelcomeModal, hasSeenWelcome } from './WelcomeModal'
 

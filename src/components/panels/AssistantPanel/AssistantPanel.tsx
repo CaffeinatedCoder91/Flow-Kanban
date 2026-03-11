@@ -1,8 +1,8 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react'
-import { apiFetch } from '../../../lib/api'
+import { apiFetch } from '@/lib/api'
 import ReactMarkdown from 'react-markdown'
 import { AssistantPanelProps, Message } from './AssistantPanel.types'
-import { ERROR_MESSAGES } from '../../../lib/errors'
+import { ERROR_MESSAGES } from '@/lib/errors'
 import {
   Overlay, Panel, Header, HeaderIdentity, Avatar, Title, CloseBtn,
   Messages, AiRow, MsgAvatar, MessageBubble, Markdown, InlineContent,

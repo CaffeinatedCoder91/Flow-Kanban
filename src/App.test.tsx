@@ -1,19 +1,19 @@
-import { render, screen, fireEvent, waitFor } from './test/utils'
+import { render, screen, fireEvent, waitFor } from '@/test/utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import App from './App'
+import App from '@/App'
 
 // NarrativeWidget makes its own /api/narrative fetch; stub it out so it doesn't
 // interfere with the fetch mock sequences used by App tests.
-vi.mock('./components/panels/NarrativeWidget', () => ({ NarrativeWidget: () => null }))
+vi.mock('@/components/panels/NarrativeWidget', () => ({ NarrativeWidget: () => null }))
 
 // Bypass the Supabase token step in apiFetch so fetch mocks are consumed in
 // a deterministic order (no async getToken() race between concurrent calls).
-vi.mock('./lib/api', () => ({
+vi.mock('@/lib/api', () => ({
   apiFetch: (url: string, options: RequestInit = {}) => fetch(url, options),
 }))
 
 // Bypass Supabase auth — App calls useAuth() to get user + signOut.
-vi.mock('./context/AuthContext', () => ({
+vi.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'test-user', email: 'test@example.com' },
     session: null,

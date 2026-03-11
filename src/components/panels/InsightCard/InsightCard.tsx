@@ -1,5 +1,5 @@
 import React from 'react'
-import { Insight } from '../../../types'
+import { Insight } from '@/types'
 import { InsightCardProps } from './InsightCard.types'
 import { Card, Icon, Content, Title, Description, ActionBtn, DismissBtn } from './InsightCard.styles'
 

@@ -1,7 +1,7 @@
-import { render, screen } from '../../../test/utils'
+import { render, screen } from '@/test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import { KanbanBoard } from './KanbanBoard'
-import type { Item } from '../../../types'
+import type { Item } from '@/types'
 
 const noop = vi.fn()
 

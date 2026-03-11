@@ -2,7 +2,7 @@
 // Email + password sign-up form using Supabase auth.
 
 import React, { useState, type FormEvent } from 'react'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import {
   Page, Card, Logo, LogoDot, LogoText,
   Title, Subtitle, Field, Label, Input,

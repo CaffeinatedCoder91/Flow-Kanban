@@ -1,4 +1,4 @@
-import { Item } from '../../../types'
+import { Item } from '@/types'
 import { KanbanBoardProps } from './KanbanBoard.types'
 
 export const mockItems: Item[] = [

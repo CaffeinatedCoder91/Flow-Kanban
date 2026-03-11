@@ -2,7 +2,7 @@
 // Light and dark theme definitions.
 // Both conform to AppTheme so all existing styled components work unchanged.
 
-import type { AppTheme } from '../theme'
+import type { AppTheme } from '@/theme'
 
 const shared = {
   spacing: {

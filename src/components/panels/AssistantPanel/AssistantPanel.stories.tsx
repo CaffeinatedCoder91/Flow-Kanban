@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
-import { theme } from '../../../theme'
+import { theme } from '@/theme'
 import { AssistantPanel } from './AssistantPanel'
 import { defaultProps } from './AssistantPanel.mockdata'
 

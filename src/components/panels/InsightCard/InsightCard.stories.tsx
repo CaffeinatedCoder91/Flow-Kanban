@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ThemeProvider } from '@emotion/react'
-import { theme } from '../../../theme'
+import { theme } from '@/theme'
 import { InsightCard } from './InsightCard'
 import { baseInsight } from './InsightCard.mockdata'
 

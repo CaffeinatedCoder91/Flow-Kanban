@@ -1,4 +1,4 @@
-import { Insight } from '../../../types'
+import { Insight } from '@/types'
 
 export const baseInsight: Insight = {
   type: 'stale',

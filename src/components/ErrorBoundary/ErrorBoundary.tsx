@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/react'
 import { ThemeProvider } from '@emotion/react'
-import { theme } from '../theme'
-import { ErrorRoot, ErrorMessage, RefreshBtn } from '../main.styles'
+import { theme } from '@/theme'
+import { ErrorRoot, ErrorMessage, RefreshBtn } from '@/main.styles'
 import styled from '@emotion/styled'
 
 const ReportBtn = styled.button`

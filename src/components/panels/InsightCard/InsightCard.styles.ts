@@ -1,5 +1,5 @@
 import styled from '@emotion/styled'
-import { Insight } from '../../../types'
+import { Insight } from '@/types'
 
 export const Card = styled.div<{ severity: Insight['severity'] }>`
   display: flex;

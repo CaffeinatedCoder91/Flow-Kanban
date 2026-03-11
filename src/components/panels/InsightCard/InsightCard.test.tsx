@@ -1,8 +1,8 @@
-import { render, screen, fireEvent } from '../../../test/utils'
+import { render, screen, fireEvent } from '@/test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import { InsightCard } from './InsightCard'
 import { baseInsight } from './InsightCard.mockdata'
-import type { Insight } from '../../../types'
+import type { Insight } from '@/types'
 
 describe('InsightCard', () => {
   it('renders title and description', () => {

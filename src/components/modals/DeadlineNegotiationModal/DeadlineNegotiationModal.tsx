@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { apiFetch } from '../../../lib/api'
+import { apiFetch } from '@/lib/api'
 import { DeadlineNegotiationModalProps } from './DeadlineNegotiationModal.types'
 
 type Screen = 'home' | 'reschedule' | 'split' | 'deprioritize'

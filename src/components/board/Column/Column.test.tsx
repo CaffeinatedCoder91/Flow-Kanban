@@ -1,7 +1,7 @@
-import { render, screen, fireEvent, waitFor } from '../../../test/utils'
+import { render, screen, fireEvent, waitFor } from '@/test/utils'
 import { describe, it, expect, vi } from 'vitest'
 import { Column } from './Column'
-import type { Item } from '../../../types'
+import type { Item } from '@/types'
 import { DndContext } from '@dnd-kit/core'
 
 const items: Item[] = [

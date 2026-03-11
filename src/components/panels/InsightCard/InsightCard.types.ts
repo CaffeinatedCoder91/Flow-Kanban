@@ -1,4 +1,4 @@
-import { Insight } from '../../../types'
+import { Insight } from '@/types'
 
 export interface InsightCardProps {
   insight: Insight

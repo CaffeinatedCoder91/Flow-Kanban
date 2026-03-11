@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { apiFetch } from '../../../lib/api'
-import { Item, ProposedTask } from '../../../types'
+import { apiFetch } from '@/lib/api'
+import { Item, ProposedTask } from '@/types'
 import { TaskPreview } from '../TaskPreview'
 import { ImportModalProps } from './ImportModal.types'
 import {

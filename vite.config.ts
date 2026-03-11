@@ -23,6 +23,9 @@ export default defineConfig({
       authToken: process.env.SENTRY_AUTH_TOKEN,
     })] : []),
   ],
+  resolve: {
+    alias: { '@': path.resolve(dirname, 'src') },
+  },
   build: {
     sourcemap: true,
   },

@@ -1,4 +1,4 @@
-import { ProposedTask } from '../../../types'
+import { ProposedTask } from '@/types'
 
 export const baseTask: ProposedTask = {
   title: 'Write release notes',

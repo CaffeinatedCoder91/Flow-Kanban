@@ -20,13 +20,13 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%238B5CF6'/><rect x='6' y='6' width='7' height='20' rx='2' fill='white' opacity='0.9'/><rect x='15' y='6' width='7' height='13' rx='2' fill='white' opacity='0.9'/></svg>" />
 
-    <!-- Fonts: preconnect + non-blocking load -->
+    <!-- Fonts: preconnect hints + preload the primary woff2 file -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Preload the most-used font file (Figtree 400 latin) so it is fetched early -->
+    <!-- Preload the most-used font file (Figtree 400 latin) so it is ready before CSS requests it -->
     <link rel="preload" href="https://fonts.gstatic.com/s/figtree/v9/_Xms-HUzqDCFdgfMm4S9DaRvzig.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Inter:wght@700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Inter:wght@700&display=swap"></noscript>
+    <!-- font-display:swap in the URL means text renders immediately in a fallback font; no onload hack needed -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Inter:wght@700&display=swap">
   </head>
   <body>
     <div id="root"></div>

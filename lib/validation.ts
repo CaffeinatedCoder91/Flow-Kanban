@@ -42,6 +42,41 @@ export const NarrativeSchema = z.object({
   period: z.enum(['last_week', 'last_30_days', 'this_month', 'previous_7_days']),
 })
 
+// ─── AI Response Schemas ────────────────────────────────────────────────────────
+// Validate JSON parsed from Claude responses to prevent runtime crashes.
+
+export const SplitSuggestionSchema = z.array(z.object({
+  title: z.string(),
+  description: z.string().default(''),
+  estimated_priority: z.string().default('medium'),
+}))
+
+export const RescheduleSuggestionSchema = z.array(z.object({
+  date: z.string(),
+  label: z.string(),
+}))
+
+export const RecommendNextSchema = z.object({
+  itemId: z.string(),
+  reason: z.string(),
+})
+
+export const DuplicateGroupsSchema = z.object({
+  groups: z.array(z.array(z.string())).default([]),
+})
+
+export const ExtractedTaskSchema = z.array(z.object({
+  title: z.string(),
+  description: z.string().nullable().default(null),
+  priority: z.string().default('medium'),
+  due_date: z.string().nullable().default(null),
+  assignee: z.string().nullable().default(null),
+  status: z.string().default('not_started'),
+  status_reasoning: z.string().nullable().default(null),
+  color: z.unknown().default(null),
+  confidence: z.record(z.string(), z.number()).default({}),
+}))
+
 // ─── Inferred Types ────────────────────────────────────────────────────────────
 
 export type CreateItemInput = z.infer<typeof CreateItemSchema>

@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
+import { RecommendNextSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -50,7 +51,7 @@ Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>
     })
 
     const text = '{' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-    const parsed = JSON.parse(text) as { itemId: string; reason: string }
+    const parsed = RecommendNextSchema.parse(JSON.parse(text))
 
     res.status(200).json({
       recommendedItemId: parsed.itemId,

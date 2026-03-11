@@ -7,6 +7,7 @@ import { getItemById, getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
+import { SplitSuggestionSchema, RescheduleSuggestionSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -46,11 +47,7 @@ Return ONLY a JSON array:
       })
 
       const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-      const suggestions = JSON.parse(text) as Array<{
-        title: string
-        description: string
-        estimated_priority: string
-      }>
+      const suggestions = SplitSuggestionSchema.parse(JSON.parse(text))
 
       return res.status(200).json({ suggestions })
     }
@@ -135,7 +132,7 @@ Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. 
     })
 
     const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-    const aiSuggestions = JSON.parse(text) as Array<{ date: string; label: string }>
+    const aiSuggestions = RescheduleSuggestionSchema.parse(JSON.parse(text))
 
     const suggestions: Array<{ date: string; label: string; isPattern?: true }> = []
     if (pattern) {

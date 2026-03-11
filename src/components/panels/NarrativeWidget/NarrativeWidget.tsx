@@ -46,7 +46,7 @@ export const NarrativeWidget = ({ onViewFullReport, hasItems }: NarrativeWidgetP
       })
       .catch(() => {}) // non-critical widget — silently no-op on error
       .finally(() => setLoading(false))
-  }, [])
+  }, [hasItems])
 
   if (loading) return (
     <div className="narrative-widget narrative-widget-skeleton">

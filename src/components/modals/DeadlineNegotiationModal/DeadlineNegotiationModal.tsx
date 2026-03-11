@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { apiFetch } from '@/lib/api'
 import { DeadlineNegotiationModalProps } from './DeadlineNegotiationModal.types'
 
@@ -39,10 +39,11 @@ const PRIORITY_LABEL: Record<string, string> = {
 export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNegotiationModalProps): React.ReactElement => {
   const [screen, setScreen]     = useState<Screen>('home')
   const [newDate, setNewDate]   = useState(item.due_date ?? '')
-  type SplitRow = { title: string; description: string; estimated_priority: string }
+  type SplitRow = { key: number; title: string; description: string; estimated_priority: string }
+  const splitNextKeyRef = useRef(3)
   const [splitRows, setSplitRows]           = useState<SplitRow[]>([
-    { title: '', description: '', estimated_priority: 'medium' },
-    { title: '', description: '', estimated_priority: 'medium' },
+    { key: 1, title: '', description: '', estimated_priority: 'medium' },
+    { key: 2, title: '', description: '', estimated_priority: 'medium' },
   ])
   const [splitLoading, setSplitLoading]     = useState(false)
   const [deleteOriginal, setDeleteOriginal] = useState(false)
@@ -79,7 +80,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
       .then(data => setSuggestions(data.suggestions ?? []))
       .catch(() => setSuggestions([]))
       .finally(() => setSuggestionsLoading(false))
-  }, [screen])
+  }, [screen, item.id])
 
   useEffect(() => {
     if (screen !== 'split') return
@@ -91,12 +92,12 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(data => {
         if (Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-          setSplitRows(data.suggestions)
+          setSplitRows(data.suggestions.map((s: Omit<SplitRow, 'key'>) => ({ ...s, key: splitNextKeyRef.current++ })))
         }
       })
       .catch(() => { /* keep default rows */ })
       .finally(() => setSplitLoading(false))
-  }, [screen])
+  }, [screen, item.id])
 
   const dueLabel = item.due_date ? friendlyDue(item.due_date) : 'no deadline set'
   const prompt   = `This task is ${dueLabel}. What would you like to do?`
@@ -336,7 +337,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
 
                 <div className="dnm-subtasks">
                   {splitRows.map((row, i) => (
-                    <div key={i} className="dnm-split-row">
+                    <div key={row.key} className="dnm-split-row">
                       <div className="dnm-split-row-header">
                         <span className={`dnm-split-priority dnm-priority-${row.estimated_priority}`}>
                           {row.estimated_priority}
@@ -362,7 +363,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
                     </div>
                   ))}
                   {!splitLoading && splitRows.length < 5 && (
-                    <button className="dnm-add-subtask" onClick={() => setSplitRows(prev => [...prev, { title: '', description: '', estimated_priority: 'medium' }])}>
+                    <button className="dnm-add-subtask" onClick={() => setSplitRows(prev => [...prev, { key: splitNextKeyRef.current++, title: '', description: '', estimated_priority: 'medium' }])}>
                       + Add another step
                     </button>
                   )}

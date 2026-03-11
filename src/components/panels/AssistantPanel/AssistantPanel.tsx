@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react'
 import { apiFetch } from '@/lib/api'
 import ReactMarkdown from 'react-markdown'
-import { AssistantPanelProps, Message } from './AssistantPanel.types'
+import { AssistantPanelProps, createMessage } from './AssistantPanel.types'
 import { ERROR_MESSAGES } from '@/lib/errors'
 import {
   Overlay, Panel, Header, HeaderIdentity, Avatar, Title, CloseBtn,
@@ -25,8 +25,8 @@ export const AssistantPanel = ({
   const [inputValue, setInputValue] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Hey, I'm Flow. What's on your mind?" },
+  const [messages, setMessages] = useState(() => [
+    createMessage({ role: 'assistant', content: "Hey, I'm Flow. What's on your mind?" }),
   ])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const shouldAutoScrollRef = useRef(true)
@@ -43,17 +43,17 @@ export const AssistantPanel = ({
       setInputValue(prefillMessage)
       onPrefillConsumed?.()
     }
-  }, [prefillMessage, isOpen])
+  }, [prefillMessage, isOpen, onPrefillConsumed])
 
   useEffect(() => {
     if (!proactiveMessages || proactiveMessages.length === 0) return
     setMessages(prev => [
       ...prev,
-      ...proactiveMessages.map(content => ({ role: 'assistant' as const, content })),
+      ...proactiveMessages.map(content => createMessage({ role: 'assistant' as const, content })),
     ])
     shouldAutoScrollRef.current = true
     onProactiveConsumed?.()
-  }, [proactiveMessages])
+  }, [proactiveMessages, onProactiveConsumed])
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget
@@ -72,26 +72,26 @@ export const AssistantPanel = ({
       })
       const data = await response.json()
       if (data.errors?.length > 0) {
-        setMessages(prev => [...prev, ...data.errors.map((e: string) => ({ role: 'error' as const, content: e }))])
+        setMessages(prev => [...prev, ...data.errors.map((e: string) => createMessage({ role: 'error' as const, content: e }))])
       }
       if (data.actions?.length > 0) {
-        setMessages(prev => [...prev, ...data.actions.map((a: string) => ({ role: 'action' as const, content: a }))])
+        setMessages(prev => [...prev, ...data.actions.map((a: string) => createMessage({ role: 'action' as const, content: a }))])
       }
       if (data.response) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+        setMessages(prev => [...prev, createMessage({ role: 'assistant', content: data.response })])
       }
       onRefresh()
     } catch {
       const retry = () => {
         setMessages(prev => prev.filter(m => !m.onRetry))
-        setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+        setMessages(prev => [...prev, createMessage({ role: 'user', content: userMessage })])
         sendMessage(userMessage)
       }
-      setMessages(prev => [...prev, {
+      setMessages(prev => [...prev, createMessage({
         role: 'error',
         content: ERROR_MESSAGES.NETWORK,
         onRetry: retry,
-      }])
+      })])
     } finally {
       setIsSending(false)
       setIsLoading(false)
@@ -99,7 +99,7 @@ export const AssistantPanel = ({
   }
 
   const handleChipClick = (suggestion: string) => {
-    setMessages(prev => [...prev, { role: 'user', content: suggestion }])
+    setMessages(prev => [...prev, createMessage({ role: 'user', content: suggestion })])
     sendMessage(suggestion)
   }
 
@@ -109,7 +109,7 @@ export const AssistantPanel = ({
     const userMessage = inputValue.trim()
     setInputValue('')
     lastUserMessageRef.current = userMessage
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+    setMessages(prev => [...prev, createMessage({ role: 'user', content: userMessage })])
     sendMessage(userMessage)
   }
 
@@ -126,16 +126,16 @@ export const AssistantPanel = ({
         </Header>
 
         <Messages onScroll={handleScroll}>
-          {messages.map((message, index) =>
+          {messages.map((message) =>
             message.role === 'assistant' ? (
-              <AiRow key={index}>
+              <AiRow key={message.id}>
                 <MsgAvatar>✦</MsgAvatar>
                 <MessageBubble role="assistant">
                   <Markdown><ReactMarkdown>{message.content}</ReactMarkdown></Markdown>
                 </MessageBubble>
               </AiRow>
             ) : (
-              <MessageBubble key={index} role={message.role}>
+              <MessageBubble key={message.id} role={message.role}>
                 {message.role === 'action' ? (
                   <InlineContent>
                     <ActionIcon width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

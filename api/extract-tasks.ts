@@ -4,7 +4,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
-import { ExtractTasksSchema } from '../lib/validation.js'
+import { ExtractTasksSchema, ExtractedTaskSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -32,17 +32,7 @@ export async function extractTasksFromText(text: string) {
   })
 
   const raw = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-  return JSON.parse(raw) as Array<{
-    title: string
-    description: string | null
-    priority: string
-    due_date: string | null
-    assignee: string | null
-    status: string
-    status_reasoning: string | null
-    color: null
-    confidence: Record<string, number>
-  }>
+  return ExtractedTaskSchema.parse(JSON.parse(raw))
 }
 
 export default withCors(async (req: Req, res: Res) => {

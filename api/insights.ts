@@ -8,6 +8,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
+import { DuplicateGroupsSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -149,8 +150,8 @@ If no duplicates, return {"groups": []}`,
         const text = aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? ''
         const jsonMatch = text.match(/\{[\s\S]*\}/)
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]) as { groups: string[][] }
-          for (const group of parsed.groups ?? []) {
+          const parsed = DuplicateGroupsSchema.parse(JSON.parse(jsonMatch[0]))
+          for (const group of parsed.groups) {
             if (group.length >= 2) {
               const dupeItems = group.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[]
               insights.push({

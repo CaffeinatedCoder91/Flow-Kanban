@@ -1,16 +1,17 @@
 import '@/instrument'
-import { StrictMode, useState, useEffect } from 'react'
+import { StrictMode, useState, useEffect, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from '@/App'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
 import { ThemeContextProvider } from '@/context/ThemeContext'
-import { SignIn } from '@/components/Auth/SignIn'
-import { SignUp } from '@/components/Auth/SignUp'
 import { GlobalStyles } from '@/components/GlobalStyles'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { DemoBanner } from '@/components/DemoBanner'
 import { LoadingRoot, LoadingSpinner } from '@/main.styles'
 import '@/index.css'
+
+const App    = lazy(() => import('@/App'))
+const SignIn = lazy(() => import('@/components/Auth/SignIn').then(m => ({ default: m.SignIn })))
+const SignUp = lazy(() => import('@/components/Auth/SignUp').then(m => ({ default: m.SignUp })))
+const DemoBanner = lazy(() => import('@/components/DemoBanner').then(m => ({ default: m.DemoBanner })))
 
 // ─── Auth gate ────────────────────────────────────────────────────────────────
 // Rendered inside AuthProvider so useAuth() is available.
@@ -27,25 +28,25 @@ function Root() {
     return () => document.removeEventListener('flow:show-signup', handler)
   }, [])
 
-  if (loading) {
+  const fallback = <LoadingRoot><LoadingSpinner /></LoadingRoot>
+
+  if (loading) return fallback
+
+  if (!user) {
     return (
-      <LoadingRoot>
-        <LoadingSpinner />
-      </LoadingRoot>
+      <Suspense fallback={fallback}>
+        {authView === 'signin'
+          ? <SignIn onSwitchToSignUp={() => setAuthView('signup')} />
+          : <SignUp onSwitchToSignIn={() => setAuthView('signin')} />}
+      </Suspense>
     )
   }
 
-  if (!user) {
-    return authView === 'signin'
-      ? <SignIn onSwitchToSignUp={() => setAuthView('signup')} />
-      : <SignUp onSwitchToSignIn={() => setAuthView('signin')} />
-  }
-
   return (
-    <>
+    <Suspense fallback={fallback}>
       <DemoBanner />
       <App />
-    </>
+    </Suspense>
   )
 }
 

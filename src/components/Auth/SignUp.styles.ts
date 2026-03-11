@@ -105,7 +105,7 @@ export const SubmitBtn = styled.button`
   width: 100%;
   padding: 0.7rem 1rem;
   margin-top: 0.5rem;
-  background: ${p => p.theme.colors.primary};
+  background: ${p => p.theme.colors.primaryDark};
   color: #fff;
   border: none;
   border-radius: ${p => p.theme.borderRadius.lg};
@@ -130,7 +130,7 @@ export const FooterLink = styled.button`
   background: none;
   border: none;
   padding: 0;
-  color: ${p => p.theme.colors.primary};
+  color: ${p => p.theme.colors.primaryDark};
   font-size: inherit;
   font-family: inherit;
   font-weight: ${p => p.theme.typography.fontWeight.medium};

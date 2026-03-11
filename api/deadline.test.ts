@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Req, Res } from './_utils.js'
 
-// Mock Supabase so getUserId can be controlled without a real JWT
 vi.mock('../lib/supabase.js', () => ({
   supabaseAdmin: {
     auth: { getUser: vi.fn() },
@@ -9,6 +8,10 @@ vi.mock('../lib/supabase.js', () => ({
       insert: vi.fn().mockResolvedValue({ error: null }),
     })),
   },
+}))
+
+vi.mock('../lib/db.js', () => ({
+  getItems: vi.fn().mockResolvedValue([]),
 }))
 
 import { supabaseAdmin } from '../lib/supabase.js'
@@ -32,17 +35,16 @@ function makeRes() {
   return res
 }
 
-// Lazily import so mocks are in place first
 let handler: (req: Req, res: Res) => Promise<void>
 
 beforeEach(async () => {
   vi.resetModules()
-  const mod = await import('./deadline-actions.js')
+  const mod = await import('./deadline.js')
   handler = mod.default
   mockGetUser.mockReset()
 })
 
-describe('POST /api/deadline-actions', () => {
+describe('POST /api/deadline — action recording (body has action_type)', () => {
   it('returns 405 for non-POST methods', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
     const res = makeRes()
@@ -84,33 +86,20 @@ describe('POST /api/deadline-actions', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
     const res = makeRes()
     await handler(
-      makeReq({
-        headers: { authorization: 'Bearer token' },
-        body: { action_type: 'deprioritize' },
-      }),
+      makeReq({ headers: { authorization: 'Bearer token' }, body: { action_type: 'deprioritize' } }),
       res as unknown as Res,
     )
     expect(res.statusCode).toBe(200)
     expect((res.data as Record<string, unknown>).ok).toBe(true)
   })
+})
 
-  it('returns 200 and computes daysExtended for reschedule', async () => {
+describe('POST /api/deadline — risk check (body has no action_type)', () => {
+  it('returns 200 with empty at_risk when no items', async () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
     const res = makeRes()
-    await handler(
-      makeReq({
-        headers: { authorization: 'Bearer token' },
-        body: {
-          action_type: 'reschedule',
-          original_due_date: '2026-03-01',
-          new_due_date: '2026-03-08',
-        },
-      }),
-      res as unknown as Res,
-    )
+    await handler(makeReq({ headers: { authorization: 'Bearer token' } }), res as unknown as Res)
     expect(res.statusCode).toBe(200)
-    const fromMock = supabaseAdmin.from as ReturnType<typeof vi.fn>
-    const insertCall = fromMock.mock.calls.find(() => true)
-    expect(insertCall).toBeDefined()
+    expect((res.data as Record<string, unknown>).at_risk).toEqual([])
   })
 })

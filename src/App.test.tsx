@@ -381,7 +381,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -395,7 +395,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [
           { item_id: 1, title: 'Task A', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' },
           { item_id: 2, title: 'Task B', due_date: '2026-02-24', status: 'stuck',       risk_level: 'high' },
@@ -412,7 +412,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'in_progress', risk_level: 'medium' }],
       },
     })
@@ -426,7 +426,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -439,7 +439,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -455,7 +455,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': { at_risk: [] },
+      '/api/deadline': { at_risk: [] },
     })
     render(<App />)
     await waitFor(() => screen.getByText('Test item'))
@@ -467,7 +467,7 @@ describe('Deadline risk insights', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [{ type: 'stale', severity: 'low', title: 'Stale tasks detected', description: '1 task.', items: [1] }] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -549,7 +549,7 @@ describe('Proactive assistant messaging', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Deploy to Production', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -563,7 +563,7 @@ describe('Proactive assistant messaging', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Deploy to Production', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -577,7 +577,7 @@ describe('Proactive assistant messaging', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Fix auth bug', due_date: '2026-02-24', status: 'stuck', risk_level: 'high' }],
       },
     })
@@ -591,7 +591,7 @@ describe('Proactive assistant messaging', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Ship feature', due_date: '2026-02-26', status: 'not_started', risk_level: 'high' }],
       },
     })
@@ -605,7 +605,7 @@ describe('Proactive assistant messaging', () => {
     routedFetch({
       '/api/items': mockItems,
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{ item_id: 1, title: 'Test item', due_date: '2026-02-25', status: 'in_progress', risk_level: 'medium' }],
       },
     })
@@ -619,7 +619,7 @@ describe('Proactive assistant messaging', () => {
     vi.spyOn(global, 'fetch').mockImplementation(async (url) => {
       if (url === '/api/items') return { ok: true, json: () => Promise.resolve(mockItems) } as Response
       if (url === '/api/insights') return { ok: true, json: () => Promise.resolve({ insights: [] }) } as Response
-      if (url === '/api/check-deadline-risks') {
+      if (url === '/api/deadline') {
         callCount++
         return { ok: true, json: () => Promise.resolve({
           at_risk: [{ item_id: 1, title: 'Repeat task', due_date: '2026-02-25', status: 'not_started', risk_level: 'high' }],

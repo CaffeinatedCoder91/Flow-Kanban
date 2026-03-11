@@ -59,7 +59,7 @@ export function useImportTasks({ setItems, showImportSuccess, onImported }: UseI
     try {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await apiFetch('/api/extract-from-file', { method: 'POST', body: formData })
+      const res = await apiFetch('/api/extract', { method: 'POST', body: formData })
       const data = await res.json()
       if (!res.ok) {
         setExtractError(getApiErrorMessage(res.status, data.error))
@@ -84,7 +84,7 @@ export function useImportTasks({ setItems, showImportSuccess, onImported }: UseI
     setIsExtracting(true)
     setExtractError(null)
     try {
-      const res = await apiFetch('/api/extract-tasks', {
+      const res = await apiFetch('/api/extract', {
         method: 'POST',
         body: JSON.stringify({ text: importText }),
       })

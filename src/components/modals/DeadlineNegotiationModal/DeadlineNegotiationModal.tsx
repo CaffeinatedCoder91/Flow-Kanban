@@ -117,7 +117,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
     setBusy(true); setError(null)
     try {
       await patch({ due_date: newDate })
-      apiFetch('/api/deadline-actions', {
+      apiFetch('/api/deadline', {
         method: 'POST',
         body: JSON.stringify({ item_id: item.id, action_type: 'reschedule', original_due_date: item.due_date, new_due_date: newDate }),
       }).catch(() => {})
@@ -155,7 +155,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
       }
 
       await patch(fields)
-      apiFetch('/api/deadline-actions', {
+      apiFetch('/api/deadline', {
         method: 'POST',
         body: JSON.stringify({
           item_id: item.id,
@@ -193,7 +193,7 @@ export const DeadlineNegotiationModal = ({ item, onClose, onDone }: DeadlineNego
       if (deleteOriginal) {
         await apiFetch(`/api/items/${item.id}`, { method: 'DELETE' })
       }
-      apiFetch('/api/deadline-actions', {
+      apiFetch('/api/deadline', {
         method: 'POST',
         body: JSON.stringify({ item_id: item.id, action_type: 'split', original_due_date: item.due_date }),
       }).catch(() => {})

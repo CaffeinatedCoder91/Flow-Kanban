@@ -106,7 +106,7 @@ export function useInsights({
     try {
       const [insightsRes, deadlineRes] = await Promise.all([
         apiFetch('/api/insights', { method: 'POST' }),
-        apiFetch('/api/check-deadline-risks', { method: 'POST' }).catch(() => null),
+        apiFetch('/api/deadline', { method: 'POST' }).catch(() => null),
       ])
       if (!insightsRes.ok) throw new Error('insights-load')
       const insightsData = await insightsRes.json()

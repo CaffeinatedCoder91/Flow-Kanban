@@ -54,7 +54,7 @@ describe('useInsights — auto-fetch (fake timers)', () => {
   })
 
   it('triggers a fetch when itemCount increases (item added)', async () => {
-    mockFetch({ '/api/insights': { insights: [] }, '/api/check-deadline-risks': { at_risk: [] } })
+    mockFetch({ '/api/insights': { insights: [] }, '/api/deadline': { at_risk: [] } })
     const fetchSpy = global.fetch as ReturnType<typeof vi.fn>
     const params = makeParams([makeItem('1')])
     const { rerender } = renderHook((p) => useInsights(p), { initialProps: params })
@@ -69,7 +69,7 @@ describe('useInsights — auto-fetch (fake timers)', () => {
   })
 
   it('does NOT re-fetch when only a field changes (same item count)', async () => {
-    mockFetch({ '/api/insights': { insights: [] }, '/api/check-deadline-risks': { at_risk: [] } })
+    mockFetch({ '/api/insights': { insights: [] }, '/api/deadline': { at_risk: [] } })
     const fetchSpy = global.fetch as ReturnType<typeof vi.fn>
     const items = [makeItem('1')]
     const params = makeParams(items)
@@ -89,7 +89,7 @@ describe('useInsights — manual refresh (real timers)', () => {
 
   it('fetchInsightsNow populates insights and sets isAllClear', async () => {
     const insight = { type: 'stale', severity: 'low', title: 'Stale task', description: 'desc', items: ['1'] }
-    mockFetch({ '/api/insights': { insights: [insight] }, '/api/check-deadline-risks': { at_risk: [] } })
+    mockFetch({ '/api/insights': { insights: [insight] }, '/api/deadline': { at_risk: [] } })
     const { result } = renderHook(() => useInsights(makeParams([makeItem('1')])))
     await act(() => result.current.fetchInsightsNow())
     expect(result.current.insights[0].title).toBe('Stale task')
@@ -106,7 +106,7 @@ describe('useInsights — manual refresh (real timers)', () => {
   })
 
   it('signals isAllClear after a successful fetch with no insights', async () => {
-    mockFetch({ '/api/insights': { insights: [] }, '/api/check-deadline-risks': { at_risk: [] } })
+    mockFetch({ '/api/insights': { insights: [] }, '/api/deadline': { at_risk: [] } })
     const { result } = renderHook(() => useInsights(makeParams([makeItem('1')])))
     await act(() => result.current.fetchInsightsNow())
     // isAllClear = insightsFetched && !loading && visibleInsights.length === 0 && ...
@@ -122,7 +122,7 @@ describe('useInsights — deadline risk proactive alerts (real timers)', () => {
     const setProactiveMessages = vi.fn()
     mockFetch({
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{
           item_id: '1', title: 'Deploy', due_date: '2026-01-01',
           status: 'not_started', risk_level: 'high',
@@ -140,7 +140,7 @@ describe('useInsights — deadline risk proactive alerts (real timers)', () => {
     const setIsAssistantOpen = vi.fn()
     mockFetch({
       '/api/insights': { insights: [] },
-      '/api/check-deadline-risks': {
+      '/api/deadline': {
         at_risk: [{
           item_id: '2', title: 'Review PR', due_date: '2026-03-11',
           status: 'in_progress', risk_level: 'medium',

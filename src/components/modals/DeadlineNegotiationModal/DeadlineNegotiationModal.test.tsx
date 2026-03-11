@@ -600,7 +600,7 @@ describe('DeadlineNegotiationModal', () => {
 
   // ── Action recording ─────────────────────────────────────────────────────────
 
-  it('POSTs to /api/deadline-actions after a successful reschedule', async () => {
+  it('POSTs to /api/deadline after a successful reschedule', async () => {
     const fetchSpy = mockOkFetch({ id: 'mock-42' })
     render(<DeadlineNegotiationModal item={makeItem({ due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
@@ -610,7 +610,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/deadline-actions',
+        '/api/deadline',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({
@@ -624,7 +624,7 @@ describe('DeadlineNegotiationModal', () => {
     )
   })
 
-  it('POSTs to /api/deadline-actions after a successful deprioritize', async () => {
+  it('POSTs to /api/deadline after a successful deprioritize', async () => {
     const fetchSpy = mockOkFetch({ id: 42 })
     render(<DeadlineNegotiationModal item={makeItem({ priority: 'high', due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
@@ -633,7 +633,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/deadline-actions',
+        '/api/deadline',
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('"action_type":"deprioritize"'),
@@ -642,7 +642,7 @@ describe('DeadlineNegotiationModal', () => {
     )
   })
 
-  it('POSTs to /api/deadline-actions after subtasks are created via Split Task', async () => {
+  it('POSTs to /api/deadline after subtasks are created via Split Task', async () => {
     const fetchSpy = mockOkFetch({ id: 99, title: 'x', description: null, status: 'not_started', priority: 'medium', color: null, assignee: null, due_date: null, position: 0, created_at: '', last_modified: '', history: [] })
     render(<DeadlineNegotiationModal item={makeItem({ due_date: TOMORROW })} onClose={vi.fn()} onDone={vi.fn()} />)
 
@@ -653,7 +653,7 @@ describe('DeadlineNegotiationModal', () => {
 
     await waitFor(() =>
       expect(fetchSpy).toHaveBeenCalledWith(
-        '/api/deadline-actions',
+        '/api/deadline',
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('"action_type":"split"'),

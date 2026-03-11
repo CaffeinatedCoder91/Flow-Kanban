@@ -39,7 +39,14 @@ export async function checkRateLimit(
   userId: string,
   limiter: Ratelimit | null = aiRateLimit,
 ): Promise<boolean> {
-  if (!limiter) return true
+  if (!limiter) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[rate-limit] Upstash not configured — blocking request in production')
+      res.status(503).json({ error: 'Rate limiting unavailable. Please try again later.' })
+      return false
+    }
+    return true // allow in development
+  }
 
   const { success, limit, remaining, reset } = await limiter.limit(userId)
 

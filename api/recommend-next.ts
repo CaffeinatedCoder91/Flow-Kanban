@@ -21,6 +21,9 @@ export default withCors(async (req: Req, res: Res) => {
     if (!Array.isArray(body?.items) || body.items.length === 0) {
       return badRequest(res, 'items must be a non-empty array')
     }
+    if (body.items.length > 500) {
+      return badRequest(res, 'Maximum 500 items per request')
+    }
 
     const nonDone = body.items.filter((i) => i.status !== 'done')
     if (nonDone.length === 0) {

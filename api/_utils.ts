@@ -42,16 +42,21 @@ export async function getUserId(req: Req): Promise<string | null> {
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 
-const CORS_HEADERS: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
+const ALLOWED_ORIGINS = new Set(
+  (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean)
+)
 
-export function setCors(res: Res): void {
-  for (const [key, val] of Object.entries(CORS_HEADERS)) {
-    res.setHeader(key, val)
-  }
+export function setCors(res: Res, req?: Req): void {
+  const origin = typeof req?.headers?.origin === 'string' ? req.headers.origin : ''
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : ''
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  if (allowedOrigin) res.setHeader('Vary', 'Origin')
 }
 
 // ─── Response helpers ─────────────────────────────────────────────────────────
@@ -69,10 +74,10 @@ export function notFound(res: Res, message = 'Not found'): void {
 }
 
 export function serverError(res: Res, err: unknown, context?: Record<string, unknown>): void {
-  const message = err instanceof Error ? err.message : 'Internal server error'
-  console.error('[api]', message, err)
+  const detail = err instanceof Error ? err.message : String(err)
+  console.error('[api]', detail, err)
   captureException(err, context)
-  res.status(500).json({ error: message })
+  res.status(500).json({ error: 'Internal server error' })
 }
 
 // ─── Vercel handler wrapper ───────────────────────────────────────────────────
@@ -84,7 +89,7 @@ type Handler = (req: Req, res: Res) => Promise<void>
  */
 export function withCors(handler: Handler): Handler {
   return async (req: Req, res: Res) => {
-    setCors(res)
+    setCors(res, req)
     if (req.method === 'OPTIONS') {
       res.status(204).end()
       return

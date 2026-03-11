@@ -8,6 +8,9 @@ import { withCors, getUserId, unauthorized, serverError, type Req, type Res } fr
 import { checkRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { ChatSchema } from '../lib/validation.js'
+import { sanitizeItemFields } from '../lib/sanitize.js'
+
+const MAX_TOOL_ROUNDS = 5
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -112,7 +115,8 @@ Today's date: ${new Date().toISOString().split('T')[0]}`
     })
 
     // Agentic loop — execute tool calls and feed results back
-    while (response.stop_reason === 'tool_use') {
+    let toolRounds = 0
+    while (response.stop_reason === 'tool_use' && ++toolRounds <= MAX_TOOL_ROUNDS) {
       const toolUseBlocks = response.content.filter(
         (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use'
       )
@@ -125,19 +129,25 @@ Today's date: ${new Date().toISOString().split('T')[0]}`
 
         try {
           if (toolUse.name === 'create_item') {
-            const item = await createItem(userId, {
+            const clean = sanitizeItemFields({
               title:       input.title,
-              status:      input.status      ?? 'not_started',
-              priority:    input.priority    ?? 'medium',
               description: input.description ?? null,
               assignee:    input.assignee    ?? null,
+            })
+            const item = await createItem(userId, {
+              title:       clean.title || 'Untitled',
+              status:      input.status      ?? 'not_started',
+              priority:    input.priority    ?? 'medium',
+              description: clean.description ?? null,
+              assignee:    clean.assignee    ?? null,
               due_date:    input.due_date    ?? null,
             })
             result = JSON.stringify({ ok: true, id: item.id, title: item.title })
             actions.push(`Created task: ${item.title}`)
           } else if (toolUse.name === 'update_item') {
             const { id, ...fields } = input
-            const item = await updateItem(userId, id, fields as Partial<Item>)
+            const cleanFields = sanitizeItemFields(fields)
+            const item = await updateItem(userId, id, cleanFields as Partial<Item>)
             result = JSON.stringify({ ok: true, id: item.id })
             actions.push(`Updated task: ${item.title}`)
           } else if (toolUse.name === 'delete_item') {

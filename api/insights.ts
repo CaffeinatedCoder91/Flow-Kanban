@@ -35,6 +35,9 @@ export default withCors(async (req: Req, res: Res) => {
     if (!Array.isArray(body?.items)) {
       return badRequest(res, 'items must be an array')
     }
+    if (body.items.length > 500) {
+      return badRequest(res, 'Maximum 500 items per request')
+    }
 
     const items: Item[] = body.items
     const insights: Insight[] = []

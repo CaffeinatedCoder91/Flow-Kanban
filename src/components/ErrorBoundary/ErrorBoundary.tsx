@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/react'
+import { showReportDialog, ErrorBoundary as SentryErrorBoundary } from '@sentry/react'
 import { ThemeProvider } from '@emotion/react'
 import { theme } from '@/theme'
 import { ErrorRoot, ErrorMessage, RefreshBtn } from '@/main.styles'
@@ -25,7 +25,7 @@ function ErrorFallback({ eventId }: { eventId?: string }) {
         <ErrorMessage>Something broke. Try refreshing the page.</ErrorMessage>
         <RefreshBtn onClick={() => window.location.reload()}>Refresh</RefreshBtn>
         {eventId && (
-          <ReportBtn onClick={() => Sentry.showReportDialog({ eventId })}>
+          <ReportBtn onClick={() => showReportDialog({ eventId })}>
             Report this
           </ReportBtn>
         )}
@@ -35,9 +35,9 @@ function ErrorFallback({ eventId }: { eventId?: string }) {
 }
 
 export const ErrorBoundary = ({ children }: { children: React.ReactNode }) => (
-  <Sentry.ErrorBoundary
+  <SentryErrorBoundary
     fallback={({ eventId }) => <ErrorFallback eventId={eventId ?? undefined} />}
   >
     {children}
-  </Sentry.ErrorBoundary>
+  </SentryErrorBoundary>
 )

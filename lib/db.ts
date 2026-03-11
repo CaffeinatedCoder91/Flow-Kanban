@@ -131,15 +131,20 @@ export async function updateItem(
 
     const updated = row as Item
 
-    // Write a history entry for each field that actually changed
+    // Batch-insert history entries for all changed fields
+    const historyRows: { item_id: string; field: string; old_value: string | null; new_value: string | null }[] = []
     for (const field of allowedFields) {
       if (data[field] !== undefined) {
         const oldVal = current[field] != null ? String(current[field]) : null
         const newVal = data[field]    != null ? String(data[field])    : null
         if (oldVal !== newVal) {
-          await createHistoryEntry(id, field, oldVal, newVal)
+          historyRows.push({ item_id: id, field, old_value: oldVal, new_value: newVal })
         }
       }
+    }
+    if (historyRows.length > 0) {
+      const { error: histErr } = await supabaseAdmin.from('item_history').insert(historyRows)
+      if (histErr) console.error('[db] batch history insert failed:', histErr.message)
     }
 
     return updated

@@ -78,7 +78,8 @@ function App() {
   const alertedItemIdsRef = useRef<Set<string>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
   const [negotiationItem, setNegotiationItem] = useState<Item | null>(null)
-  const [isBoardLoading, setIsBoardLoading] = useState(true)
+  const [isBoardLoading, setIsBoardLoading] = useState(false)
+  const [hasFetchedBoard, setHasFetchedBoard] = useState(false)
   const [insightsFetched, setInsightsFetched] = useState(false)
   const [allClearDismissed, setAllClearDismissed] = useState(false)
   const allClearTimerRef = useRef<ReturnType<typeof setTimeout>>()
@@ -175,7 +176,8 @@ function App() {
 
   const init = useCallback(async () => {
     setBoardLoadError(false)
-    setIsBoardLoading(true)
+    // Only show skeletons if the fetch takes longer than 300ms
+    const skeletonTimer = setTimeout(() => setIsBoardLoading(true), 300)
     try {
       const res = await apiFetch('/api/items')
       if (!res.ok) throw new Error('board-load')
@@ -207,7 +209,9 @@ function App() {
     } catch {
       setBoardLoadError(true)
     } finally {
+      clearTimeout(skeletonTimer)
       setIsBoardLoading(false)
+      setHasFetchedBoard(true)
     }
   }, [])
 
@@ -774,7 +778,9 @@ function App() {
               </button>
             </div>
           )}
-          {isBoardLoading ? (
+          {!hasFetchedBoard && !isBoardLoading ? (
+            <div className="kanban-board" />
+          ) : isBoardLoading ? (
             <div className="kanban-board">
               {STATUS_CONFIG.map(col => (
                 <div key={col.key} className="kanban-column">

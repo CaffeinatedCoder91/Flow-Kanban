@@ -65,12 +65,15 @@ describe('App', () => {
   })
 
   it('renders kanban columns', async () => {
-    mockFetchItems([])
+    mockFetchItems()
     render(<App />)
-    expect(screen.getByText('Not Started')).toBeInTheDocument()
-    expect(screen.getByText('In Progress')).toBeInTheDocument()
-    expect(screen.getByText('Done')).toBeInTheDocument()
-    expect(screen.getByText('Stuck')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Test item')).toBeInTheDocument()
+    })
+    expect(screen.getAllByText('Not Started').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('In Progress').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Done').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Stuck').length).toBeGreaterThanOrEqual(1)
   })
 
   it('loads and displays items in correct column', async () => {

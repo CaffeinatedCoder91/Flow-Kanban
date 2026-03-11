@@ -4,8 +4,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
-import type { Item } from '../lib/supabase.js'
 import { RecommendNextSchema } from '../lib/validation.js'
+import { getItems } from '../lib/db.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -17,15 +17,12 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
-    const body = req.body as { items?: Item[] }
-    if (!Array.isArray(body?.items) || body.items.length === 0) {
-      return badRequest(res, 'items must be a non-empty array')
-    }
-    if (body.items.length > 500) {
-      return badRequest(res, 'Maximum 500 items per request')
+    const items = await getItems(userId)
+    if (items.length === 0) {
+      return badRequest(res, 'No items found — nothing to recommend')
     }
 
-    const nonDone = body.items.filter((i) => i.status !== 'done')
+    const nonDone = items.filter((i) => i.status !== 'done')
     if (nonDone.length === 0) {
       return badRequest(res, 'All items are done — nothing to recommend')
     }
@@ -54,7 +51,12 @@ Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>
     })
 
     const text = '{' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-    const parsed = RecommendNextSchema.parse(JSON.parse(text))
+    let parsed
+    try {
+      parsed = RecommendNextSchema.parse(JSON.parse(text))
+    } catch {
+      return serverError(res, new Error('AI returned malformed recommendation'))
+    }
 
     res.status(200).json({
       recommendedItemId: parsed.itemId,

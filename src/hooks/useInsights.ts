@@ -105,7 +105,7 @@ export function useInsights({
     setIsInsightsLoading(true)
     try {
       const [insightsRes, deadlineRes] = await Promise.all([
-        apiFetch('/api/insights', { method: 'POST', body: JSON.stringify({ items }) }),
+        apiFetch('/api/insights', { method: 'POST' }),
         apiFetch('/api/check-deadline-risks', { method: 'POST' }).catch(() => null),
       ])
       if (!insightsRes.ok) throw new Error('insights-load')
@@ -178,10 +178,7 @@ export function useInsights({
 
       let newRecommendation: Recommendation | null = null
       if (isManual) {
-        const recommendRes = await apiFetch('/api/recommend-next', {
-          method: 'POST',
-          body: JSON.stringify({ items }),
-        })
+        const recommendRes = await apiFetch('/api/recommend-next', { method: 'POST' })
         if (recommendRes.ok) {
           newRecommendation = await recommendRes.json()
           setRecommendation(newRecommendation)

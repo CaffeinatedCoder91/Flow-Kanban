@@ -47,7 +47,12 @@ Return ONLY a JSON array:
       })
 
       const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-      const suggestions = SplitSuggestionSchema.parse(JSON.parse(text))
+      let suggestions
+      try {
+        suggestions = SplitSuggestionSchema.parse(JSON.parse(text))
+      } catch {
+        return serverError(res, new Error('AI returned malformed split suggestions'))
+      }
 
       return res.status(200).json({ suggestions })
     }
@@ -132,7 +137,12 @@ Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. 
     })
 
     const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-    const aiSuggestions = RescheduleSuggestionSchema.parse(JSON.parse(text))
+    let aiSuggestions
+    try {
+      aiSuggestions = RescheduleSuggestionSchema.parse(JSON.parse(text))
+    } catch {
+      return serverError(res, new Error('AI returned malformed reschedule suggestions'))
+    }
 
     const suggestions: Array<{ date: string; label: string; isPattern?: true }> = []
     if (pattern) {

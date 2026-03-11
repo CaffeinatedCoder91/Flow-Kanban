@@ -7,7 +7,7 @@ import { getItemById, getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
-import { SplitSuggestionSchema, RescheduleSuggestionSchema } from '../lib/validation.js'
+import { SplitSuggestionSchema, RescheduleSuggestionSchema, SuggestSchema } from '../lib/validation.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -19,15 +19,15 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
-    const body = req.body as { type?: string; itemId?: string }
-    if (!body?.itemId) return badRequest(res, 'itemId is required')
-    if (body.type !== 'reschedule' && body.type !== 'split') return badRequest(res, 'type must be reschedule or split')
+    const parsed = SuggestSchema.safeParse(req.body)
+    if (!parsed.success) return badRequest(res, parsed.error.errors[0]?.message ?? 'Invalid request body')
+    const { type, itemId } = parsed.data
 
-    const item = await getItemById(userId, body.itemId)
-    if (!item) return notFound(res, `Item ${body.itemId} not found`)
+    const item = await getItemById(userId, itemId)
+    if (!item) return notFound(res, `Item ${itemId} not found`)
 
     // ── Split ─────────────────────────────────────────────────────────────
-    if (body.type === 'split') {
+    if (type === 'split') {
       const aiRes = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 512,

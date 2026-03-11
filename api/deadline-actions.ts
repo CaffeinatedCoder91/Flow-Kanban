@@ -5,9 +5,7 @@
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, standardRateLimit } from '../lib/rateLimit.js'
-
-const VALID_ACTION_TYPES = ['reschedule', 'deprioritize', 'split'] as const
-type ActionType = (typeof VALID_ACTION_TYPES)[number]
+import { DeadlineActionSchema } from '../lib/validation.js'
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -17,30 +15,23 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId, standardRateLimit)) return
 
   try {
-    const body = req.body as {
-      item_id?: string | null
-      action_type?: string
-      original_due_date?: string | null
-      new_due_date?: string | null
-    }
-
-    if (!body?.action_type || !VALID_ACTION_TYPES.includes(body.action_type as ActionType)) {
-      return badRequest(res, `action_type must be one of: ${VALID_ACTION_TYPES.join(', ')}`)
-    }
+    const parsed = DeadlineActionSchema.safeParse(req.body)
+    if (!parsed.success) return badRequest(res, parsed.error.errors[0]?.message ?? 'Invalid request body')
+    const { action_type, item_id, original_due_date, new_due_date } = parsed.data
 
     let daysExtended: number | null = null
-    if (body.action_type === 'reschedule' && body.original_due_date && body.new_due_date) {
-      const orig = new Date(body.original_due_date)
-      const next = new Date(body.new_due_date)
+    if (action_type === 'reschedule' && original_due_date && new_due_date) {
+      const orig = new Date(original_due_date)
+      const next = new Date(new_due_date)
       daysExtended = Math.round((next.getTime() - orig.getTime()) / (1000 * 60 * 60 * 24))
     }
 
     const { error } = await supabaseAdmin.from('deadline_actions').insert({
-      item_id:           body.item_id ?? null,
+      item_id:           item_id ?? null,
       user_id:           userId,
-      action_type:       body.action_type,
-      original_due_date: body.original_due_date ?? null,
-      new_due_date:      body.new_due_date ?? null,
+      action_type,
+      original_due_date: original_due_date ?? null,
+      new_due_date:      new_due_date ?? null,
       days_extended:     daysExtended,
     })
 

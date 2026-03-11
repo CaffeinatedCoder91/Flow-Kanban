@@ -1,120 +1,28 @@
-import React, { useState } from 'react'
-import { apiFetch } from '@/lib/api'
-import { Item, ProposedTask } from '@/types'
-import { TaskPreview } from '../TaskPreview'
+import React from 'react'
+import { Button } from '@/components/ui/Button'
+import { TaskPreview } from '@/components/modals/TaskPreview'
 import { ImportModalProps } from './ImportModal.types'
 import {
   ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody,
   ModalHint, ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel,
-  ModalFooter, HiddenFileInput, FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList,
-  CancelBtn, ProcessBtn,
+  ModalFooter, HiddenFileInput, FileBtnLabel, FileHint, FileSource,
+  PreviewCount, PreviewList,
 } from './ImportModal.styles'
 
-export const ImportModal = ({ onClose, onImported }: ImportModalProps): React.ReactElement => {
-  const [importText, setImportText] = useState('')
-  const [importFileName, setImportFileName] = useState<string | null>(null)
-  const [isExtracting, setIsExtracting] = useState(false)
-  const [isConfirming, setIsConfirming] = useState(false)
-  const [extractedTasks, setExtractedTasks] = useState<ProposedTask[]>([])
-  const [extractError, setExtractError] = useState<string | null>(null)
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const allowedExts = ['.txt', '.pdf', '.docx']
-    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
-    if (!allowedExts.includes(ext)) {
-      setExtractError('Unsupported file type. Please upload a .txt, .pdf, or .docx file.')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setExtractError('File is too large. Maximum size is 5MB.')
-      return
-    }
-
-    setExtractError(null)
-    setIsExtracting(true)
-    setImportFileName(file.name)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await apiFetch('/api/extract-from-file', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (!res.ok) {
-        setExtractError(data.error ?? 'Failed to process file.')
-        setImportFileName(null)
-        return
-      }
-      setExtractedTasks(data.tasks ?? [])
-      if ((data.tasks ?? []).length === 0 && data.message) {
-        setExtractError(data.message)
-        setImportFileName(null)
-      }
-    } catch {
-      setExtractError('Failed to reach the server. Please try again.')
-      setImportFileName(null)
-    } finally {
-      setIsExtracting(false)
-      e.target.value = ''
-    }
-  }
-
-  const handleExtractTasks = async () => {
-    setIsExtracting(true)
-    setExtractError(null)
-    try {
-      const res = await apiFetch('/api/extract-tasks', {
-        method: 'POST',
-        body: JSON.stringify({ text: importText }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setExtractError(data.error ?? 'Something went wrong.')
-        return
-      }
-      setExtractedTasks(data.tasks ?? [])
-      if ((data.tasks ?? []).length === 0 && data.message) {
-        setExtractError(data.message)
-      }
-    } catch {
-      setExtractError('Failed to reach the server. Please try again.')
-    } finally {
-      setIsExtracting(false)
-    }
-  }
-
-  const handleConfirmAll = async () => {
-    setIsConfirming(true)
-    try {
-      const res = await apiFetch('/api/items/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ tasks: extractedTasks }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setExtractError(data.error ?? 'Failed to add tasks. Please try again.')
-        return
-      }
-      const newItems: Item[] = data.items.map((item: Item) => ({ ...item, history: [] }))
-      onImported(newItems)
-      onClose()
-    } catch {
-      setExtractError('Failed to reach the server. Please try again.')
-    } finally {
-      setIsConfirming(false)
-    }
-  }
-
+export const ImportModal = ({
+  isExtracting, isConfirming,
+  importText, importFileName, extractedTasks, extractError,
+  closeImportModal, setImportText, setExtractError, setExtractedTasks,
+  handleFileUpload, handleExtractTasks, handleConfirmAll,
+}: ImportModalProps): React.ReactElement => {
   const canClose = !isExtracting && !isConfirming
 
   return (
-    <ModalOverlay onClick={() => { if (canClose) onClose() }}>
+    <ModalOverlay onClick={() => { if (canClose) closeImportModal() }}>
       <ModalContainer wide={extractedTasks.length > 0} onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <h2>📋 Import Tasks</h2>
-          <ModalClose onClick={onClose} aria-label="Close" disabled={!canClose}>&times;</ModalClose>
+          <ModalClose onClick={closeImportModal} aria-label="Close" disabled={!canClose}>&times;</ModalClose>
         </ModalHeader>
 
         {extractedTasks.length === 0 ? (
@@ -145,10 +53,10 @@ export const ImportModal = ({ onClose, onImported }: ImportModalProps): React.Re
                 <HiddenFileInput type="file" accept=".txt,.pdf,.docx" onChange={handleFileUpload} disabled={isExtracting} />
               </FileBtnLabel>
               <FileHint>.txt · .pdf · .docx · max 5MB</FileHint>
-              <CancelBtn onClick={onClose} disabled={isExtracting}>Cancel</CancelBtn>
-              <ProcessBtn onClick={handleExtractTasks} disabled={!importText.trim() || isExtracting}>
+              <Button variant="secondary" onClick={closeImportModal} disabled={isExtracting}>Cancel</Button>
+              <Button variant="primary" onClick={handleExtractTasks} disabled={!importText.trim() || isExtracting} loading={isExtracting}>
                 {isExtracting ? 'Analysing...' : 'Process'}
-              </ProcessBtn>
+              </Button>
             </ModalFooter>
           </>
         ) : (
@@ -173,10 +81,10 @@ export const ImportModal = ({ onClose, onImported }: ImportModalProps): React.Re
               {extractError && <ExtractError>{extractError}</ExtractError>}
             </ModalBody>
             <ModalFooter>
-              <CancelBtn onClick={() => { setExtractedTasks([]); setExtractError(null) }} disabled={isConfirming}>Back</CancelBtn>
-              <ProcessBtn onClick={handleConfirmAll} disabled={isConfirming || extractedTasks.length === 0}>
-                {isConfirming ? <><Spinner inline /> Adding...</> : `Confirm All (${extractedTasks.length})`}
-              </ProcessBtn>
+              <Button variant="secondary" onClick={() => { setExtractedTasks([]); setExtractError(null) }} disabled={isConfirming}>Back</Button>
+              <Button variant="primary" onClick={handleConfirmAll} disabled={isConfirming || extractedTasks.length === 0} loading={isConfirming}>
+                {isConfirming ? 'Adding...' : `Confirm All (${extractedTasks.length})`}
+              </Button>
             </ModalFooter>
           </>
         )}

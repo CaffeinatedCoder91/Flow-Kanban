@@ -11,8 +11,10 @@ CREATE TABLE IF NOT EXISTS items (
   user_id       UUID                      NOT NULL REFERENCES auth.users(id),
   title         VARCHAR(500)              NOT NULL,
   description   TEXT,
-  status        VARCHAR(50)               NOT NULL DEFAULT 'not_started',
-  priority      VARCHAR(50)               NOT NULL DEFAULT 'medium',
+  status        VARCHAR(50)               NOT NULL DEFAULT 'not_started'
+                  CHECK (status IN ('not_started', 'in_progress', 'done', 'stuck')),
+  priority      VARCHAR(50)               NOT NULL DEFAULT 'medium'
+                  CHECK (priority IN ('low', 'medium', 'high', 'critical')),
   color         VARCHAR(50),
   assignee      VARCHAR(255),
   due_date      DATE,
@@ -48,6 +50,15 @@ CREATE INDEX IF NOT EXISTS idx_items_due_date
 
 CREATE INDEX IF NOT EXISTS idx_item_history_item_id
   ON item_history (item_id);
+
+CREATE INDEX IF NOT EXISTS idx_item_history_changed_at
+  ON item_history (changed_at);
+
+CREATE INDEX IF NOT EXISTS idx_items_user_id_status
+  ON items (user_id, status);
+
+CREATE INDEX IF NOT EXISTS idx_deadline_actions_user_id_action_type
+  ON deadline_actions (user_id, action_type);
 
 -- ------------------------------------------------------------
 -- Row-Level Security

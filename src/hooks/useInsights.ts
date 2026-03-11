@@ -206,13 +206,16 @@ export function useInsights({
     }
   }, [items, showRefreshMessage, clearRefreshMessage, setIsAssistantOpen, setProactiveMessages])
 
-  // Debounced insights fetch when items change
+  // Fetch insights when the number of items changes (tasks added or deleted),
+  // not on every field edit. Field edits (status, priority, etc.) don't
+  // meaningfully change the insights picture and would burn through the AI rate limit.
+  const itemCount = items.length
   useEffect(() => {
-    if (items.length === 0) return
+    if (itemCount === 0) return
     clearTimeout(insightsTimeoutRef.current)
     insightsTimeoutRef.current = setTimeout(fetchInsightsNow, 500)
     return () => clearTimeout(insightsTimeoutRef.current)
-  }, [items])
+  }, [itemCount])
 
   // Auto-dismiss "all clear" after 5 seconds
   const isAllClear = insightsFetched && !isInsightsLoading && visibleInsights.length === 0

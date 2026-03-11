@@ -3,10 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { STATUS_CONFIG, Item } from '@/types'
 import {
-  ModalOverlay, ModalContainer, ModalHeader, ModalClose, ModalBody, ModalHint,
-  ModalTextarea, ExtractError, SpinnerRow, Spinner, SpinnerLabel, ModalFooter,
-  FileBtnLabel, FileHint, FileSource, PreviewCount, PreviewList, Toast, ToastRetryBtn,
-  ColumnDot, SkeletonLineVar, NoMarginSpinner, HiddenFileInput,
+  Toast, ToastRetryBtn, ColumnDot, SkeletonLineVar, NoMarginSpinner,
   AvatarWrapper, UserAvatar, AvatarMenu, AvatarMenuUser, AvatarMenuDivider, AvatarMenuBtn,
 } from '@/App.styles'
 import { Button } from '@/components/ui/Button'
@@ -14,7 +11,7 @@ import { KanbanBoard } from '@/components/board/KanbanBoard'
 import { InsightCard } from '@/components/panels/InsightCard'
 import { SpotlightCard } from '@/components/panels/SpotlightCard'
 import { AssistantPanel } from '@/components/panels/AssistantPanel'
-import { TaskPreview } from '@/components/modals/TaskPreview'
+import { ImportModal } from '@/components/modals/ImportModal'
 const SummaryView = React.lazy(() =>
   import('@/components/panels/SummaryView').then(m => ({ default: m.SummaryView }))
 )
@@ -393,80 +390,7 @@ function App() {
           />
         </Suspense>
       )}
-      {importTasks.isImportOpen && (
-        <ModalOverlay onClick={() => { if (!importTasks.isExtracting && !importTasks.isConfirming) importTasks.closeImportModal() }}>
-          <ModalContainer wide={importTasks.extractedTasks.length > 0} onClick={e => e.stopPropagation()}>
-            <ModalHeader>
-              <h2>📋 Import Tasks</h2>
-              <ModalClose onClick={importTasks.closeImportModal} aria-label="Close" disabled={importTasks.isExtracting || importTasks.isConfirming}>&times;</ModalClose>
-            </ModalHeader>
-
-            {importTasks.extractedTasks.length === 0 ? (
-              <>
-                <ModalBody>
-                  <ModalHint>Paste your tasks below, or upload a file.</ModalHint>
-                  <ModalTextarea
-                    placeholder={'e.g.\n- Fix login bug\n- Update homepage banner\n- Write release notes'}
-                    value={importTasks.importText}
-                    onChange={e => { importTasks.setImportText(e.target.value); importTasks.setExtractError(null) }}
-                    autoFocus
-                    disabled={importTasks.isExtracting}
-                  />
-                  {importTasks.extractError && <ExtractError>{importTasks.extractError}</ExtractError>}
-                  {importTasks.isExtracting && (
-                    <SpinnerRow>
-                      <Spinner />
-                      <SpinnerLabel>Analysing...</SpinnerLabel>
-                    </SpinnerRow>
-                  )}
-                </ModalBody>
-                <ModalFooter>
-                  <FileBtnLabel aria-label="Upload file">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                    </svg>
-                    Upload file
-                    <HiddenFileInput type="file" accept=".txt,.pdf,.docx" onChange={importTasks.handleFileUpload} disabled={importTasks.isExtracting} />
-                  </FileBtnLabel>
-                  <FileHint>.txt · .pdf · .docx · max 5MB</FileHint>
-                  <Button variant="secondary" onClick={importTasks.closeImportModal} disabled={importTasks.isExtracting}>Cancel</Button>
-                  <Button variant="primary" onClick={importTasks.handleExtractTasks} disabled={!importTasks.importText.trim() || importTasks.isExtracting} loading={importTasks.isExtracting}>
-                    {importTasks.isExtracting ? 'Analysing...' : 'Process'}
-                  </Button>
-                </ModalFooter>
-              </>
-            ) : (
-              <>
-                <ModalBody preview>
-                  {importTasks.importFileName && (
-                    <FileSource>📄 Tasks from: <strong>{importTasks.importFileName}</strong></FileSource>
-                  )}
-                  <PreviewCount>
-                    {importTasks.extractedTasks.length} task{importTasks.extractedTasks.length !== 1 ? 's' : ''} found — edit or remove before adding
-                  </PreviewCount>
-                  <PreviewList>
-                    {importTasks.extractedTasks.map((task, i) => (
-                      <TaskPreview
-                        key={i}
-                        task={task}
-                        onChange={updated => importTasks.setExtractedTasks(prev => prev.map((t, j) => j === i ? updated : t))}
-                        onRemove={() => importTasks.setExtractedTasks(prev => prev.filter((_, j) => j !== i))}
-                      />
-                    ))}
-                  </PreviewList>
-                  {importTasks.extractError && <ExtractError>{importTasks.extractError}</ExtractError>}
-                </ModalBody>
-                <ModalFooter>
-                  <Button variant="secondary" onClick={() => { importTasks.setExtractedTasks([]); importTasks.setExtractError(null) }} disabled={importTasks.isConfirming}>Back</Button>
-                  <Button variant="primary" onClick={importTasks.handleConfirmAll} disabled={importTasks.isConfirming || importTasks.extractedTasks.length === 0} loading={importTasks.isConfirming}>
-                    {importTasks.isConfirming ? 'Adding...' : `Confirm All (${importTasks.extractedTasks.length})`}
-                  </Button>
-                </ModalFooter>
-              </>
-            )}
-          </ModalContainer>
-        </ModalOverlay>
-      )}
+      {importTasks.isImportOpen && <ImportModal {...importTasks} />}
     </div>
   )
 }

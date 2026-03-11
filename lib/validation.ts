@@ -77,6 +77,24 @@ export const ExtractedTaskSchema = z.array(z.object({
   confidence: z.record(z.string(), z.number()).default({}),
 }))
 
+// ─── Suggest Schema ────────────────────────────────────────────────────────────
+// api/suggest.ts body: { type, itemId }
+
+export const SuggestSchema = z.object({
+  type: z.enum(['reschedule', 'split']),
+  itemId: z.string().uuid('itemId must be a valid UUID'),
+})
+
+// ─── Deadline Action Schema ─────────────────────────────────────────────────────
+// api/deadline-actions.ts body: { item_id, action_type, original_due_date, new_due_date }
+
+export const DeadlineActionSchema = z.object({
+  action_type: z.enum(['reschedule', 'deprioritize', 'split']),
+  item_id: z.string().uuid().optional().nullable(),
+  original_due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  new_due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+})
+
 // ─── Inferred Types ────────────────────────────────────────────────────────────
 
 export type CreateItemInput = z.infer<typeof CreateItemSchema>

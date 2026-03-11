@@ -19,26 +19,19 @@ export const Card = styled.div`
   max-width: 400px;
 `
 
-export const Logo = styled.div`
+export const AuthLogo = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
 `
 
-export const LogoDot = styled.span`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: ${p => p.theme.colors.primary};
-  display: inline-block;
-`
-
-export const LogoText = styled.span`
-  font-size: 1.25rem;
+export const AuthWordMark = styled.span`
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.3rem;
   font-weight: 700;
+  letter-spacing: -0.03em;
   color: ${p => p.theme.colors.text};
-  letter-spacing: -0.02em;
 `
 
 export const Title = styled.h1`

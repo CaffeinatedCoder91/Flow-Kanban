@@ -4,10 +4,11 @@
 import React, { useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import {
-  Page, Card, Logo, LogoDot, LogoText,
+  Page, Card, AuthLogo, AuthWordMark,
   Title, Subtitle, Field, Label, Input,
   ErrorMsg, ConfirmBanner, SubmitBtn, Footer, FooterLink,
 } from './SignUp.styles'
+import { Logo } from '@/components/ui/Logo/Logo'
 
 interface SignUpProps {
   onSwitchToSignIn: () => void
@@ -56,10 +57,10 @@ export const SignUp = ({ onSwitchToSignIn }: SignUpProps): React.ReactElement =>
     return (
       <Page>
         <Card>
-          <Logo>
-            <LogoDot />
-            <LogoText>Flow</LogoText>
-          </Logo>
+          <AuthLogo>
+            <Logo size={32} />
+            <AuthWordMark>Flow</AuthWordMark>
+          </AuthLogo>
           <ConfirmBanner>
             <strong>Check your email</strong>
             We sent a confirmation link to <strong>{email}</strong>.
@@ -79,10 +80,10 @@ export const SignUp = ({ onSwitchToSignIn }: SignUpProps): React.ReactElement =>
   return (
     <Page>
       <Card>
-        <Logo>
-          <LogoDot />
-          <LogoText>Flow</LogoText>
-        </Logo>
+        <AuthLogo>
+          <Logo size={32} />
+          <AuthWordMark>Flow</AuthWordMark>
+        </AuthLogo>
 
         <Title>Create account</Title>
         <Subtitle>Start managing your tasks with Flow</Subtitle>

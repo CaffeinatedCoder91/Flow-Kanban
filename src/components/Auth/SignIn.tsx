@@ -5,10 +5,11 @@ import React, { useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabaseBrowser'
 import {
-  Page, Card, Logo, LogoDot, LogoText,
+  Page, Card, AuthLogo, AuthWordMark,
   Title, Subtitle, Field, Label, Input,
   ErrorMsg, SubmitBtn, Divider, GoogleBtn, GuestBtn, Footer, FooterLink,
 } from './SignIn.styles'
+import { Logo } from '@/components/ui/Logo/Logo'
 import { signInAsGuest } from '@/lib/guestLogin'
 
 interface SignInProps {
@@ -61,10 +62,10 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
   return (
     <Page>
       <Card>
-        <Logo>
-          <LogoDot />
-          <LogoText>Flow</LogoText>
-        </Logo>
+        <AuthLogo>
+          <Logo size={32} />
+          <AuthWordMark>Flow</AuthWordMark>
+        </AuthLogo>
 
         <Title>Welcome back</Title>
         <Subtitle>Sign in to your board</Subtitle>

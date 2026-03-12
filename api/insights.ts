@@ -26,6 +26,29 @@ interface Insight {
   items: string[]  // item UUIDs
 }
 
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function tokenSet(value: string): Set<string> {
+  const tokens = normalizeText(value).split(' ').filter(t => t.length >= 3)
+  return new Set(tokens)
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 || b.size === 0) return 0
+  let intersection = 0
+  for (const t of a) {
+    if (b.has(t)) intersection += 1
+  }
+  const union = a.size + b.size - intersection
+  return union === 0 ? 0 : intersection / union
+}
+
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -122,6 +145,29 @@ export default withCors(async (req: Req, res: Res) => {
 
     // ── Semantic duplicates (AI) ─────────────────────────────────────────────
     if (items.length >= 2) {
+      const tokenized = items.map(i => ({
+        id: i.id,
+        title: i.title,
+        description: i.description ?? '',
+        tokens: tokenSet(`${i.title} ${i.description ?? ''}`),
+      }))
+
+      let hasNearDuplicate = false
+      for (let i = 0; i < tokenized.length; i++) {
+        for (let j = i + 1; j < tokenized.length; j++) {
+          if (jaccard(tokenized[i].tokens, tokenized[j].tokens) >= 0.6) {
+            hasNearDuplicate = true
+            break
+          }
+        }
+        if (hasNearDuplicate) break
+      }
+
+      if (!hasNearDuplicate) {
+        res.status(200).json({ insights })
+        return
+      }
+
       try {
         const itemList = items.map((i) =>
           `${i.id}: ${i.title}${i.description ? ` — ${i.description}` : ''}`
@@ -153,6 +199,15 @@ If no duplicates, return {"groups": []}`,
           for (const group of parsed.groups) {
             if (group.length >= 2) {
               const dupeItems = group.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[]
+              let maxSim = 0
+              for (let i = 0; i < dupeItems.length; i++) {
+                for (let j = i + 1; j < dupeItems.length; j++) {
+                  const a = tokenSet(`${dupeItems[i].title} ${dupeItems[i].description ?? ''}`)
+                  const b = tokenSet(`${dupeItems[j].title} ${dupeItems[j].description ?? ''}`)
+                  maxSim = Math.max(maxSim, jaccard(a, b))
+                }
+              }
+              if (maxSim < 0.7) continue
               insights.push({
                 type: 'duplicate',
                 severity: 'low',

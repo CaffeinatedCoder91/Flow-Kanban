@@ -29,7 +29,6 @@ import { useBoardItems } from '@/hooks/useBoardItems'
 import { useImportTasks } from '@/hooks/useImportTasks'
 import { useInsights } from '@/hooks/useInsights'
 import { useOnboarding } from '@/hooks/useOnboarding'
-import { DEMO_EMAIL } from '@/lib/guestLogin'
 
 function App() {
   const { user, signOut } = useAuth()
@@ -55,7 +54,7 @@ function App() {
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const toasts = useToasts()
-  const isDemo = user?.email === DEMO_EMAIL
+  const isDemo = !!user?.user_metadata?.demo
   const board = useBoardItems({ showError: toasts.showError, isDemo })
   const onboarding = useOnboarding({ items: board.items })
   const importTasks = useImportTasks({

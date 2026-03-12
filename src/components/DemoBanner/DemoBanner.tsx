@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import styled from '@emotion/styled'
 import { useAuth } from '@/context/AuthContext'
-import { DEMO_EMAIL } from '@/lib/guestLogin'
 
 export const DemoBanner = (): React.ReactElement | null => {
   const { user, signOut } = useAuth()
   const [closed, setClosed] = useState(false)
 
-  if (!user || user.email !== DEMO_EMAIL || closed) return null
+  if (!user || !user.user_metadata?.demo || closed) return null
 
   const handleSignUp = async (e: React.MouseEvent) => {
     e.preventDefault()

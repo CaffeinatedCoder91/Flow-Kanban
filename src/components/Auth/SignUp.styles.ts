@@ -71,7 +71,8 @@ export const Input = styled.input`
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 
-  &::placeholder { color: ${p => p.theme.colors.textTertiary}; }
+  &::placeholder { color: #6B7280; }
+  html.dark &::placeholder { color: ${p => p.theme.colors.textSecondary}; }
 
   &:focus {
     border-color: ${p => p.theme.colors.primary};
@@ -105,7 +106,7 @@ export const SubmitBtn = styled.button`
   width: 100%;
   padding: 0.7rem 1rem;
   margin-top: 0.5rem;
-  background: ${p => p.theme.colors.primaryDark};
+  background: #6D28D9;
   color: #fff;
   border: none;
   border-radius: ${p => p.theme.borderRadius.lg};
@@ -115,7 +116,7 @@ export const SubmitBtn = styled.button`
   cursor: pointer;
   transition: background 0.15s;
 
-  &:hover:not(:disabled) { background: ${p => p.theme.colors.primaryDark}; }
+  &:hover:not(:disabled) { background: #5B21B6; }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `
 
@@ -130,11 +131,12 @@ export const FooterLink = styled.button`
   background: none;
   border: none;
   padding: 0;
-  color: ${p => p.theme.colors.primaryDark};
+  color: #6D28D9;
   font-size: inherit;
   font-family: inherit;
   font-weight: ${p => p.theme.typography.fontWeight.medium};
   cursor: pointer;
 
+  html.dark & { color: ${p => p.theme.colors.primaryDark}; }
   &:hover { text-decoration: underline; }
 `

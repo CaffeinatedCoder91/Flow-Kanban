@@ -35,7 +35,22 @@ export default defineConfig({
     },
     proxy: {
       '/api': 'http://localhost:3000'
-    }
+    },
+    headers: {
+      // Override the strict production CSP so Vite's inline React refresh
+      // script and HMR WebSocket are not blocked during local development.
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: blob:",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co ws://localhost:* http://localhost:* https://*.sentry.io https://*.ingest.sentry.io",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+      ].join('; '),
+    },
   },
   test: {
     projects: [
@@ -64,6 +79,13 @@ export default defineConfig({
           // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
           storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
+        resolve: {
+          alias: {
+            '@': path.resolve(dirname, 'src'),
+            // Storybook vitest plugin rewrites @emotion/react → @emotion/react-vite; alias it back
+            '@emotion/react-vite': '@emotion/react',
+          },
+        },
         test: {
           name: 'storybook',
           browser: {
@@ -71,6 +93,9 @@ export default defineConfig({
             headless: true,
             provider: 'playwright',
             instances: [{ browser: 'chromium' }],
+            api: {
+              host: '127.0.0.1',
+            },
           },
           setupFiles: ['.storybook/vitest.setup.ts'],
         },

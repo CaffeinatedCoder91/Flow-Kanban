@@ -40,12 +40,16 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
       if (isDemo && data.length > 0) {
         await Promise.all(data.map(item => apiFetch(`/api/items/${item.id}`, { method: 'DELETE' }).catch(() => {})))
         data = []
+        // Clear seed flag so reseeding can happen (handles page-refresh case)
+        try { localStorage.removeItem('flow-sample-ids') } catch {}
       }
 
       setItems(data)
 
       const alreadySeeded = !!localStorage.getItem('flow-sample-ids')
-      if (data.length === 0 && !hasSeenWelcome() && !alreadySeeded) {
+      // Demo users: skip the hasSeenWelcome() guard — the welcome modal can be
+      // dismissed during cleanup, which would otherwise race and prevent seeding.
+      if (data.length === 0 && !alreadySeeded && (isDemo || !hasSeenWelcome())) {
         const tasks = [
           { title: 'Deploy new feature to production', status: 'in_progress', priority: 'high',     description: 'Ship the redesigned dashboard after final QA sign-off.' },
           { title: 'Review team PRs',                  status: 'not_started', priority: 'medium',   description: 'Go through open pull requests and leave detailed feedback.' },

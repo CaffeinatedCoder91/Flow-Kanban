@@ -32,6 +32,16 @@ AI-powered Kanban board with ambient intelligence — smart insights, natural la
 
 ---
 
+## Why I Built This
+
+A friend of mine runs a specialty coffee roastery. He tried Notion, then Monday.com, then a spreadsheet that lasted about a week. Each time the tool demanded more than it gave back — twenty minutes configuring a board for a problem that should've taken two minutes to solve. He quit all of them. Now he runs everything from memory and a notes app, which works until it doesn't.
+
+The pattern repeats everywhere: founders and small teams aren't failing because they lack discipline, they're failing because the tools built for them were actually built for operations teams at mid-size companies. Everything is reactive. You move a card, update a status, log a note. The software records what happened. It never tells you what matters.
+
+Flow treats AI as ambient intelligence woven into the workflow — not a chatbot bolted to the side. It surfaces what's at risk before you have to ask, suggests what to work on next when you're stuck, and turns a pile of meeting notes into actual tasks in seconds. The goal isn't to replace judgment. It's to protect attention so it can go where it's actually needed.
+
+---
+
 ## Features
 
 ### Ambient Intelligence

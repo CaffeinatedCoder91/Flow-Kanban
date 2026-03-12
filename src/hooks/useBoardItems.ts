@@ -27,8 +27,13 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
     }
   })
   const [isClearingSample, setIsClearingSample] = useState(false)
+  const initInFlightRef = useRef(false)
+  const seededThisSessionRef = useRef(false)
+  const SEEDING_KEY = 'flow-sample-seeding'
 
   const init = useCallback(async () => {
+    if (initInFlightRef.current) return
+    initInFlightRef.current = true
     setBoardLoadError(false)
     const skeletonTimer = setTimeout(() => setIsBoardLoading(true), 300)
     try {
@@ -47,9 +52,16 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
       setItems(data)
 
       const alreadySeeded = !!localStorage.getItem('flow-sample-ids')
+      const isSeeding = !!localStorage.getItem(SEEDING_KEY)
       // Demo users: skip the hasSeenWelcome() guard — the welcome modal can be
       // dismissed during cleanup, which would otherwise race and prevent seeding.
-      if (data.length === 0 && !alreadySeeded && (isDemo || !hasSeenWelcome())) {
+      if (
+        data.length === 0 &&
+        !alreadySeeded &&
+        !isSeeding &&
+        !seededThisSessionRef.current &&
+        (isDemo || !hasSeenWelcome())
+      ) {
         const tasks = [
           { title: 'Deploy new feature to production', status: 'in_progress', priority: 'high',     description: 'Ship the redesigned dashboard after final QA sign-off.' },
           { title: 'Review team PRs',                  status: 'not_started', priority: 'medium',   description: 'Go through open pull requests and leave detailed feedback.' },
@@ -57,6 +69,7 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
           { title: 'Fix login bug on mobile',          status: 'stuck',       priority: 'critical', description: 'Users on iOS can\'t sign in — blocked on auth service response.' },
         ]
         try {
+          localStorage.setItem(SEEDING_KEY, '1')
           const seedRes = await apiFetch('/api/items/bulk', {
             method: 'POST',
             body: JSON.stringify({ tasks }),
@@ -67,8 +80,12 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
             localStorage.setItem('flow-sample-ids', JSON.stringify(ids))
             setSampleIds(ids)
             setItems(seedData.items)
+            seededThisSessionRef.current = true
           }
         } catch { /* ignore — user just won't see sample data */ }
+        finally {
+          try { localStorage.removeItem(SEEDING_KEY) } catch {}
+        }
       }
     } catch {
       setBoardLoadError(true)
@@ -76,6 +93,7 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
       clearTimeout(skeletonTimer)
       setIsBoardLoading(false)
       setHasFetchedBoard(true)
+      initInFlightRef.current = false
     }
   }, [])
 

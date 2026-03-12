@@ -39,6 +39,10 @@ function tokenSet(value: string): Set<string> {
   return new Set(tokens)
 }
 
+function titlesMatch(a: Item, b: Item): boolean {
+  return normalizeText(a.title) === normalizeText(b.title)
+}
+
 function jaccard(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 || b.size === 0) return 0
   let intersection = 0
@@ -155,7 +159,13 @@ export default withCors(async (req: Req, res: Res) => {
       let hasNearDuplicate = false
       for (let i = 0; i < tokenized.length; i++) {
         for (let j = i + 1; j < tokenized.length; j++) {
-          if (jaccard(tokenized[i].tokens, tokenized[j].tokens) >= 0.6) {
+          const itemA = items.find(x => x.id === tokenized[i].id)
+          const itemB = items.find(x => x.id === tokenized[j].id)
+          if (itemA && itemB && titlesMatch(itemA, itemB)) {
+            hasNearDuplicate = true
+            break
+          }
+          if (jaccard(tokenized[i].tokens, tokenized[j].tokens) >= 0.8) {
             hasNearDuplicate = true
             break
           }
@@ -200,14 +210,18 @@ If no duplicates, return {"groups": []}`,
             if (group.length >= 2) {
               const dupeItems = group.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[]
               let maxSim = 0
+              let anyTitleMatch = false
               for (let i = 0; i < dupeItems.length; i++) {
                 for (let j = i + 1; j < dupeItems.length; j++) {
+                  if (titlesMatch(dupeItems[i], dupeItems[j])) {
+                    anyTitleMatch = true
+                  }
                   const a = tokenSet(`${dupeItems[i].title} ${dupeItems[i].description ?? ''}`)
                   const b = tokenSet(`${dupeItems[j].title} ${dupeItems[j].description ?? ''}`)
                   maxSim = Math.max(maxSim, jaccard(a, b))
                 }
               }
-              if (maxSim < 0.7) continue
+              if (!anyTitleMatch && maxSim < 0.85) continue
               insights.push({
                 type: 'duplicate',
                 severity: 'low',

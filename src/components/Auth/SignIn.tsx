@@ -38,7 +38,10 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
       const { error } = await signInAsGuest()
       if (error) {
         console.error('Guest login error:', error.message)
-        setError('Demo login unavailable. Please try again or sign in.')
+        const msg = error.message?.includes('Invalid login credentials')
+          ? 'Demo login failed: invalid credentials. Check VITE_DEMO_EMAIL/VITE_DEMO_PASSWORD and the Supabase demo user.'
+          : error.message || 'Demo login unavailable. Please try again or sign in.'
+        setError(msg)
       }
       // On success, AuthContext picks up the new session automatically.
     } catch (err) {

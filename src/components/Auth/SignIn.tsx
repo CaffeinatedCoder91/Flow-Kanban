@@ -34,13 +34,19 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
   const handleGuestLogin = async () => {
     setGuestLoading(true)
     setError(null)
-    const { error } = await signInAsGuest()
-    if (error) {
-      console.error('Guest login error:', error.message)
+    try {
+      const { error } = await signInAsGuest()
+      if (error) {
+        console.error('Guest login error:', error.message)
+        setError('Demo login unavailable. Please try again or sign in.')
+      }
+      // On success, AuthContext picks up the new session automatically.
+    } catch (err) {
+      console.error('Guest login exception:', err)
       setError('Demo login unavailable. Please try again or sign in.')
+    } finally {
       setGuestLoading(false)
     }
-    // On success, AuthContext picks up the new session automatically.
   }
 
   const handleSubmit = async (e: FormEvent) => {

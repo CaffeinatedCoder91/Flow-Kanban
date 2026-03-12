@@ -1,6 +1,6 @@
 import { supabase } from './supabaseBrowser'
 
-export const DEMO_EMAIL = 'demo@flow.com'
+export const DEMO_EMAIL = (import.meta.env.VITE_DEMO_EMAIL as string | undefined) ?? 'demo@flow.com'
 
 const FLOW_STORAGE_KEYS = [
   'flow-welcome-seen',
@@ -19,10 +19,13 @@ export function clearDemoState() {
 
 export async function signInAsGuest() {
   const password = import.meta.env.VITE_DEMO_PASSWORD
-  if (!password) throw new Error('VITE_DEMO_PASSWORD is not set')
+  const email = DEMO_EMAIL
+  if (!password) {
+    return { error: { message: 'VITE_DEMO_PASSWORD is not set' } }
+  }
   clearDemoState()
   return supabase.auth.signInWithPassword({
-    email: DEMO_EMAIL,
+    email,
     password,
   })
 }

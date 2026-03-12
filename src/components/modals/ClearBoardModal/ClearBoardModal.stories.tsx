@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ThemeProvider } from '@emotion/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { ThemeProvider } from '@emotion/react-vite'
 import { theme } from '@/theme'
 import { ClearBoardModal } from './ClearBoardModal'
 import { defaultProps } from './ClearBoardModal.mockdata'

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { GlobalStyles } from './GlobalStyles'
 
 const meta: Meta<typeof GlobalStyles> = {

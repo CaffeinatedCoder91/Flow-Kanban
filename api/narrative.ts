@@ -9,6 +9,7 @@ import { withCors, getUserId, unauthorized, serverError, type Req, type Res } fr
 import { checkRateLimit } from '../lib/rateLimit.js'
 import type { ItemHistory } from '../lib/supabase.js'
 import { NarrativeSchema } from '../lib/validation.js'
+import { parseJsonFromText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -146,7 +147,6 @@ Stuck tasks: ${tasksStuck.map((h) => h.item_title).join(', ') || 'none'}`
             role: 'user',
             content: `Score the team's momentum from 0–100 and classify sentiment.\n\n${statsText}\n\nReturn ONLY valid JSON: {"score": N, "reasoning": "...", "sentiment": "healthy"|"at_risk"|"critical"}`,
           },
-          { role: 'assistant', content: '{' },
         ],
       }),
     ])
@@ -155,8 +155,12 @@ Stuck tasks: ${tasksStuck.map((h) => h.item_title).join(', ') || 'none'}`
 
     let momentum: { score: number; reasoning: string; sentiment: string } | null = null
     try {
-      const mText = '{' + (momentumRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-      momentum = JSON.parse(mText)
+      const textBlocks = momentumRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      const raw = textBlocks.map(b => b.text).join('')
+      const parsed = parseJsonFromText<{ score: number; reasoning: string; sentiment: string }>(raw)
+      if (parsed && typeof parsed.score === 'number' && typeof parsed.reasoning === 'string' && typeof parsed.sentiment === 'string') {
+        momentum = parsed
+      }
     } catch {
       // momentum is optional
     }

@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ThemeProvider } from '@emotion/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { ThemeProvider } from '@emotion/react-vite'
 import { theme } from '@/theme'
 import { KanbanBoard } from './KanbanBoard'
 import { defaultBoardProps, mockItems } from './KanbanBoard.mockdata'

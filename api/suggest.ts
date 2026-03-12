@@ -8,6 +8,8 @@ import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
 import { SplitSuggestionSchema, RescheduleSuggestionSchema, SuggestSchema } from '../lib/validation.js'
+import { formatDateOnly, parseDateOnly, startOfToday } from '../lib/date.js'
+import { parseJsonFromText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -42,23 +44,27 @@ ${item.description ? `Description: ${item.description}` : ''}
 Return ONLY a JSON array:
 [{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}, ...]`,
           },
-          { role: 'assistant', content: '[' },
         ],
       })
 
-      const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
+      const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      const raw = textBlocks.map(b => b.text).join('')
+      const parsedRaw = parseJsonFromText<unknown>(raw)
+      if (!parsedRaw) {
+        return res.status(502).json({ error: 'AI returned malformed split suggestions' })
+      }
       let suggestions
       try {
-        suggestions = SplitSuggestionSchema.parse(JSON.parse(text))
+        suggestions = SplitSuggestionSchema.parse(parsedRaw)
       } catch {
-        return serverError(res, new Error('AI returned malformed split suggestions'))
+        return res.status(502).json({ error: 'AI returned malformed split suggestions' })
       }
 
       return res.status(200).json({ suggestions })
     }
 
     // ── Reschedule ────────────────────────────────────────────────────────
-    const today = new Date()
+    const today = startOfToday()
     const twoWeeksOut = new Date(today); twoWeeksOut.setDate(today.getDate() + 14)
 
     const allItems = await getItems(userId)
@@ -67,8 +73,8 @@ Return ONLY a JSON array:
         i.due_date &&
         i.id !== item.id &&
         i.status !== 'done' &&
-        new Date(i.due_date) >= today &&
-        new Date(i.due_date) <= twoWeeksOut
+        parseDateOnly(i.due_date) >= today &&
+        parseDateOnly(i.due_date) <= twoWeeksOut
       )
       .slice(0, 10)
 
@@ -102,7 +108,7 @@ Return ONLY a JSON array:
       // deadline_actions table may not exist yet
     }
 
-    const todayStr = today.toISOString().split('T')[0]
+    const todayStr = formatDateOnly(today)
     const upcomingText = upcoming.length
       ? upcoming.map((i) => `  - ${i.title} (due ${i.due_date}, ${i.priority})`).join('\n')
       : '  (none in next 14 days)'
@@ -132,25 +138,30 @@ Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. 
       max_tokens: 256,
       messages: [
         { role: 'user', content: prompt },
-        { role: 'assistant', content: '[' },
       ],
     })
 
-    const text = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
+    const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    const raw = textBlocks.map(b => b.text).join('')
+    const parsedRaw = parseJsonFromText<unknown>(raw)
+    if (!parsedRaw) {
+      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions' })
+    }
     let aiSuggestions
     try {
-      aiSuggestions = RescheduleSuggestionSchema.parse(JSON.parse(text))
+      aiSuggestions = RescheduleSuggestionSchema.parse(parsedRaw)
     } catch {
-      return serverError(res, new Error('AI returned malformed reschedule suggestions'))
+      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions' })
     }
 
     const suggestions: Array<{ date: string; label: string; isPattern?: true }> = []
     if (pattern) {
       const patternDate = new Date(today)
       patternDate.setDate(today.getDate() + pattern.days)
+      const patternDateStr = formatDateOnly(patternDate)
       suggestions.push({
-        date: patternDate.toISOString().split('T')[0],
-        label: `${patternDate.toISOString().split('T')[0]} — your usual +${pattern.days} days (used ${pattern.count} times)`,
+        date: patternDateStr,
+        label: `${patternDateStr} — your usual +${pattern.days} days (used ${pattern.count} times)`,
         isPattern: true,
       })
     }

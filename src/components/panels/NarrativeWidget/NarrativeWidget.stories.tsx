@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { NarrativeWidget } from './NarrativeWidget'
 
 const meta: Meta<typeof NarrativeWidget> = {

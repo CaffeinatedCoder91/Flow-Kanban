@@ -21,6 +21,37 @@ export const CreateItemSchema = ItemSchema.required({ title: true })
 
 export const UpdateItemSchema = ItemSchema.partial()
 
+// ─── Chat tool schemas ────────────────────────────────────────────────────────
+// Validate tool inputs before writing to the DB.
+
+export const ToolCreateItemSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(500, 'Title too long').trim(),
+  status: z.enum(['not_started', 'in_progress', 'done', 'stuck']).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  description: z.string().max(5000, 'Description too long').optional().nullable(),
+  assignee: z.string().max(255, 'Assignee too long').optional().nullable(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'due_date must be YYYY-MM-DD').optional().nullable(),
+})
+
+export const ToolUpdateItemSchema = z.object({
+  id: z.string().uuid('id must be a valid UUID'),
+  title: z.string().min(1).max(500).optional(),
+  status: z.enum(['not_started', 'in_progress', 'done', 'stuck']).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  description: z.string().max(5000).optional().nullable(),
+  assignee: z.string().max(255).optional().nullable(),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+})
+
+export const ToolDeleteItemSchema = z.object({
+  id: z.string().uuid('id must be a valid UUID'),
+})
+
+export const ToolMoveItemSchema = z.object({
+  id: z.string().uuid('id must be a valid UUID'),
+  new_status: z.enum(['not_started', 'in_progress', 'done', 'stuck']),
+})
+
 // ─── Chat Schema ───────────────────────────────────────────────────────────────
 // api/chat.ts body: { message, items }
 

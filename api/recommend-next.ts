@@ -6,6 +6,8 @@ import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, t
 import { checkRateLimit } from '../lib/rateLimit.js'
 import { RecommendNextSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
+import { parseJsonFromText } from '../lib/ai.js'
+import { formatDateOnly } from '../lib/date.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -31,7 +33,7 @@ export default withCors(async (req: Req, res: Res) => {
       `${i.id}: [${i.priority}] ${i.title}${i.due_date ? ` (due ${i.due_date})` : ''}${i.status === 'stuck' ? ' [STUCK]' : ''}`
     ).join('\n')
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = formatDateOnly(new Date())
 
     const aiRes = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -46,16 +48,20 @@ ${itemList}
 
 Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>"}`,
         },
-        { role: 'assistant', content: '{' },
       ],
     })
 
-    const text = '{' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
+    const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    const raw = textBlocks.map(b => b.text).join('')
+    const parsedRaw = parseJsonFromText<unknown>(raw)
+    if (!parsedRaw) {
+      return res.status(502).json({ error: 'AI returned malformed recommendation' })
+    }
     let parsed
     try {
-      parsed = RecommendNextSchema.parse(JSON.parse(text))
+      parsed = RecommendNextSchema.parse(parsedRaw)
     } catch {
-      return serverError(res, new Error('AI returned malformed recommendation'))
+      return res.status(502).json({ error: 'AI returned malformed recommendation' })
     }
 
     res.status(200).json({

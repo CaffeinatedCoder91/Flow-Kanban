@@ -9,6 +9,7 @@ import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, standardRateLimit } from '../lib/rateLimit.js'
 import { DeadlineActionSchema } from '../lib/validation.js'
+import { diffDays, parseDateOnly } from '../lib/date.js'
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -28,9 +29,9 @@ export default withCors(async (req: Req, res: Res) => {
 
       let daysExtended: number | null = null
       if (action_type === 'reschedule' && original_due_date && new_due_date) {
-        const orig = new Date(original_due_date)
-        const next = new Date(new_due_date)
-        daysExtended = Math.round((next.getTime() - orig.getTime()) / (1000 * 60 * 60 * 24))
+        const orig = parseDateOnly(original_due_date)
+        const next = parseDateOnly(new_due_date)
+        daysExtended = diffDays(orig, next)
       }
 
       const { error } = await supabaseAdmin.from('deadline_actions').insert({
@@ -52,7 +53,7 @@ export default withCors(async (req: Req, res: Res) => {
       const atRisk = items
         .filter((i) => i.due_date && i.status !== 'done')
         .flatMap((i) => {
-          const due = new Date(i.due_date!)
+          const due = parseDateOnly(i.due_date!)
           const msUntilDue = due.getTime() - now.getTime()
           const hoursUntilDue = msUntilDue / (1000 * 60 * 60)
           const isToday = due.toDateString() === now.toDateString()

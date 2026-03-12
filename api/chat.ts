@@ -7,8 +7,9 @@ import { createItem, updateItem, deleteItem, getItemById } from '../lib/db.js'
 import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
-import { ChatSchema } from '../lib/validation.js'
+import { ChatSchema, ToolCreateItemSchema, ToolDeleteItemSchema, ToolMoveItemSchema, ToolUpdateItemSchema } from '../lib/validation.js'
 import { sanitizeItemFields } from '../lib/sanitize.js'
+import { formatDateOnly } from '../lib/date.js'
 
 const MAX_TOOL_ROUNDS = 5
 
@@ -99,7 +100,7 @@ export default withCors(async (req: Req, res: Res) => {
 Current board state:
 ${boardContext || '(empty board)'}
 
-Today's date: ${new Date().toISOString().split('T')[0]}`
+Today's date: ${formatDateOnly(new Date())}`
 
     const messages: Anthropic.MessageParam[] = [
       { role: 'user', content: message },
@@ -129,34 +130,42 @@ Today's date: ${new Date().toISOString().split('T')[0]}`
 
         try {
           if (toolUse.name === 'create_item') {
+            const parsed = ToolCreateItemSchema.safeParse(input)
+            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid create_item input')
             const clean = sanitizeItemFields({
-              title:       input.title,
-              description: input.description ?? null,
-              assignee:    input.assignee    ?? null,
+              title:       parsed.data.title,
+              description: parsed.data.description ?? null,
+              assignee:    parsed.data.assignee    ?? null,
             })
             const item = await createItem(userId, {
               title:       clean.title || 'Untitled',
-              status:      input.status      ?? 'not_started',
-              priority:    input.priority    ?? 'medium',
+              status:      parsed.data.status      ?? 'not_started',
+              priority:    parsed.data.priority    ?? 'medium',
               description: clean.description ?? null,
               assignee:    clean.assignee    ?? null,
-              due_date:    input.due_date    ?? null,
+              due_date:    parsed.data.due_date    ?? null,
             })
             result = JSON.stringify({ ok: true, id: item.id, title: item.title })
             actions.push(`Created task: ${item.title}`)
           } else if (toolUse.name === 'update_item') {
-            const { id, ...fields } = input
+            const parsed = ToolUpdateItemSchema.safeParse(input)
+            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid update_item input')
+            const { id, ...fields } = parsed.data
             const cleanFields = sanitizeItemFields(fields)
             const item = await updateItem(userId, id, cleanFields as Partial<Item>)
             result = JSON.stringify({ ok: true, id: item.id })
             actions.push(`Updated task: ${item.title}`)
           } else if (toolUse.name === 'delete_item') {
-            const item = await getItemById(userId, input.id)
-            const deleted = await deleteItem(userId, input.id)
+            const parsed = ToolDeleteItemSchema.safeParse(input)
+            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid delete_item input')
+            const item = await getItemById(userId, parsed.data.id)
+            const deleted = await deleteItem(userId, parsed.data.id)
             result = JSON.stringify({ ok: deleted })
             if (item) actions.push(`Deleted task: ${item.title}`)
           } else if (toolUse.name === 'move_item') {
-            const item = await updateItem(userId, input.id, { status: input.new_status })
+            const parsed = ToolMoveItemSchema.safeParse(input)
+            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid move_item input')
+            const item = await updateItem(userId, parsed.data.id, { status: parsed.data.new_status })
             result = JSON.stringify({ ok: true, id: item.id, new_status: item.status })
             actions.push(`Moved task '${item.title}' to ${item.status}`)
           }

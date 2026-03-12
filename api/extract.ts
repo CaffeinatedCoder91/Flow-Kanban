@@ -11,6 +11,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit } from '../lib/rateLimit.js'
 import { ExtractTasksSchema, ExtractedTaskSchema } from '../lib/validation.js'
+import { parseJsonFromText } from '../lib/ai.js'
 
 // Must disable Vercel's body parser to support multipart uploads.
 // JSON bodies are read from the raw stream below.
@@ -37,21 +38,40 @@ async function extractTasksFromText(text: string) {
     system: EXTRACT_SYSTEM_PROMPT,
     messages: [
       { role: 'user', content: `Extract tasks from the following text:\n\n${text}` },
-      { role: 'assistant', content: '[' },
     ],
   })
 
-  const raw = '[' + (aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? '')
-  return ExtractedTaskSchema.parse(JSON.parse(raw))
+  const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+  const raw = textBlocks.map(b => b.text).join('')
+  const parsed = parseJsonFromText<unknown>(raw)
+  if (!parsed) throw new Error('AI returned malformed JSON')
+  return ExtractedTaskSchema.parse(parsed)
 }
 
 // ─── JSON body reader (body parser is disabled) ───────────────────────────────
 
+const MAX_JSON_BYTES = 1_000_000
+
 function readJsonBody(req: Req): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let data = ''
+    let size = 0
     const stream = req as unknown as NodeJS.ReadableStream
-    stream.on('data', (chunk: Buffer | string) => { data += chunk.toString() })
+    stream.on('data', (chunk: Buffer | string) => {
+      const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+      size += buf.length
+      if (size > MAX_JSON_BYTES) {
+        stream.removeAllListeners('data')
+        stream.removeAllListeners('end')
+        stream.removeAllListeners('error')
+        if (typeof (stream as { destroy?: () => void }).destroy === 'function') {
+          (stream as { destroy: () => void }).destroy()
+        }
+        reject(new Error('JSON body too large'))
+        return
+      }
+      data += buf.toString()
+    })
     stream.on('end', () => {
       try { resolve(JSON.parse(data)) } catch { reject(new Error('Invalid JSON body')) }
     })
@@ -143,7 +163,16 @@ export default withCors(async (req: Req, res: Res) => {
       })
     } else {
       // ── Text path ─────────────────────────────────────────────────────────────
-      const rawBody = await readJsonBody(req)
+      let rawBody: unknown
+      try {
+        rawBody = await readJsonBody(req)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Invalid JSON body'
+        if (msg === 'JSON body too large') {
+          return res.status(413).json({ error: 'Payload too large' })
+        }
+        return badRequest(res, msg)
+      }
       const parsed = ExtractTasksSchema.safeParse(rawBody)
       if (!parsed.success) {
         return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
@@ -156,6 +185,10 @@ export default withCors(async (req: Req, res: Res) => {
       })
     }
   } catch (err) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg === 'AI returned malformed JSON') {
+      return res.status(502).json({ error: msg })
+    }
     serverError(res, err)
   }
 })

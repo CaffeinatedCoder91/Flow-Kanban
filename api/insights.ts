@@ -10,6 +10,8 @@ import { checkRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { DuplicateGroupsSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
+import { parseDateOnly } from '../lib/date.js'
+import { parseJsonFromText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -94,7 +96,7 @@ export default withCors(async (req: Req, res: Res) => {
     // ── Deadline cluster ─────────────────────────────────────────────────────
     const upcoming = items
       .filter((i) => i.due_date && i.status !== 'done')
-      .map((i) => ({ item: i, ts: new Date(i.due_date!).getTime() }))
+      .map((i) => ({ item: i, ts: parseDateOnly(i.due_date!).getTime() }))
       .sort((a, b) => a.ts - b.ts)
 
     for (let i = 0; i < upcoming.length; i++) {
@@ -143,10 +145,11 @@ If no duplicates, return {"groups": []}`,
           ],
         })
 
-        const text = aiRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? ''
-        const jsonMatch = text.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          const parsed = DuplicateGroupsSchema.parse(JSON.parse(jsonMatch[0]))
+        const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
+        const raw = textBlocks.map(b => b.text).join('')
+        const parsedRaw = parseJsonFromText<unknown>(raw)
+        if (parsedRaw) {
+          const parsed = DuplicateGroupsSchema.parse(parsedRaw)
           for (const group of parsed.groups) {
             if (group.length >= 2) {
               const dupeItems = group.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[]

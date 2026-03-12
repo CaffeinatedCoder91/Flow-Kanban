@@ -73,7 +73,14 @@ export function Navbar({
           <span>📋</span>
           <span className="ai-btn-label">Import Tasks</span>
         </button>
-        <button className="ai-btn" onClick={onToggleAssistant} aria-label="AI Assistant" data-tooltip="Ask AI to manage your tasks" data-tooltip-pos="below">
+        <button
+          className={`ai-btn${isAssistantOpen ? ' active' : ''}`}
+          onClick={onToggleAssistant}
+          aria-label="AI Assistant"
+          aria-pressed={isAssistantOpen}
+          data-tooltip="Ask AI to manage your tasks"
+          data-tooltip-pos="below"
+        >
           <span className="ai-sparkle">✨</span>
           <span className="ai-btn-label">AI Assistant</span>
         </button>

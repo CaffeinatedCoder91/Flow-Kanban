@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ThemeProvider } from '@emotion/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
+import { ThemeProvider } from '@emotion/react-vite'
 import { DndContext } from '@dnd-kit/core'
 import { theme } from '@/theme'
 import { TaskCard } from './TaskCard'

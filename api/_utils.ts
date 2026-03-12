@@ -53,7 +53,7 @@ export function setCors(res: Res, req?: Req): void {
   const origin = typeof req?.headers?.origin === 'string' ? req.headers.origin : ''
   const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : ''
 
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
+  if (allowedOrigin) res.setHeader('Access-Control-Allow-Origin', allowedOrigin)
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (allowedOrigin) res.setHeader('Vary', 'Origin')

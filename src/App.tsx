@@ -54,7 +54,7 @@ function App() {
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const toasts = useToasts()
-  const isDemo = !!user?.user_metadata?.demo
+  const isDemo = typeof window !== 'undefined' && localStorage.getItem('flow-demo-session') === '1'
   const board = useBoardItems({ showError: toasts.showError, isDemo })
   const onboarding = useOnboarding({ items: board.items })
   const importTasks = useImportTasks({

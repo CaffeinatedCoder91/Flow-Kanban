@@ -5,8 +5,9 @@ import { useAuth } from '@/context/AuthContext'
 export const DemoBanner = (): React.ReactElement | null => {
   const { user, signOut } = useAuth()
   const [closed, setClosed] = useState(false)
+  const isDemo = typeof window !== 'undefined' && localStorage.getItem('flow-demo-session') === '1'
 
-  if (!user || !user.user_metadata?.demo || closed) return null
+  if (!user || !isDemo || closed) return null
 
   const handleSignUp = async (e: React.MouseEvent) => {
     e.preventDefault()

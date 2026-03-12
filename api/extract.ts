@@ -64,8 +64,9 @@ function readJsonBody(req: Req): Promise<unknown> {
         stream.removeAllListeners('data')
         stream.removeAllListeners('end')
         stream.removeAllListeners('error')
-        if (typeof (stream as { destroy?: () => void }).destroy === 'function') {
-          (stream as { destroy: () => void }).destroy()
+        const destroyable = stream as unknown as { destroy?: () => void }
+        if (typeof destroyable.destroy === 'function') {
+          destroyable.destroy()
         }
         reject(new Error('JSON body too large'))
         return

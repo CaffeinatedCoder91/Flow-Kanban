@@ -54,7 +54,8 @@ function App() {
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const toasts = useToasts()
-  const board = useBoardItems({ showError: toasts.showError })
+  const isDemo = user?.email === 'demo@flow.com'
+  const board = useBoardItems({ showError: toasts.showError, isDemo })
   const onboarding = useOnboarding({ items: board.items })
   const importTasks = useImportTasks({
     setItems: board.setItems,

@@ -5,9 +5,10 @@ import { hasSeenWelcome } from '@/components/modals/WelcomeModal'
 
 interface UseBoardItemsParams {
   showError: (message: string, onRetry?: () => void) => void
+  isDemo?: boolean
 }
 
-export function useBoardItems({ showError }: UseBoardItemsParams) {
+export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
   const [items, setItems] = useState<Item[]>([])
   const [text, setText] = useState('')
   const [isBoardLoading, setIsBoardLoading] = useState(false)
@@ -33,7 +34,14 @@ export function useBoardItems({ showError }: UseBoardItemsParams) {
     try {
       const res = await apiFetch('/api/items')
       if (!res.ok) throw new Error('board-load')
-      const data: Item[] = await res.json()
+      let data: Item[] = await res.json()
+
+      // Demo users get a fresh board each session — delete any leftover items
+      if (isDemo && data.length > 0) {
+        await Promise.all(data.map(item => apiFetch(`/api/items/${item.id}`, { method: 'DELETE' }).catch(() => {})))
+        data = []
+      }
+
       setItems(data)
 
       const alreadySeeded = !!localStorage.getItem('flow-sample-ids')

@@ -5,11 +5,13 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getItemById, getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { withCors, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { SplitSuggestionSchema, RescheduleSuggestionSchema, SuggestSchema } from '../lib/validation.js'
 import { formatDateOnly, parseDateOnly, startOfToday } from '../lib/date.js'
 import { parseJsonFromText } from '../lib/ai.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { truncateText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -18,6 +20,8 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   try {
@@ -30,6 +34,17 @@ export default withCors(async (req: Req, res: Res) => {
 
     // ── Split ─────────────────────────────────────────────────────────────
     if (type === 'split') {
+      const budget = await consumeDailyBudget(userId)
+      if (!budget.allowed) {
+        return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+      }
+      if (ip) {
+        const ipBudget = await consumeIpDailyBudget(ip)
+        if (!ipBudget.allowed) {
+          return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+        }
+      }
+
       const aiRes = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 512,
@@ -38,8 +53,8 @@ export default withCors(async (req: Req, res: Res) => {
             role: 'user',
             content: `Break this task into 2–4 concrete, actionable subtasks.
 
-Task: ${item.title}
-${item.description ? `Description: ${item.description}` : ''}
+Task: ${truncateText(item.title, 120)}
+${item.description ? `Description: ${truncateText(item.description, 400)}` : ''}
 
 Return ONLY a JSON array:
 [{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}, ...]`,
@@ -108,18 +123,29 @@ Return ONLY a JSON array:
       // deadline_actions table may not exist yet
     }
 
+    const budget = await consumeDailyBudget(userId)
+    if (!budget.allowed) {
+      return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+    }
+    if (ip) {
+      const ipBudget = await consumeIpDailyBudget(ip)
+      if (!ipBudget.allowed) {
+        return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+      }
+    }
+
     const todayStr = formatDateOnly(today)
     const upcomingText = upcoming.length
-      ? upcoming.map((i) => `  - ${i.title} (due ${i.due_date}, ${i.priority})`).join('\n')
+      ? upcoming.map((i) => `  - ${truncateText(i.title, 120)} (due ${i.due_date}, ${i.priority})`).join('\n')
       : '  (none in next 14 days)'
     const doneText = recentDone.length
-      ? recentDone.map((i) => `  - ${i.title}`).join('\n')
+      ? recentDone.map((i) => `  - ${truncateText(i.title, 120)}`).join('\n')
       : '  (none recently)'
 
     const prompt = `Today is ${todayStr}.
 
 Task to reschedule:
-  Title: ${item.title}
+  Title: ${truncateText(item.title, 120)}
   Current due date: ${item.due_date ?? 'none'}
   Priority: ${item.priority}
   Status: ${item.status}

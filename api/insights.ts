@@ -5,15 +5,18 @@
 // Duplicate detection uses Claude (semantic similarity).
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { DuplicateGroupsSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
 import { parseDateOnly } from '../lib/date.js'
-import { parseJsonFromText } from '../lib/ai.js'
+import { parseJsonFromText, truncateText } from '../lib/ai.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const MAX_DUPLICATE_ITEMS = 200
+const MAX_DESC_CHARS = 200
 
 type InsightType = 'stale' | 'bottleneck' | 'duplicate' | 'priority_inflation' | 'deadline_cluster'
 type Severity = 'low' | 'medium' | 'high'
@@ -58,6 +61,8 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   try {
@@ -149,7 +154,11 @@ export default withCors(async (req: Req, res: Res) => {
 
     // ── Semantic duplicates (AI) ─────────────────────────────────────────────
     if (items.length >= 2) {
-      const tokenized = items.map(i => ({
+      const aiItems = [...items]
+        .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())
+        .slice(0, MAX_DUPLICATE_ITEMS)
+
+      const tokenized = aiItems.map(i => ({
         id: i.id,
         title: i.title,
         description: i.description ?? '',
@@ -179,8 +188,19 @@ export default withCors(async (req: Req, res: Res) => {
       }
 
       try {
-        const itemList = items.map((i) =>
-          `${i.id}: ${i.title}${i.description ? ` — ${i.description}` : ''}`
+        const budget = await consumeDailyBudget(userId)
+        if (!budget.allowed) {
+          return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+        }
+        if (ip) {
+          const ipBudget = await consumeIpDailyBudget(ip)
+          if (!ipBudget.allowed) {
+            return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+          }
+        }
+
+        const itemList = aiItems.map((i) =>
+          `${i.id}: ${truncateText(i.title, 120)}${i.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
         ).join('\n')
 
         const aiRes = await anthropic.messages.create({

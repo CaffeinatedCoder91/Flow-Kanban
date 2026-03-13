@@ -8,16 +8,19 @@
 
 import multer from 'multer'
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { ExtractTasksSchema, ExtractedTaskSchema } from '../lib/validation.js'
-import { parseJsonFromText } from '../lib/ai.js'
+import { parseJsonFromText, truncateText } from '../lib/ai.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
 
 // Must disable Vercel's body parser to support multipart uploads.
 // JSON bodies are read from the raw stream below.
 export const config = { api: { bodyParser: false } }
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const MAX_EXTRACT_CHARS = 5000
+const MAX_FILE_BYTES = 2 * 1024 * 1024
 
 const EXTRACT_SYSTEM_PROMPT = `You are a task extraction assistant. Extract all actionable tasks from the provided text.
 For each task return:
@@ -84,7 +87,7 @@ function readJsonBody(req: Req): Promise<unknown> {
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: MAX_FILE_BYTES },
   fileFilter: (_req, file, cb) => {
     const allowed = ['.txt', '.pdf', '.docx']
     const ext = '.' + file.originalname.split('.').pop()?.toLowerCase()
@@ -132,6 +135,8 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   const contentType = (req.headers['content-type'] ?? '') as string
@@ -157,7 +162,18 @@ export default withCors(async (req: Req, res: Res) => {
         return badRequest(res, 'Could not extract enough text from the file')
       }
 
-      const tasks = await extractTasksFromText(text)
+      const budget = await consumeDailyBudget(userId)
+      if (!budget.allowed) {
+        return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+      }
+      if (ip) {
+        const ipBudget = await consumeIpDailyBudget(ip)
+        if (!ipBudget.allowed) {
+          return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+        }
+      }
+
+      const tasks = await extractTasksFromText(truncateText(text, MAX_EXTRACT_CHARS))
       return res.status(200).json({
         tasks,
         ...(tasks.length === 0 && { message: 'No actionable tasks found in the uploaded file.' }),
@@ -179,7 +195,18 @@ export default withCors(async (req: Req, res: Res) => {
         return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
       }
 
-      const tasks = await extractTasksFromText(parsed.data.text)
+      const budget = await consumeDailyBudget(userId)
+      if (!budget.allowed) {
+        return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+      }
+      if (ip) {
+        const ipBudget = await consumeIpDailyBudget(ip)
+        if (!ipBudget.allowed) {
+          return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+        }
+      }
+
+      const tasks = await extractTasksFromText(truncateText(parsed.data.text, MAX_EXTRACT_CHARS))
       return res.status(200).json({
         tasks,
         ...(tasks.length === 0 && { message: 'No actionable tasks found in the provided text.' }),

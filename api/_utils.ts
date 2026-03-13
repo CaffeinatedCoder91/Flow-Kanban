@@ -59,6 +59,13 @@ export function setCors(res: Res, req?: Req): void {
   if (allowedOrigin) res.setHeader('Vary', 'Origin')
 }
 
+export function getClientIp(req: Req): string | null {
+  const header = req.headers['x-forwarded-for']
+  const raw = Array.isArray(header) ? header[0] : header
+  if (!raw) return null
+  return raw.split(',')[0].trim() || null
+}
+
 // ─── Response helpers ─────────────────────────────────────────────────────────
 
 export function unauthorized(res: Res): void {

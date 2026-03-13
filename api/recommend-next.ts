@@ -2,20 +2,25 @@
 // POST /api/recommend-next — ask Claude to pick the single highest-priority task.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { RecommendNextSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
 import { parseJsonFromText } from '../lib/ai.js'
 import { formatDateOnly } from '../lib/date.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { truncateText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const MAX_RECOMMEND_ITEMS = 200
 
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   try {
@@ -29,8 +34,19 @@ export default withCors(async (req: Req, res: Res) => {
       return badRequest(res, 'All items are done — nothing to recommend')
     }
 
-    const itemList = nonDone.map((i) =>
-      `${i.id}: [${i.priority}] ${i.title}${i.due_date ? ` (due ${i.due_date})` : ''}${i.status === 'stuck' ? ' [STUCK]' : ''}`
+    const budget = await consumeDailyBudget(userId)
+    if (!budget.allowed) {
+      return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+    }
+    if (ip) {
+      const ipBudget = await consumeIpDailyBudget(ip)
+      if (!ipBudget.allowed) {
+        return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+      }
+    }
+
+    const itemList = nonDone.slice(0, MAX_RECOMMEND_ITEMS).map((i) =>
+      `${i.id}: [${i.priority}] ${truncateText(i.title, 120)}${i.due_date ? ` (due ${i.due_date})` : ''}${i.status === 'stuck' ? ' [STUCK]' : ''}`
     ).join('\n')
 
     const today = formatDateOnly(new Date())

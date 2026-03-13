@@ -63,7 +63,7 @@ export const ChatSchema = z.object({
 // ─── Extract Tasks Schema ──────────────────────────────────────────────────────
 
 export const ExtractTasksSchema = z.object({
-  text: z.string().min(10, 'Text must be at least 10 characters').max(10000, 'Text too long'),
+  text: z.string().min(10, 'Text must be at least 10 characters').max(5000, 'Text too long'),
 })
 
 // ─── Narrative Schema ──────────────────────────────────────────────────────────

@@ -5,13 +5,16 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { ItemHistory } from '../lib/supabase.js'
 import { NarrativeSchema } from '../lib/validation.js'
 import { parseJsonFromText } from '../lib/ai.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { truncateText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const MAX_LIST_ITEMS = 20
 
 type Period = 'last_week' | 'last_30_days' | 'this_month' | 'previous_7_days'
 
@@ -49,6 +52,8 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   try {
@@ -120,6 +125,17 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     // ── AI: narrative + momentum (parallel) ───────────────────────────────
+    const budget = await consumeDailyBudget(userId)
+    if (!budget.allowed) {
+      return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+    }
+    if (ip) {
+      const ipBudget = await consumeIpDailyBudget(ip)
+      if (!ipBudget.allowed) {
+        return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+      }
+    }
+
     const statsText = `Period: ${period}
 Tasks created: ${summary.tasks_created}
 Tasks completed: ${summary.tasks_completed}
@@ -127,8 +143,8 @@ Tasks stuck: ${summary.tasks_stuck}
 Tasks unblocked: ${summary.tasks_unblocked}
 Status changes: ${summary.status_changes}
 Priority changes: ${summary.priority_changes}
-Completed tasks: ${tasksCompleted.map((h) => h.item_title).join(', ') || 'none'}
-Stuck tasks: ${tasksStuck.map((h) => h.item_title).join(', ') || 'none'}`
+Completed tasks: ${tasksCompleted.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}
+Stuck tasks: ${tasksStuck.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}`
 
     const [narrativeRes, momentumRes] = await Promise.all([
       anthropic.messages.create({

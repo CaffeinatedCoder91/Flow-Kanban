@@ -29,6 +29,13 @@ export const standardRateLimit = redis ? new Ratelimit({
   prefix:  'rl:std',
 }) : null
 
+// IP-based limiter: 60 requests per IP per minute
+export const ipRateLimit = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(60, '1 m'),
+  prefix:  'rl:ip',
+}) : null
+
 /**
  * Check rate limit for a user. Returns true if the request is allowed.
  * Sends a 429 response and returns false if the limit is exceeded.

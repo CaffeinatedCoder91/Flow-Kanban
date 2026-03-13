@@ -120,3 +120,56 @@ CREATE POLICY "deadline_actions: select own"
 CREATE POLICY "deadline_actions: insert own"
   ON deadline_actions FOR INSERT
   WITH CHECK (user_id = auth.uid());
+
+-- ------------------------------------------------------------
+-- ai_daily_usage
+-- Tracks per-user daily AI usage counts for budget enforcement.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ai_daily_usage (
+  user_id    UUID        NOT NULL REFERENCES auth.users(id),
+  day        DATE        NOT NULL,
+  count      INTEGER     NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, day)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_daily_usage_day
+  ON ai_daily_usage (day);
+
+ALTER TABLE ai_daily_usage ENABLE ROW LEVEL SECURITY;
+
+-- ------------------------------------------------------------
+-- ai_ip_daily_usage
+-- Tracks per-IP daily AI usage counts for abuse prevention.
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ai_ip_daily_usage (
+  ip         TEXT        NOT NULL,
+  day        DATE        NOT NULL,
+  count      INTEGER     NOT NULL DEFAULT 0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (ip, day)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ai_ip_daily_usage_day
+  ON ai_ip_daily_usage (day);
+
+ALTER TABLE ai_ip_daily_usage ENABLE ROW LEVEL SECURITY;
+
+-- Optional: cleanup for demo data older than 48 hours (requires pg_cron).
+-- Uncomment if pg_cron is enabled in your Supabase project.
+--
+-- CREATE EXTENSION IF NOT EXISTS pg_cron;
+--
+-- CREATE OR REPLACE FUNCTION cleanup_demo_items() RETURNS void
+-- LANGUAGE plpgsql SECURITY DEFINER AS $$
+-- BEGIN
+--   DELETE FROM items
+--   WHERE user_id IN (
+--     SELECT id FROM auth.users
+--     WHERE (raw_user_meta_data->>'demo')::boolean = true
+--       AND created_at < now() - interval '48 hours'
+--   );
+-- END;
+-- $$;
+--
+-- SELECT cron.schedule('cleanup-demo-items', '0 * * * *', $$SELECT cleanup_demo_items();$$);

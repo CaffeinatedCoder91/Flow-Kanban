@@ -4,14 +4,19 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db.js'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { ChatSchema, ToolCreateItemSchema, ToolDeleteItemSchema, ToolMoveItemSchema, ToolUpdateItemSchema } from '../lib/validation.js'
 import { sanitizeItemFields } from '../lib/sanitize.js'
 import { formatDateOnly } from '../lib/date.js'
+import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { truncateText } from '../lib/ai.js'
 
-const MAX_TOOL_ROUNDS = 5
+const MAX_TOOL_ROUNDS = 3
+const MAX_CHAT_ITEMS = 100
+const MAX_MESSAGE_CHARS = 2000
+const MAX_TITLE_CHARS = 120
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -79,9 +84,22 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    const budget = await consumeDailyBudget(userId)
+    if (!budget.allowed) {
+      return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
+    }
+    if (ip) {
+      const ipBudget = await consumeIpDailyBudget(ip)
+      if (!ipBudget.allowed) {
+        return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
+      }
+    }
+
     const parsed = ChatSchema.safeParse(req.body)
     if (!parsed.success) {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
@@ -91,8 +109,9 @@ export default withCors(async (req: Req, res: Res) => {
     const actions: string[] = []
     const errors: string[] = []
 
-    const boardContext = items.map(i =>
-      `[${i.id}] ${i.title} | status: ${i.status} | priority: ${i.priority}${i.due_date ? ` | due: ${i.due_date}` : ''}`
+    const cappedItems = items.slice(0, MAX_CHAT_ITEMS)
+    const boardContext = cappedItems.map(i =>
+      `[${i.id}] ${truncateText(String(i.title ?? ''), MAX_TITLE_CHARS)} | status: ${i.status} | priority: ${i.priority}${i.due_date ? ` | due: ${i.due_date}` : ''}`
     ).join('\n')
 
     const systemPrompt = `You are a helpful kanban board assistant. You can manage tasks on the user's board.
@@ -103,7 +122,7 @@ ${boardContext || '(empty board)'}
 Today's date: ${formatDateOnly(new Date())}`
 
     const messages: Anthropic.MessageParam[] = [
-      { role: 'user', content: message },
+      { role: 'user', content: truncateText(message, MAX_MESSAGE_CHARS) },
     ]
 
     // First API call
@@ -117,6 +136,8 @@ Today's date: ${formatDateOnly(new Date())}`
 
     // Agentic loop — execute tool calls and feed results back
     let toolRounds = 0
+    let lastActionCount = 0
+    let stalledRounds = 0
     while (response.stop_reason === 'tool_use' && ++toolRounds <= MAX_TOOL_ROUNDS) {
       const toolUseBlocks = response.content.filter(
         (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use'
@@ -192,6 +213,14 @@ Today's date: ${formatDateOnly(new Date())}`
         tools: TOOLS,
         messages,
       })
+
+      if (actions.length === lastActionCount) {
+        stalledRounds += 1
+        if (stalledRounds >= 2) break
+      } else {
+        stalledRounds = 0
+        lastActionCount = actions.length
+      }
     }
 
     const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text')

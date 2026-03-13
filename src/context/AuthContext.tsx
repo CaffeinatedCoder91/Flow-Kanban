@@ -5,6 +5,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabaseBrowser'
+import { isDemoSessionExpired } from '@/lib/guestLogin'
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -43,6 +44,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!user) return
+    if (isDemoSessionExpired()) {
+      supabase.auth.signOut().finally(() => {
+        try { localStorage.removeItem('flow-demo-session') } catch {}
+      })
+    }
+  }, [user])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })

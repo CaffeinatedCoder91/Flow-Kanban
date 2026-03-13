@@ -35,17 +35,6 @@ function App() {
   const { mode, setMode } = useTheme()
   const toggleTheme = () => setMode(mode === 'dark' ? 'light' : 'dark')
 
-  const userInitials = useMemo(() => {
-    const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
-    if (name) {
-      const parts = name.trim().split(/\s+/)
-      return parts.length >= 2
-        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-        : parts[0].slice(0, 2).toUpperCase()
-    }
-    return (user?.email ?? '?').slice(0, 2).toUpperCase()
-  }, [user])
-
   const [view, setView] = useState<'board' | 'summary' | 'help'>('board')
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [prefillMessage, setPrefillMessage] = useState('')
@@ -55,6 +44,18 @@ function App() {
 
   const toasts = useToasts()
   const isDemo = typeof window !== 'undefined' && localStorage.getItem('flow-demo-session') === '1'
+  const userInitials = useMemo(() => {
+    const name = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? ''
+    if (name) {
+      const parts = name.trim().split(/\s+/)
+      return parts.length >= 2
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0].slice(0, 2).toUpperCase()
+    }
+    const emailInitials = (user?.email ?? '').slice(0, 2).toUpperCase()
+    if (emailInitials) return emailInitials
+    return isDemo ? 'DE' : 'ME'
+  }, [user, isDemo])
   const board = useBoardItems({ showError: toasts.showError, isDemo })
   const onboarding = useOnboarding({ items: board.items })
   const importTasks = useImportTasks({

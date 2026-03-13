@@ -3,29 +3,15 @@ import styled from '@emotion/styled'
 import { useAuth } from '@/context/AuthContext'
 
 export const DemoBanner = (): React.ReactElement | null => {
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const [closed, setClosed] = useState(false)
   const isDemo = typeof window !== 'undefined' && localStorage.getItem('flow-demo-session') === '1'
 
   if (!user || !isDemo || closed) return null
 
-  const handleSignUp = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    await signOut()
-    // After sign-out, Root in main.tsx renders the auth screen.
-    // Dispatch event so Root can switch directly to the sign-up form.
-    document.dispatchEvent(new CustomEvent('flow:show-signup'))
-  }
-
   return (
     <Banner>
-      <span>
-        You're in demo mode — data resets between sessions.{' '}
-        <BannerLink href="#" onClick={handleSignUp}>
-          Create a free account
-        </BannerLink>{' '}
-        to save your work.
-      </span>
+      <span>You're in demo mode.</span>
       <CloseBtn onClick={() => setClosed(true)} aria-label="Dismiss">×</CloseBtn>
     </Banner>
   )

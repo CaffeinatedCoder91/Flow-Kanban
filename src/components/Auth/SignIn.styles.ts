@@ -23,7 +23,8 @@ export const AuthLogo = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+  justify-content: center;
 `
 
 export const AuthWordMark = styled.span`
@@ -39,12 +40,14 @@ export const Title = styled.h1`
   font-size: 1.5rem;
   font-weight: 700;
   color: ${p => p.theme.colors.text};
+  text-align: center;
 `
 
 export const Subtitle = styled.p`
   margin: 0 0 1.75rem;
   font-size: ${p => p.theme.typography.fontSize.sm};
   color: ${p => p.theme.colors.textSecondary};
+  text-align: center;
 `
 
 export const Field = styled.div`
@@ -177,7 +180,7 @@ export const GuestBtn = styled.button`
   justify-content: center;
   gap: 0.5rem;
   padding: 0.7rem 1rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
   background: transparent;
   color: ${p => p.theme.colors.textSecondary};
   border: 1px dashed ${p => p.theme.colors.borderSubtle};
@@ -194,4 +197,11 @@ export const GuestBtn = styled.button`
     color: ${p => p.theme.colors.primary};
   }
   &:disabled { opacity: 0.6; cursor: not-allowed; }
+`
+
+export const DemoHint = styled.p`
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: ${p => p.theme.typography.fontSize.xs};
+  color: ${p => p.theme.colors.textSecondary};
 `

@@ -2,9 +2,10 @@
 // POST /api/items/bulk — insert multiple items atomically
 
 import { createItems } from '../../lib/db.js'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from '../_utils.js'
 import { CreateItemSchema } from '../../lib/validation.js'
 import { sanitizeItemFields } from '../../lib/sanitize.js'
+import { checkRateLimit, ipRateLimit, standardRateLimit } from '../../lib/rateLimit.js'
 
 const MAX_BULK_ITEMS = 200
 
@@ -15,8 +16,13 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
+  if (!await checkRateLimit(res, userId, standardRateLimit)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
     const body = req.body as Record<string, unknown>
     const tasks = body?.tasks
 

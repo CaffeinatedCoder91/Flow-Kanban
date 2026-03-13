@@ -20,6 +20,8 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
 
   const [error, setError]             = useState<string | null>(null)
   const [guestLoading, setGuestLoading] = useState(false)
+  const isDev = import.meta.env.MODE === 'development'
+  const hasDevCreds = !!import.meta.env.VITE_DEMO_PASSWORD
 
   const handleGuestLogin = async () => {
     setGuestLoading(true)
@@ -29,8 +31,10 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
       if (error) {
         console.error('Guest login error:', error.message)
         const msg = error.message?.includes('Invalid login credentials')
-          ? 'Demo login failed: invalid credentials. Check VITE_DEMO_EMAIL/VITE_DEMO_PASSWORD and the Supabase demo user.'
-          : error.message || 'Demo login unavailable. Please try again or sign in.'
+          ? (isDev && hasDevCreds
+              ? 'Demo login failed: invalid credentials. Check VITE_DEMO_EMAIL/VITE_DEMO_PASSWORD and the Supabase demo user.'
+              : 'Demo login failed. Please try again.')
+          : error.message || 'Demo login unavailable. Please try again.'
         setError(msg)
       }
       // On success, AuthContext picks up the new session automatically.

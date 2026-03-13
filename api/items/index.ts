@@ -3,13 +3,17 @@
 // POST /api/items — create a new item
 
 import { getItems, createItem, getHistoryForItems } from '../../lib/db.js'
-import { withCors, getUserId, unauthorized, serverError, type Req, type Res } from '../_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from '../_utils.js'
 import { CreateItemSchema } from '../../lib/validation.js'
 import { sanitizeItemFields } from '../../lib/sanitize.js'
+import { checkRateLimit, ipRateLimit, standardRateLimit } from '../../lib/rateLimit.js'
 
 export default withCors(async (req: Req, res: Res) => {
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
+  if (!await checkRateLimit(res, userId, standardRateLimit)) return
 
   try {
     if (req.method === 'GET') {
@@ -26,6 +30,8 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     if (req.method === 'POST') {
+      if (!requireJson(req, res)) return
+      if (!enforceJsonBodyLimit(req, res)) return
       const parsed = CreateItemSchema.safeParse(req.body)
       if (!parsed.success) {
         return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })

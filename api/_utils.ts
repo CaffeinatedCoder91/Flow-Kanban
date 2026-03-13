@@ -1,6 +1,7 @@
 // api/_utils.ts
 // Shared helpers for all Vercel serverless functions.
 
+import { Buffer } from 'node:buffer'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { captureException } from './_lib/sentry.js'
 
@@ -42,12 +43,18 @@ export async function getUserId(req: Req): Promise<string | null> {
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 
+const DEFAULT_ORIGINS = process.env.NODE_ENV === 'production'
+  ? ''
+  : 'http://localhost:5173,http://localhost:3000'
+
 const ALLOWED_ORIGINS = new Set(
-  (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:5173,http://localhost:3000')
+  (process.env.CORS_ALLOWED_ORIGINS ?? DEFAULT_ORIGINS)
     .split(',')
     .map(o => o.trim())
     .filter(Boolean)
 )
+
+const MAX_JSON_BODY_BYTES = 1_000_000
 
 export function setCors(res: Res, req?: Req): void {
   const origin = typeof req?.headers?.origin === 'string' ? req.headers.origin : ''
@@ -57,6 +64,7 @@ export function setCors(res: Res, req?: Req): void {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (allowedOrigin) res.setHeader('Vary', 'Origin')
+  res.setHeader('Cache-Control', 'no-store')
 }
 
 export function getClientIp(req: Req): string | null {
@@ -64,6 +72,46 @@ export function getClientIp(req: Req): string | null {
   const raw = Array.isArray(header) ? header[0] : header
   if (!raw) return null
   return raw.split(',')[0].trim() || null
+}
+
+export function requireJson(req: Req, res: Res): boolean {
+  const contentType = Array.isArray(req.headers['content-type'])
+    ? req.headers['content-type'][0]
+    : req.headers['content-type']
+  const value = typeof contentType === 'string' ? contentType : ''
+  if (!value.includes('application/json')) {
+    res.status(415).json({ error: 'Content-Type must be application/json' })
+    return false
+  }
+  return true
+}
+
+export function enforceJsonBodyLimit(
+  req: Req,
+  res: Res,
+  limit = MAX_JSON_BODY_BYTES
+): boolean {
+  const lenHeader = req.headers['content-length']
+  const lenRaw = Array.isArray(lenHeader) ? lenHeader[0] : lenHeader
+  const len = typeof lenRaw === 'string' ? Number.parseInt(lenRaw, 10) : NaN
+  if (Number.isFinite(len) && len > limit) {
+    res.status(413).json({ error: 'Payload too large' })
+    return false
+  }
+
+  if (req.body != null) {
+    try {
+      const size = Buffer.byteLength(JSON.stringify(req.body))
+      if (size > limit) {
+        res.status(413).json({ error: 'Payload too large' })
+        return false
+      }
+    } catch {
+      // If the body can't be stringified, let validation handle it later.
+    }
+  }
+
+  return true
 }
 
 // ─── Response helpers ─────────────────────────────────────────────────────────
@@ -96,6 +144,17 @@ type Handler = (req: Req, res: Res) => Promise<void>
  */
 export function withCors(handler: Handler): Handler {
   return async (req: Req, res: Res) => {
+    const origin = typeof req?.headers?.origin === 'string' ? req.headers.origin : ''
+    if (process.env.NODE_ENV === 'production' && origin) {
+      if (ALLOWED_ORIGINS.size === 0) {
+        res.status(500).json({ error: 'CORS not configured' })
+        return
+      }
+      if (!ALLOWED_ORIGINS.has(origin)) {
+        res.status(403).json({ error: 'Origin not allowed' })
+        return
+      }
+    }
     setCors(res, req)
     if (req.method === 'OPTIONS') {
       res.status(204).end()

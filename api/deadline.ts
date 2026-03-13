@@ -6,8 +6,8 @@
 
 import { getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { withCors, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit, standardRateLimit } from '../lib/rateLimit.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { checkRateLimit, ipRateLimit, standardRateLimit } from '../lib/rateLimit.js'
 import { DeadlineActionSchema } from '../lib/validation.js'
 import { diffDays, parseDateOnly } from '../lib/date.js'
 
@@ -16,7 +16,12 @@ export default withCors(async (req: Req, res: Res) => {
 
   const userId = await getUserId(req)
   if (!userId) return unauthorized(res)
+  const ip = getClientIp(req)
+  if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId, standardRateLimit)) return
+
+  if (!requireJson(req, res)) return
+  if (!enforceJsonBodyLimit(req, res)) return
 
   const body = (req.body ?? {}) as Record<string, unknown>
 

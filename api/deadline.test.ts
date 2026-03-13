@@ -19,7 +19,9 @@ import { supabaseAdmin } from '../lib/supabase.js'
 const mockGetUser = supabaseAdmin.auth.getUser as ReturnType<typeof vi.fn>
 
 function makeReq(overrides: Partial<Req> = {}): Req {
-  return { method: 'POST', headers: {}, body: {}, query: {}, ...overrides }
+  const { headers: overrideHeaders, ...rest } = overrides
+  const headers = { 'content-type': 'application/json', ...(overrideHeaders ?? {}) }
+  return { method: 'POST', headers, body: {}, query: {}, ...rest }
 }
 
 function makeRes() {

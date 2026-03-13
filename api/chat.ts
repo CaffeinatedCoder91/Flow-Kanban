@@ -4,7 +4,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db.js'
-import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { ChatSchema, ToolCreateItemSchema, ToolDeleteItemSchema, ToolMoveItemSchema, ToolUpdateItemSchema } from '../lib/validation.js'
@@ -89,6 +89,14 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
+
+    const parsed = ChatSchema.safeParse(req.body)
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
+    }
+
     const budget = await consumeDailyBudget(userId)
     if (!budget.allowed) {
       return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
@@ -98,11 +106,6 @@ export default withCors(async (req: Req, res: Res) => {
       if (!ipBudget.allowed) {
         return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
       }
-    }
-
-    const parsed = ChatSchema.safeParse(req.body)
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
     }
 
     const { message, items = [] } = parsed.data

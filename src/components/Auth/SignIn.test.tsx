@@ -33,11 +33,13 @@ describe('SignIn', () => {
     mockSignInAsGuest.mockResolvedValue({ error: null })
   })
 
-  it('renders email and password fields and submit button', () => {
+  it('renders demo-only sign in UI', () => {
     render(<SignIn onSwitchToSignUp={onSwitchToSignUp} />)
-    expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument()
+    expect(screen.getByText('Start a fresh demo board in one click')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /try demo/i })).toBeInTheDocument()
+    expect(screen.getByText('No email or password required')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create an account' })).toBeInTheDocument()
   })
 
   it('renders "Try demo" button', () => {
@@ -45,23 +47,21 @@ describe('SignIn', () => {
     expect(screen.getByRole('button', { name: /try demo/i })).toBeInTheDocument()
   })
 
-  it('shows error on failed login', async () => {
-    mockSignIn.mockResolvedValue({ error: 'Invalid credentials' })
+  it('shows error on failed demo login', async () => {
+    mockSignInAsGuest.mockResolvedValue({ error: { message: 'Invalid login credentials' } })
 
     render(<SignIn onSwitchToSignUp={onSwitchToSignUp} />)
 
-    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'test@example.com' } })
-    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrongpass' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    fireEvent.click(screen.getByRole('button', { name: /try demo/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
+      expect(screen.getByText(/demo login failed/i)).toBeInTheDocument()
     })
   })
 
   it('calls onSwitchToSignUp when link clicked', () => {
     render(<SignIn onSwitchToSignUp={onSwitchToSignUp} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Sign up' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create an account' }))
     expect(onSwitchToSignUp).toHaveBeenCalled()
   })
 })

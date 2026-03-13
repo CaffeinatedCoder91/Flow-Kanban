@@ -178,7 +178,11 @@ export default withCors(async (req: Req, res: Res) => {
         tasks,
         ...(tasks.length === 0 && { message: 'No actionable tasks found in the uploaded file.' }),
       })
-    } else {
+    }
+    if (!contentType.includes('application/json')) {
+      return res.status(415).json({ error: 'Content-Type must be multipart/form-data or application/json' })
+    }
+    {
       // ── Text path ─────────────────────────────────────────────────────────────
       let rawBody: unknown
       try {

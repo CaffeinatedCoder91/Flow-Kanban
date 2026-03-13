@@ -19,5 +19,19 @@ export default meta
 type Story = StoryObj<typeof ImportModal>
 
 export const Default: Story = {
-  args: { onClose: () => {}, onImported: () => {} },
+  args: {
+    isExtracting: false,
+    isConfirming: false,
+    importText: '',
+    importFileName: null,
+    extractedTasks: [],
+    extractError: null,
+    closeImportModal: () => {},
+    setImportText: () => {},
+    setExtractError: () => {},
+    setExtractedTasks: () => {},
+    handleFileUpload: () => {},
+    handleExtractTasks: () => {},
+    handleConfirmAll: () => {},
+  },
 }

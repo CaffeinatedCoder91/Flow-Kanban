@@ -5,7 +5,7 @@
 // Duplicate detection uses Claude (semantic similarity).
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { DuplicateGroupsSchema } from '../lib/validation.js'
@@ -66,6 +66,8 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
     const items: Item[] = await getItems(userId)
     const insights: Insight[] = []
     const now = new Date()

@@ -5,7 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getItemById, getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { withCors, getClientIp, getUserId, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { SplitSuggestionSchema, RescheduleSuggestionSchema, SuggestSchema } from '../lib/validation.js'
 import { formatDateOnly, parseDateOnly, startOfToday } from '../lib/date.js'
@@ -25,6 +25,8 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
     const parsed = SuggestSchema.safeParse(req.body)
     if (!parsed.success) return badRequest(res, parsed.error.issues[0]?.message ?? 'Invalid request body')
     const { type, itemId } = parsed.data

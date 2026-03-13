@@ -5,7 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { getItems } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
-import { withCors, getClientIp, getUserId, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { ItemHistory } from '../lib/supabase.js'
 import { NarrativeSchema } from '../lib/validation.js'
@@ -57,6 +57,8 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
     const parsed = NarrativeSchema.safeParse(req.body)
     if (!parsed.success) {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })

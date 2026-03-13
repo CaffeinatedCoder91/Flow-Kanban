@@ -1,5 +1,15 @@
 import { supabase } from './supabaseBrowser'
 
+type DemoEnv = {
+  MODE?: string
+  VITE_DEMO_PASSWORD?: string
+}
+
+function getEnv(): DemoEnv {
+  const testEnv = (globalThis as { __FLOW_ENV__?: DemoEnv }).__FLOW_ENV__
+  return testEnv ?? import.meta.env
+}
+
 export const DEMO_EMAIL = (import.meta.env.VITE_DEMO_EMAIL as string | undefined) ?? 'demo@flow.com'
 const DEMO_SESSION_KEY = 'flow-demo-session'
 const DEMO_SESSION_STARTED_AT = 'flow-demo-session-started-at'
@@ -24,8 +34,10 @@ export function clearDemoState() {
 
 export async function signInAsGuest() {
   clearDemoState()
-  const devPassword = import.meta.env.VITE_DEMO_PASSWORD as string | undefined
-  if (import.meta.env.MODE === 'development' && devPassword) {
+  const env = getEnv()
+  const devPassword = env.VITE_DEMO_PASSWORD as string | undefined
+  const isDev = env.MODE === 'development'
+  if (isDev && devPassword) {
     const result = await supabase.auth.signInWithPassword({ email: DEMO_EMAIL, password: devPassword })
     if (!result.error) {
       localStorage.setItem(DEMO_SESSION_KEY, '1')
@@ -35,28 +47,25 @@ export async function signInAsGuest() {
     return result
   }
 
-  const authAny = supabase.auth as unknown as { signInAnonymously?: () => Promise<{ data: { session: unknown } | null; error: { message: string } | null }> }
-  if (typeof authAny.signInAnonymously === 'function') {
-    const result = await authAny.signInAnonymously()
-    if (!result.error) {
-      localStorage.setItem(DEMO_SESSION_KEY, '1')
-      localStorage.setItem(DEMO_SESSION_STARTED_AT, String(Date.now()))
-      await supabase.auth.updateUser({ data: { demo: true, demo_created_at: new Date().toISOString() } })
-    }
-    return result
+  const { data, error } = await supabase.functions.invoke('demo-login')
+  if (error) {
+    return { error: { message: error.message || 'Demo login unavailable. Please try again.' } }
   }
 
-  const rand = crypto.getRandomValues(new Uint32Array(4)).join('')
-  const email = `demo+${rand}@example.com`
-  const password = `demo-${rand}`
-  const signUp = await supabase.auth.signUp({ email, password, options: { data: { demo: true, demo_created_at: new Date().toISOString() } } })
-  if (signUp.error) return signUp
-  if (signUp.data.session) {
-    localStorage.setItem(DEMO_SESSION_KEY, '1')
-    localStorage.setItem(DEMO_SESSION_STARTED_AT, String(Date.now()))
-    return signUp
+  const payload = data as { access_token?: string; refresh_token?: string }
+  if (!payload?.access_token || !payload?.refresh_token) {
+    return { error: { message: 'Demo login unavailable. Please try again.' } }
   }
-  return { error: { message: 'Demo login unavailable. Enable anonymous sign-in or disable email confirmation.' } }
+
+  const session = await supabase.auth.setSession({
+    access_token: payload.access_token,
+    refresh_token: payload.refresh_token,
+  })
+  if (session.error) return session
+
+  localStorage.setItem(DEMO_SESSION_KEY, '1')
+  localStorage.setItem(DEMO_SESSION_STARTED_AT, String(Date.now()))
+  return session
 }
 
 export function isDemoSessionExpired(): boolean {

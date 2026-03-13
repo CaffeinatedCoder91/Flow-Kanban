@@ -2,7 +2,7 @@
 // POST /api/recommend-next — ask Claude to pick the single highest-priority task.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getClientIp, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { RecommendNextSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
@@ -24,6 +24,8 @@ export default withCors(async (req: Req, res: Res) => {
   if (!await checkRateLimit(res, userId)) return
 
   try {
+    if (!requireJson(req, res)) return
+    if (!enforceJsonBodyLimit(req, res)) return
     const items = await getItems(userId)
     if (items.length === 0) {
       return badRequest(res, 'No items found — nothing to recommend')

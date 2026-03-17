@@ -1,23 +1,16 @@
 // src/components/Auth/SignIn.tsx
-// Email + password sign-in form using Supabase auth.
+// Demo-only sign-in surface.
 
-import React, { useState, type FormEvent } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import React, { useState } from 'react'
 import {
   Page, Card, AuthLogo, AuthWordMark,
   Title, Subtitle,
-  ErrorMsg, GuestBtn, Footer, FooterLink, DemoHint,
+  ErrorMsg, GuestBtn, DemoHint,
 } from './SignIn.styles'
 import { Logo } from '@/components/ui/Logo/Logo'
 import { signInAsGuest } from '@/lib/guestLogin'
 
-interface SignInProps {
-  onSwitchToSignUp: () => void
-}
-
-export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement => {
-  const { signIn } = useAuth()
-
+export const SignIn = (): React.ReactElement => {
   const [error, setError]             = useState<string | null>(null)
   const [guestLoading, setGuestLoading] = useState(false)
   const isDev = import.meta.env.MODE === 'development'
@@ -63,13 +56,6 @@ export const SignIn = ({ onSwitchToSignUp }: SignInProps): React.ReactElement =>
           {guestLoading ? 'Loading…' : '▶ Try demo'}
         </GuestBtn>
         <DemoHint>No email or password required</DemoHint>
-
-        <Footer>
-          Want to save your work?{' '}
-          <FooterLink type="button" onClick={onSwitchToSignUp}>
-            Create an account
-          </FooterLink>
-        </Footer>
       </Card>
     </Page>
   )

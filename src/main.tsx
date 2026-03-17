@@ -36,7 +36,7 @@ function Root() {
     return (
       <Suspense fallback={fallback}>
         {authView === 'signin'
-          ? <SignIn onSwitchToSignUp={() => setAuthView('signup')} />
+          ? <SignIn />
           : <SignUp onSwitchToSignIn={() => setAuthView('signin')} />}
       </Suspense>
     )

@@ -11,3 +11,4 @@ db/*.db
 storybook-static
 .vercel
 .env*.local
+supabase/.temp

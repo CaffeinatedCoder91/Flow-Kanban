@@ -4,14 +4,14 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db.js'
-import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { ChatSchema, ToolCreateItemSchema, ToolDeleteItemSchema, ToolMoveItemSchema, ToolUpdateItemSchema } from '../lib/validation.js'
 import { sanitizeItemFields } from '../lib/sanitize.js'
 import { formatDateOnly } from '../lib/date.js'
-import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
-import { truncateText } from '../lib/ai.js'
+import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
+import { truncateText, getTokenUsage, sumTokenUsage } from '../lib/ai.js'
 
 const MAX_TOOL_ROUNDS = 3
 const MAX_CHAT_ITEMS = 100
@@ -82,8 +82,9 @@ const TOOLS: Anthropic.Tool[] = [
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const userId = await getUserId(req)
-  if (!userId) return unauthorized(res)
+  const userContext = await getUserContext(req)
+  if (!userContext) return unauthorized(res)
+  const { userId, isDemo } = userContext
   const ip = getClientIp(req)
   if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
@@ -97,12 +98,12 @@ export default withCors(async (req: Req, res: Res) => {
       return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
     }
 
-    const budget = await consumeDailyBudget(userId)
+    const budget = await checkDailyBudget(userId, { isDemo })
     if (!budget.allowed) {
       return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
     }
     if (ip) {
-      const ipBudget = await consumeIpDailyBudget(ip)
+      const ipBudget = await checkIpDailyBudget(ip, { isDemo })
       if (!ipBudget.allowed) {
         return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
       }
@@ -136,6 +137,7 @@ Today's date: ${formatDateOnly(new Date())}`
       tools: TOOLS,
       messages,
     })
+    let tokenUsage = getTokenUsage(response)
 
     // Agentic loop — execute tool calls and feed results back
     let toolRounds = 0
@@ -216,6 +218,7 @@ Today's date: ${formatDateOnly(new Date())}`
         tools: TOOLS,
         messages,
       })
+      tokenUsage = sumTokenUsage(tokenUsage, getTokenUsage(response))
 
       if (actions.length === lastActionCount) {
         stalledRounds += 1
@@ -228,6 +231,9 @@ Today's date: ${formatDateOnly(new Date())}`
 
     const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
     const replyText = textBlock?.text ?? ''
+
+    await recordDailyUsage(userId, tokenUsage)
+    if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
     res.status(200).json({
       response: replyText,

@@ -2,6 +2,7 @@
 // Shared helpers for all Vercel serverless functions.
 
 import { Buffer } from 'node:buffer'
+import type { User } from '@supabase/supabase-js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { captureException } from './_lib/sentry.js'
 
@@ -28,7 +29,7 @@ export interface Res {
  * Extract and verify the Supabase JWT from the Authorization header.
  * Returns the authenticated user's UUID, or null if unauthenticated.
  */
-export async function getUserId(req: Req): Promise<string | null> {
+export async function getUser(req: Req): Promise<User | null> {
   const auth = req.headers?.authorization
   const token = typeof auth === 'string' && auth.startsWith('Bearer ')
     ? auth.slice(7)
@@ -38,7 +39,21 @@ export async function getUserId(req: Req): Promise<string | null> {
 
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
   if (error || !user) return null
-  return user.id
+  return user
+}
+
+export async function getUserId(req: Req): Promise<string | null> {
+  const user = await getUser(req)
+  return user?.id ?? null
+}
+
+export async function getUserContext(req: Req): Promise<{ userId: string; isDemo: boolean } | null> {
+  const user = await getUser(req)
+  if (!user) return null
+  const meta = user.user_metadata as Record<string, unknown> | null | undefined
+  const demoValue = meta?.demo
+  const isDemo = demoValue === true || demoValue === 'true'
+  return { userId: user.id, isDemo }
 }
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────

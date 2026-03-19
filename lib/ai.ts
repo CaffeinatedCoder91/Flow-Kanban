@@ -59,3 +59,38 @@ export function truncateText(value: string, maxChars: number): string {
   if (value.length <= maxChars) return value
   return value.slice(0, maxChars)
 }
+
+export type TokenUsage = {
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+}
+
+function safeTokenCount(value: unknown): number {
+  const num = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(num) || num <= 0) return 0
+  return Math.floor(num)
+}
+
+export function getTokenUsage(
+  response: { usage?: { input_tokens?: number; output_tokens?: number } } | null | undefined
+): TokenUsage {
+  const inputTokens = safeTokenCount(response?.usage?.input_tokens)
+  const outputTokens = safeTokenCount(response?.usage?.output_tokens)
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens: inputTokens + outputTokens,
+  }
+}
+
+export function sumTokenUsage(...usages: TokenUsage[]): TokenUsage {
+  return usages.reduce(
+    (acc, usage) => ({
+      inputTokens: acc.inputTokens + usage.inputTokens,
+      outputTokens: acc.outputTokens + usage.outputTokens,
+      totalTokens: acc.totalTokens + usage.totalTokens,
+    }),
+    { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
+  )
+}

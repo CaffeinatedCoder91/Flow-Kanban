@@ -18,6 +18,7 @@ const DEMO_TTL_MS = 24 * 60 * 60 * 1000
 const FLOW_STORAGE_KEYS = [
   'flow-welcome-seen',
   'flow-sample-ids',
+  'flow-demo-seeded',
   'flow-tried-ai',
   'flow-imported-tasks',
   'flow-first-celebration-done',

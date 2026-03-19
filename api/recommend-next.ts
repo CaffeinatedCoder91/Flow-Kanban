@@ -2,13 +2,13 @@
 // POST /api/recommend-next — ask Claude to pick the single highest-priority task.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getClientIp, getUserId, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { RecommendNextSchema } from '../lib/validation.js'
 import { getItems } from '../lib/db.js'
-import { parseJsonFromText } from '../lib/ai.js'
+import { parseJsonFromText, getTokenUsage } from '../lib/ai.js'
 import { formatDateOnly } from '../lib/date.js'
-import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText } from '../lib/ai.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -17,8 +17,9 @@ const MAX_RECOMMEND_ITEMS = 200
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const userId = await getUserId(req)
-  if (!userId) return unauthorized(res)
+  const userContext = await getUserContext(req)
+  if (!userContext) return unauthorized(res)
+  const { userId, isDemo } = userContext
   const ip = getClientIp(req)
   if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
@@ -36,12 +37,12 @@ export default withCors(async (req: Req, res: Res) => {
       return badRequest(res, 'All items are done — nothing to recommend')
     }
 
-    const budget = await consumeDailyBudget(userId)
+    const budget = await checkDailyBudget(userId, { isDemo })
     if (!budget.allowed) {
       return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
     }
     if (ip) {
-      const ipBudget = await consumeIpDailyBudget(ip)
+      const ipBudget = await checkIpDailyBudget(ip, { isDemo })
       if (!ipBudget.allowed) {
         return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
       }
@@ -68,6 +69,10 @@ Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>
         },
       ],
     })
+
+    const tokenUsage = getTokenUsage(aiRes)
+    await recordDailyUsage(userId, tokenUsage)
+    if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
     const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
     const raw = textBlocks.map(b => b.text).join('')

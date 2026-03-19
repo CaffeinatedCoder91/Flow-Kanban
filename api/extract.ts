@@ -8,11 +8,11 @@
 
 import multer from 'multer'
 import Anthropic from '@anthropic-ai/sdk'
-import { withCors, getClientIp, getUserId, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
+import { withCors, getClientIp, getUserContext, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { ExtractTasksSchema, ExtractedTaskSchema } from '../lib/validation.js'
-import { parseJsonFromText, truncateText } from '../lib/ai.js'
-import { consumeDailyBudget, consumeIpDailyBudget } from '../lib/usage.js'
+import { parseJsonFromText, truncateText, getTokenUsage } from '../lib/ai.js'
+import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 
 // Must disable Vercel's body parser to support multipart uploads.
 // JSON bodies are read from the raw stream below.
@@ -48,7 +48,9 @@ async function extractTasksFromText(text: string) {
   const raw = textBlocks.map(b => b.text).join('')
   const parsed = parseJsonFromText<unknown>(raw)
   if (!parsed) throw new Error('AI returned malformed JSON')
-  return ExtractedTaskSchema.parse(parsed)
+  const tasks = ExtractedTaskSchema.parse(parsed)
+  const usage = getTokenUsage(aiRes)
+  return { tasks, usage }
 }
 
 // ─── JSON body reader (body parser is disabled) ───────────────────────────────
@@ -133,8 +135,9 @@ async function extractTextFromFile(file: Express.Multer.File): Promise<string> {
 export default withCors(async (req: Req, res: Res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const userId = await getUserId(req)
-  if (!userId) return unauthorized(res)
+  const userContext = await getUserContext(req)
+  if (!userContext) return unauthorized(res)
+  const { userId, isDemo } = userContext
   const ip = getClientIp(req)
   if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
@@ -162,18 +165,21 @@ export default withCors(async (req: Req, res: Res) => {
         return badRequest(res, 'Could not extract enough text from the file')
       }
 
-      const budget = await consumeDailyBudget(userId)
+      const budget = await checkDailyBudget(userId, { isDemo })
       if (!budget.allowed) {
         return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
       }
       if (ip) {
-        const ipBudget = await consumeIpDailyBudget(ip)
+        const ipBudget = await checkIpDailyBudget(ip, { isDemo })
         if (!ipBudget.allowed) {
           return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
         }
       }
 
-      const tasks = await extractTasksFromText(truncateText(text, MAX_EXTRACT_CHARS))
+      const { tasks, usage } = await extractTasksFromText(truncateText(text, MAX_EXTRACT_CHARS))
+      await recordDailyUsage(userId, usage)
+      if (ip) await recordIpDailyUsage(ip, usage)
+
       return res.status(200).json({
         tasks,
         ...(tasks.length === 0 && { message: 'No actionable tasks found in the uploaded file.' }),
@@ -199,18 +205,21 @@ export default withCors(async (req: Req, res: Res) => {
         return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
       }
 
-      const budget = await consumeDailyBudget(userId)
+      const budget = await checkDailyBudget(userId, { isDemo })
       if (!budget.allowed) {
         return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
       }
       if (ip) {
-        const ipBudget = await consumeIpDailyBudget(ip)
+        const ipBudget = await checkIpDailyBudget(ip, { isDemo })
         if (!ipBudget.allowed) {
           return res.status(429).json({ error: 'Daily IP AI limit reached', reset: ipBudget.reset })
         }
       }
 
-      const tasks = await extractTasksFromText(truncateText(parsed.data.text, MAX_EXTRACT_CHARS))
+      const { tasks, usage } = await extractTasksFromText(truncateText(parsed.data.text, MAX_EXTRACT_CHARS))
+      await recordDailyUsage(userId, usage)
+      if (ip) await recordIpDailyUsage(ip, usage)
+
       return res.status(200).json({
         tasks,
         ...(tasks.length === 0 && { message: 'No actionable tasks found in the provided text.' }),

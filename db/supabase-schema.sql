@@ -129,6 +129,9 @@ CREATE TABLE IF NOT EXISTS ai_daily_usage (
   user_id    UUID        NOT NULL REFERENCES auth.users(id),
   day        DATE        NOT NULL,
   count      INTEGER     NOT NULL DEFAULT 0,
+  input_tokens  INTEGER  NOT NULL DEFAULT 0,
+  output_tokens INTEGER  NOT NULL DEFAULT 0,
+  total_tokens  INTEGER  NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, day)
 );
@@ -146,6 +149,9 @@ CREATE TABLE IF NOT EXISTS ai_ip_daily_usage (
   ip         TEXT        NOT NULL,
   day        DATE        NOT NULL,
   count      INTEGER     NOT NULL DEFAULT 0,
+  input_tokens  INTEGER  NOT NULL DEFAULT 0,
+  output_tokens INTEGER  NOT NULL DEFAULT 0,
+  total_tokens  INTEGER  NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (ip, day)
 );
@@ -154,6 +160,19 @@ CREATE INDEX IF NOT EXISTS idx_ai_ip_daily_usage_day
   ON ai_ip_daily_usage (day);
 
 ALTER TABLE ai_ip_daily_usage ENABLE ROW LEVEL SECURITY;
+
+-- ------------------------------------------------------------
+-- ai usage token columns (safe for existing tables)
+-- ------------------------------------------------------------
+ALTER TABLE ai_daily_usage
+  ADD COLUMN IF NOT EXISTS input_tokens  INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS output_tokens INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_tokens  INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE ai_ip_daily_usage
+  ADD COLUMN IF NOT EXISTS input_tokens  INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS output_tokens INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_tokens  INTEGER NOT NULL DEFAULT 0;
 
 -- Optional: cleanup for demo data older than 48 hours (requires pg_cron).
 -- Uncomment if pg_cron is enabled in your Supabase project.

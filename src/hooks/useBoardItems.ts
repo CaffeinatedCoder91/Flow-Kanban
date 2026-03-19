@@ -30,6 +30,7 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
   const initInFlightRef = useRef(false)
   const seededThisSessionRef = useRef(false)
   const SEEDING_KEY = 'flow-sample-seeding'
+  const DEMO_SEEDED_KEY = 'flow-demo-seeded'
 
   const init = useCallback(async () => {
     if (initInFlightRef.current) return
@@ -51,7 +52,9 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
 
       setItems(data)
 
-      const alreadySeeded = !!localStorage.getItem('flow-sample-ids')
+      const alreadySeeded = isDemo
+        ? localStorage.getItem(DEMO_SEEDED_KEY) === '1'
+        : !!localStorage.getItem('flow-sample-ids')
       const isSeeding = !!localStorage.getItem(SEEDING_KEY)
       // Demo users: skip the hasSeenWelcome() guard — the welcome modal can be
       // dismissed during cleanup, which would otherwise race and prevent seeding.
@@ -78,6 +81,7 @@ export function useBoardItems({ showError, isDemo }: UseBoardItemsParams) {
             const seedData = await seedRes.json()
             const ids: string[] = seedData.items.map((i: Item) => i.id)
             localStorage.setItem('flow-sample-ids', JSON.stringify(ids))
+            if (isDemo) localStorage.setItem(DEMO_SEEDED_KEY, '1')
             setSampleIds(ids)
             setItems(seedData.items)
             seededThisSessionRef.current = true

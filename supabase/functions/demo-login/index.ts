@@ -62,6 +62,11 @@ serve(async (req) => {
   }
 
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !SUPABASE_ANON_KEY) {
+    console.error('Missing env vars:', {
+      hasUrl: !!SUPABASE_URL,
+      hasServiceKey: !!SERVICE_ROLE_KEY,
+      hasAnonKey: !!SUPABASE_ANON_KEY,
+    })
     return jsonResponse({ error: 'Supabase env not configured' }, 500, origin)
   }
 
@@ -84,11 +89,13 @@ serve(async (req) => {
     user_metadata: { demo: true, demo_created_at: now },
   })
   if (createError) {
+    console.error('createUser failed:', createError.message, createError.status)
     return jsonResponse({ error: 'Failed to create demo user' }, 500, origin)
   }
 
   const { data, error: signInError } = await anon.auth.signInWithPassword({ email, password })
   if (signInError || !data.session) {
+    console.error('signIn failed:', signInError?.message, signInError?.status)
     return jsonResponse({ error: 'Failed to create demo session' }, 500, origin)
   }
 

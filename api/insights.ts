@@ -9,15 +9,15 @@ import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJso
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { DuplicateGroupsSchema } from '../lib/validation.js'
-import { getItems } from '../lib/db.js'
-import { parseDateOnly } from '../lib/date.js'
+import { getItems, getItemsNotDone, getItemsWithDueDate } from '../lib/db.js'
+import { parseDateOnly, startOfToday } from '../lib/date.js'
 import { parseJsonFromText, truncateText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { withAiCache } from '../lib/aiCache.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const MAX_DUPLICATE_ITEMS = 200
-const MAX_DESC_CHARS = 200
+const MAX_DESC_CHARS = 100
 
 type InsightType = 'stale' | 'bottleneck' | 'duplicate' | 'priority_inflation' | 'deadline_cluster'
 type Severity = 'low' | 'medium' | 'high'
@@ -39,7 +39,7 @@ function normalizeText(value: string): string {
 }
 
 function tokenSet(value: string): Set<string> {
-  const tokens = normalizeText(value).split(' ').filter(t => t.length >= 3)
+  const tokens = normalizeText(value).split(' ').filter(token => token.length >= 3)
   return new Set(tokens)
 }
 
@@ -47,13 +47,13 @@ function titlesMatch(a: Item, b: Item): boolean {
   return normalizeText(a.title) === normalizeText(b.title)
 }
 
-function jaccard(a: Set<string>, b: Set<string>): number {
-  if (a.size === 0 || b.size === 0) return 0
+function jaccard(setA: Set<string>, setB: Set<string>): number {
+  if (setA.size === 0 || setB.size === 0) return 0
   let intersection = 0
-  for (const t of a) {
-    if (b.has(t)) intersection += 1
+  for (const token of setA) {
+    if (setB.has(token)) intersection += 1
   }
-  const union = a.size + b.size - intersection
+  const union = setA.size + setB.size - intersection
   return union === 0 ? 0 : intersection / union
 }
 
@@ -93,10 +93,11 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     // ── Bottleneck ───────────────────────────────────────────────────────────
+    const statuses = ['not_started', 'in_progress', 'stuck']
     const statusCounts: Record<string, Item[]> = {}
-    for (const item of items) {
-      if (!statusCounts[item.status]) statusCounts[item.status] = []
-      statusCounts[item.status].push(item)
+    for (const status of statuses) {
+      const statusItems = await getItems(userId, { status })
+      if (statusItems.length > 0) statusCounts[status] = statusItems
     }
 
     for (const [status, statusItems] of Object.entries(statusCounts)) {
@@ -130,10 +131,12 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     // ── Deadline cluster ─────────────────────────────────────────────────────
-    const upcoming = items
-      .filter((item) => item.due_date && item.status !== 'done')
+    const today = startOfToday()
+    const twoWeeksOut = new Date(today)
+    twoWeeksOut.setDate(today.getDate() + 14)
+    const upcomingItems = await getItemsWithDueDate(userId, today, twoWeeksOut)
+    const upcoming = upcomingItems
       .map((item) => ({ item, ts: parseDateOnly(item.due_date!).getTime() }))
-      .sort((a, b) => a.ts - b.ts)
 
     for (let i = 0; i < upcoming.length; i++) {
       const cluster = [upcoming[i]]
@@ -255,9 +258,9 @@ If no duplicates, return {"groups": []}`,
                   if (titlesMatch(dupeItems[i], dupeItems[j])) {
                     anyTitleMatch = true
                   }
-                  const a = tokenSet(`${dupeItems[i].title} ${dupeItems[i].description ?? ''}`)
-                  const b = tokenSet(`${dupeItems[j].title} ${dupeItems[j].description ?? ''}`)
-                  maxSim = Math.max(maxSim, jaccard(a, b))
+                  const tokenSetA = tokenSet(`${dupeItems[i].title} ${dupeItems[i].description ?? ''}`)
+                  const tokenSetB = tokenSet(`${dupeItems[j].title} ${dupeItems[j].description ?? ''}`)
+                  maxSim = Math.max(maxSim, jaccard(tokenSetA, tokenSetB))
                 }
               }
               if (!anyTitleMatch && maxSim < 0.85) continue

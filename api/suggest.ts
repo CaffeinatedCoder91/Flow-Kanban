@@ -3,7 +3,7 @@
 // Body: { type: 'reschedule' | 'split', itemId: string }
 
 import Anthropic from '@anthropic-ai/sdk'
-import { getItemById, getItems } from '../lib/db.js'
+import { getItemById, getItemsWithDueDate } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
@@ -61,13 +61,12 @@ export default withCors(async (req: Req, res: Res) => {
             messages: [
               {
                 role: 'user',
-                content: `Break this task into 2–4 concrete, actionable subtasks.
+                content: `Break into 2–4 subtasks.
 
-Task: ${truncateText(item.title, 120)}
-${item.description ? `Description: ${truncateText(item.description, 400)}` : ''}
+Task: ${truncateText(item.title, 80)}
+${item.description ? `Details: ${truncateText(item.description, 150)}` : ''}
 
-Return ONLY a JSON array:
-[{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}, ...]`,
+Return ONLY: [{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}]`,
               },
             ],
           })
@@ -100,19 +99,11 @@ Return ONLY a JSON array:
     const today = startOfToday()
     const twoWeeksOut = new Date(today); twoWeeksOut.setDate(today.getDate() + 14)
 
-    const allItems = await getItems(userId)
-    const upcoming = allItems
-      .filter((i) =>
-        i.due_date &&
-        i.id !== item.id &&
-        i.status !== 'done' &&
-        parseDateOnly(i.due_date) >= today &&
-        parseDateOnly(i.due_date) <= twoWeeksOut
-      )
+    const upcoming = (await getItemsWithDueDate(userId, today, twoWeeksOut))
+      .filter((i) => i.id !== item.id)
       .slice(0, 10)
 
-    const recentDone = allItems
-      .filter((i) => i.status === 'done')
+    const recentDone = (await getItems(userId, { status: 'done' }))
       .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())
       .slice(0, 5)
 
@@ -128,11 +119,11 @@ Return ONLY a JSON array:
       if (data && data.length > 0) {
         const counts: Record<number, number> = {}
         for (const row of data) {
-          const d = row.days_extended as number
-          counts[d] = (counts[d] ?? 0) + 1
+          const daysExtended = row.days_extended as number
+          counts[daysExtended] = (counts[daysExtended] ?? 0) + 1
         }
         const [topDays, topCount] = Object.entries(counts)
-          .sort(([, a], [, b]) => b - a)[0]
+          .sort(([, countA], [, countB]) => countB - countA)[0]
           .map(Number) as [number, number]
 
         if (topCount >= 2) pattern = { days: topDays, count: topCount }
@@ -162,28 +153,24 @@ Return ONLY a JSON array:
       isDemo,
       fn: async () => {
         const upcomingText = upcoming.length
-          ? upcoming.map((item) => `  - ${truncateText(item.title, 120)} (due ${item.due_date}, ${item.priority})`).join('\n')
+          ? upcoming.map((item) => `  - ${truncateText(item.title, 80)} (${item.due_date})`).join('\n')
           : '  (none in next 14 days)'
         const doneText = recentDone.length
-          ? recentDone.map((item) => `  - ${truncateText(item.title, 120)}`).join('\n')
+          ? recentDone.map((item) => `  - ${truncateText(item.title, 80)}`).join('\n')
           : '  (none recently)'
 
-        const prompt = `Today is ${todayStr}.
+        const prompt = `Today: ${todayStr}
 
-Task to reschedule:
-  Title: ${truncateText(item.title, 120)}
-  Current due date: ${item.due_date ?? 'none'}
-  Priority: ${item.priority}
-  Status: ${item.status}
+Task: ${truncateText(item.title, 80)}
+Due: ${item.due_date ?? 'none'} | Priority: ${item.priority}
 
-Upcoming tasks (next 14 days):
+Upcoming (next 14 days):
 ${upcomingText}
 
-Recently completed tasks:
+Recently done:
 ${doneText}
 
-Suggest 2–3 realistic new due dates for this task. Consider workload spacing and task complexity.
-Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. Friday (3 days out)"}, ...]`
+Suggest 2–3 new due dates. Return ONLY: [{"date": "YYYY-MM-DD", "label": "..."}]`
 
         const aiRes = await anthropic.messages.create({
           model: 'claude-haiku-4-5-20251001',

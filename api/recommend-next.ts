@@ -5,7 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { RecommendNextSchema } from '../lib/validation.js'
-import { getItems } from '../lib/db.js'
+import { getItemsNotDone } from '../lib/db.js'
 import { parseJsonFromText, getTokenUsage } from '../lib/ai.js'
 import { formatDateOnly } from '../lib/date.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
@@ -28,14 +28,9 @@ export default withCors(async (req: Req, res: Res) => {
   try {
     if (!requireJson(req, res)) return
     if (!enforceJsonBodyLimit(req, res)) return
-    const items = await getItems(userId)
-    if (items.length === 0) {
-      return badRequest(res, 'No items found — nothing to recommend')
-    }
-
-    const nonDone = items.filter((i) => i.status !== 'done')
+    const nonDone = await getItemsNotDone(userId)
     if (nonDone.length === 0) {
-      return badRequest(res, 'All items are done — nothing to recommend')
+      return badRequest(res, 'No active items to recommend')
     }
 
     const budget = await checkDailyBudget(userId, { isDemo })
@@ -69,12 +64,11 @@ export default withCors(async (req: Req, res: Res) => {
           messages: [
             {
               role: 'user',
-              content: `Today is ${today}. Pick the single most important task to work on next. Consider priority, due date, and whether it is stuck.
+              content: `Today: ${today}. Pick the most important task next (consider priority, due date, stuck status).
 
-Tasks:
 ${itemList}
 
-Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>"}`,
+Return ONLY: {"itemId": "<uuid>", "reason": "..."}`,
             },
           ],
         })

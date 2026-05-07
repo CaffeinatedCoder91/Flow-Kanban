@@ -37,6 +37,94 @@ export async function getItems(
 }
 
 /**
+ * Fetch items with a specific status.
+ * Useful for insights bottleneck detection.
+ */
+export async function getItemsByStatus(userId: string, status: string): Promise<Item[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('items')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', status)
+
+    if (error) throw new Error(`getItemsByStatus failed: ${error.message}`)
+    return (data ?? []) as Item[]
+  } catch (err) {
+    console.error('[db] getItemsByStatus error:', err)
+    throw err
+  }
+}
+
+/**
+ * Fetch items not in 'done' status.
+ * Useful for recommend-next, chat context.
+ */
+export async function getItemsNotDone(userId: string): Promise<Item[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('items')
+      .select('*')
+      .eq('user_id', userId)
+      .neq('status', 'done')
+      .order('position', { ascending: true })
+
+    if (error) throw new Error(`getItemsNotDone failed: ${error.message}`)
+    return (data ?? []) as Item[]
+  } catch (err) {
+    console.error('[db] getItemsNotDone error:', err)
+    throw err
+  }
+}
+
+/**
+ * Fetch items with due dates in a given range.
+ * Useful for suggest reschedule upcoming context.
+ */
+export async function getItemsWithDueDate(
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<Item[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('items')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('due_date', startDate.toISOString().split('T')[0])
+      .lte('due_date', endDate.toISOString().split('T')[0])
+      .neq('status', 'done')
+      .order('due_date', { ascending: true })
+
+    if (error) throw new Error(`getItemsWithDueDate failed: ${error.message}`)
+    return (data ?? []) as Item[]
+  } catch (err) {
+    console.error('[db] getItemsWithDueDate error:', err)
+    throw err
+  }
+}
+
+/**
+ * Fetch items modified since a given date.
+ * Useful for narrative analytics.
+ */
+export async function getItemsModifiedSince(userId: string, since: Date): Promise<Item[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('items')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('last_modified', since.toISOString())
+
+    if (error) throw new Error(`getItemsModifiedSince failed: ${error.message}`)
+    return (data ?? []) as Item[]
+  } catch (err) {
+    console.error('[db] getItemsModifiedSince error:', err)
+    throw err
+  }
+}
+
+/**
  * Fetch a single item by id, scoped to the user.
  * Returns null if not found or belongs to a different user.
  */

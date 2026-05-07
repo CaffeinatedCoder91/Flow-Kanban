@@ -309,13 +309,13 @@ npm run storybook                           # Visual component sandbox
 ### Lighthouse Scores
 - 🎯 **Accessibility:** 100/100 (WCAG 2.1 AA compliant)
 - 🎯 **Best Practices:** 100/100 (CSP headers, modern standards)
-- 🎯 **SEO:** 100/100 (Search optimized)
+- 🎯 **SEO:** 100/100 (Search optimised)
 - ⚡ **Performance:** 88/100
 
 ### Technical Achievements
 - Zero accessibility violations (WCAG 2.1 AA)
 - Content Security Policy implemented
-- Optimized font loading (preload strategy)
+- Optimised font loading (preload strategy)
 - Mobile-responsive design
 - Cross-browser compatible
 

@@ -5,7 +5,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createItem, updateItem, deleteItem, getItemById } from '../lib/db.js'
 import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
+import { checkRateLimit, ipRateLimit, chatLimiter } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { ChatSchema, ToolCreateItemSchema, ToolDeleteItemSchema, ToolMoveItemSchema, ToolUpdateItemSchema } from '../lib/validation.js'
 import { sanitizeItemFields } from '../lib/sanitize.js'
@@ -89,6 +89,9 @@ export default withCors(async (req: Req, res: Res) => {
   const ip = getClientIp(req)
   if (ip && !await checkRateLimit(res, `ip:${ip}`, ipRateLimit)) return
   if (!await checkRateLimit(res, userId)) return
+  if (isDemo && chatLimiter) {
+    if (!await checkRateLimit(res, userId, chatLimiter)) return
+  }
 
   try {
     if (!requireJson(req, res)) return
@@ -96,7 +99,7 @@ export default withCors(async (req: Req, res: Res) => {
 
     const parsed = ChatSchema.safeParse(req.body)
     if (!parsed.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() })
+      return res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten(), context: 'schema_validation' })
     }
 
     const budget = await checkDailyBudget(userId, { isDemo })

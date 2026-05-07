@@ -83,13 +83,13 @@ Return ONLY: [{"title": "...", "description": "...", "estimated_priority": "low"
       if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
       if (!parsedRaw) {
-        return res.status(502).json({ error: 'AI returned malformed split suggestions' })
+        return res.status(502).json({ error: 'AI returned malformed split suggestions', context: 'json_parse' })
       }
       let suggestions
       try {
         suggestions = SplitSuggestionSchema.parse(parsedRaw)
       } catch {
-        return res.status(502).json({ error: 'AI returned malformed split suggestions' })
+        return res.status(502).json({ error: 'AI returned malformed split suggestions', context: 'schema_validation' })
       }
 
       return res.status(200).json({ suggestions })
@@ -192,13 +192,13 @@ Suggest 2–3 new due dates. Return ONLY: [{"date": "YYYY-MM-DD", "label": "..."
     if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
     if (!parsedRaw) {
-      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions' })
+      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions', context: 'json_parse' })
     }
     let aiSuggestions
     try {
       aiSuggestions = RescheduleSuggestionSchema.parse(parsedRaw)
     } catch {
-      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions' })
+      return res.status(502).json({ error: 'AI returned malformed reschedule suggestions', context: 'schema_validation' })
     }
 
     const suggestions: Array<{ date: string; label: string; isPattern?: true }> = []

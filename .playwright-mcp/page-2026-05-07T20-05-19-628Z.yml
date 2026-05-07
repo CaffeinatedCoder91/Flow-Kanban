@@ -1,0 +1,72 @@
+- generic [ref=e2]:
+  - generic [ref=e16]:
+    - generic [ref=e17]: You're in demo mode.
+    - button "Dismiss" [ref=e18] [cursor=pointer]: ×
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - link "Go to board" [ref=e22] [cursor=pointer]:
+        - img "Flow logo" [ref=e23]
+        - generic [ref=e26]: Flow
+      - generic [ref=e27]:
+        - img [ref=e28]
+        - textbox "Add a new task..." [ref=e31]
+        - button "Add" [ref=e32] [cursor=pointer]
+      - generic [ref=e33]:
+        - button "Import Tasks" [ref=e34] [cursor=pointer]:
+          - generic [ref=e35]: 📋
+          - generic [ref=e36]: Import Tasks
+          - text: Paste emails or meeting notes
+        - button "AI Assistant" [ref=e37] [cursor=pointer]:
+          - generic [ref=e38]: ✨
+          - generic [ref=e39]: AI Assistant
+          - text: Ask AI to manage your tasks
+        - button "Kanban view" [ref=e40] [cursor=pointer]:
+          - img [ref=e41]
+        - button "Summary view" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+        - button "Help" [ref=e46] [cursor=pointer]: "? Help & shortcuts"
+        - button "Switch to dark mode" [ref=e47] [cursor=pointer]: 🌙 Switch to dark
+        - button "Account menu" [ref=e49] [cursor=pointer]: DE
+    - generic [ref=e50]:
+      - generic [ref=e54]: Not Started
+      - generic [ref=e72]: In Progress
+      - generic [ref=e90]: Done
+      - generic [ref=e108]: Stuck
+    - complementary [ref=e123]:
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - generic [ref=e126]: ✦
+          - heading "Flow" [level=2] [ref=e127]
+        - button "Close" [ref=e128] [cursor=pointer]: ×
+      - generic [ref=e130]:
+        - generic [ref=e131]: ✦
+        - paragraph [ref=e134]: Hey, I'm Flow. What's on your mind?
+      - generic [ref=e135]:
+        - paragraph [ref=e136]: Try asking
+        - button "What should I work on next?" [ref=e137] [cursor=pointer]
+        - button "Any blocked or overdue tasks?" [ref=e138] [cursor=pointer]
+        - button "Summarise my progress this week" [ref=e139] [cursor=pointer]
+        - button "Help me break down a large task" [ref=e140] [cursor=pointer]
+      - generic [ref=e141]:
+        - textbox "Ask me anything about your tasks..." [ref=e142]
+        - button "Send message" [disabled] [ref=e143]:
+          - img [ref=e144]
+    - generic [ref=e147]:
+      - generic [ref=e148]:
+        - generic [ref=e149]: Get started
+        - button "Dismiss" [ref=e150] [cursor=pointer]: ×
+      - list [ref=e151]:
+        - listitem [ref=e152]:
+          - generic [ref=e153]: ✓
+          - text: Create your account
+        - listitem [ref=e154]: Add your first task
+        - listitem [ref=e156]: Try the AI assistant
+        - listitem [ref=e158]: Import tasks
+    - dialog "Welcome to Flow" [ref=e161]:
+      - generic [ref=e162]:
+        - button "Skip" [ref=e163] [cursor=pointer]
+        - generic [ref=e164]:
+          - generic [ref=e165]: ✦
+          - heading "Welcome to Flow" [level=2] [ref=e166]
+          - paragraph [ref=e167]: The task board that thinks with you — AI insights, deadline negotiation, and smart suggestions all in one place.
+        - button "Next" [ref=e173] [cursor=pointer]

@@ -85,13 +85,13 @@ Return ONLY: {"itemId": "<uuid>", "reason": "..."}`,
     if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
     if (!parsedRaw) {
-      return res.status(502).json({ error: 'AI returned malformed recommendation' })
+      return res.status(502).json({ error: 'AI returned malformed recommendation', context: 'json_parse' })
     }
     let parsed
     try {
       parsed = RecommendNextSchema.parse(parsedRaw)
     } catch {
-      return res.status(502).json({ error: 'AI returned malformed recommendation' })
+      return res.status(502).json({ error: 'AI returned malformed recommendation', context: 'schema_validation' })
     }
 
     res.status(200).json({

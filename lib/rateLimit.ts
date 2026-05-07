@@ -36,6 +36,19 @@ export const ipRateLimit = redis ? new Ratelimit({
   prefix:  'rl:ip',
 }) : null
 
+// Per-endpoint limiters for demo users
+export const extractFileLimiter = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(1, '5 m'), // max 1 file extraction per 5 minutes
+  prefix:  'rl:extract',
+}) : null
+
+export const chatLimiter = redis ? new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(1, '10 s'), // max 1 request per 10 seconds (prevents spam)
+  prefix:  'rl:chat',
+}) : null
+
 /**
  * Check rate limit for a user. Returns true if the request is allowed.
  * Sends a 429 response and returns false if the limit is exceeded.

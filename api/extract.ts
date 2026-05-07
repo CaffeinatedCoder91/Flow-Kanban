@@ -9,7 +9,7 @@
 import multer from 'multer'
 import Anthropic from '@anthropic-ai/sdk'
 import { withCors, getClientIp, getUserContext, unauthorized, badRequest, serverError, type Req, type Res } from './_utils.js'
-import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
+import { checkRateLimit, ipRateLimit, extractFileLimiter } from '../lib/rateLimit.js'
 import { ExtractTasksSchema, ExtractedTaskSchema } from '../lib/validation.js'
 import { parseJsonFromText, truncateText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
@@ -165,6 +165,10 @@ export default withCors(async (req: Req, res: Res) => {
         return badRequest(res, 'Could not extract enough text from the file')
       }
 
+      if (isDemo && extractFileLimiter) {
+        if (!await checkRateLimit(res, userId, extractFileLimiter)) return
+      }
+
       const budget = await checkDailyBudget(userId, { isDemo })
       if (!budget.allowed) {
         return res.status(429).json({ error: 'Daily AI limit reached', reset: budget.reset })
@@ -228,7 +232,7 @@ export default withCors(async (req: Req, res: Res) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : ''
     if (msg === 'AI returned malformed JSON') {
-      return res.status(502).json({ error: msg })
+      return res.status(502).json({ error: msg, context: 'json_parse' })
     }
     serverError(res, err)
   }

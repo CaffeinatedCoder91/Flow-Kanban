@@ -48,7 +48,7 @@ Flow treats AI as ambient intelligence woven into the workflow — not a chatbot
 The insight bar runs silently in the background and surfaces what matters — stale tasks that haven't moved in days, bottlenecks blocking progress, duplicate work, priority inflation, and upcoming deadline clusters. No configuration needed; it just watches and tells you.
 
 ### Conversational AI Assistant
-Ask Flow anything in plain English. *"Create three tasks for the product launch"*, *"What's blocking me right now?"*, *"Mark the auth bug as done"* — the assistant reads your board, takes action, and explains its reasoning. Powered by Claude Sonnet with tool use.
+Ask Flow anything in plain English. *"Create three tasks for the product launch"*, *"What's blocking me right now?"*, *"Mark the auth bug as done"* — the assistant reads your board, takes action, and explains its reasoning. Powered by Claude with tool use. Responses are cached for demo users (24h) and deduplicated across all users (30s) to minimise API costs.
 
 ### Natural Language Task Import
 Paste a meeting transcript, email thread, or bullet list and click Process. Flow extracts the action items, assigns priorities and due dates, shows confidence scores for each extracted field, and waits for your review before adding anything. Also accepts `.txt`, `.pdf`, and `.docx` uploads (up to 5 MB).
@@ -77,8 +77,8 @@ Browser (React 18 + Emotion + dnd-kit)
 Vercel Serverless Functions (Node.js 22)
     │
     ├──► Supabase (Postgres + Auth)
-    ├──► Anthropic Claude Sonnet (AI features)
-    └──► Upstash Redis (rate limiting)
+    ├──► Anthropic Claude (AI features with intelligent caching)
+    └──► Upstash Redis (rate limiting + response cache)
 ```
 
 ```
@@ -131,7 +131,8 @@ Vercel Serverless Functions (Node.js 22)
 | **Backend** | Vercel Serverless Functions | REST API (one function per route) |
 | **Database** | Supabase (Postgres) | Persistent storage + Row Level Security |
 | **Auth** | Supabase Auth | JWT-based authentication with demo guest login |
-| **AI** | Anthropic Claude Sonnet | Chat, insights, task extraction, narrative |
+| **AI** | Anthropic Claude (Haiku + Sonnet) | Chat and analysis with intelligent model selection |
+| **Caching** | Upstash Redis | 24h response cache for demo users; 30s dedup for all users |
 | **Rate Limiting** | Upstash Redis | Sliding window rate limits on AI endpoints |
 | **File Parsing** | pdf-parse + mammoth | PDF and DOCX import support |
 | **Testing** | Vitest + React Testing Library | 296 unit and component tests |

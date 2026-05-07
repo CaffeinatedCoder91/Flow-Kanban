@@ -22,7 +22,10 @@ export interface AiCacheOptions<T> {
 }
 
 export async function withAiCache<T>(opts: AiCacheOptions<T>): Promise<T> {
-  if (!redis) return opts.fn()
+  if (!redis) {
+    console.debug('[aiCache] Redis unavailable, skipping cache')
+    return opts.fn()
+  }
 
   const ttl = opts.isDemo ? DEMO_TTL_SECONDS : DEDUP_TTL_SECONDS
   const fp = fingerprint(opts.inputs)
@@ -30,8 +33,16 @@ export async function withAiCache<T>(opts: AiCacheOptions<T>): Promise<T> {
 
   try {
     const cached = await redis.get<T>(key)
-    if (cached !== null) return cached
-  } catch {
+    if (cached !== null) {
+      console.debug('[aiCache] Cache hit', { endpoint: opts.endpoint, userId: opts.userId })
+      return cached
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.warn('[aiCache] Cache read error, falling through to API call', {
+      endpoint: opts.endpoint,
+      error: msg,
+    })
     return opts.fn()
   }
 
@@ -39,8 +50,10 @@ export async function withAiCache<T>(opts: AiCacheOptions<T>): Promise<T> {
 
   try {
     await redis.set(key, result, { ex: ttl })
-  } catch {
-    // cache write failure is non-fatal
+    console.debug('[aiCache] Cache write success', { endpoint: opts.endpoint, ttl })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    console.warn('[aiCache] Cache write error (non-fatal)', { endpoint: opts.endpoint, error: msg })
   }
 
   return result

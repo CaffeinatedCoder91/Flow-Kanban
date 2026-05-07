@@ -12,6 +12,7 @@ import { sanitizeItemFields } from '../lib/sanitize.js'
 import { formatDateOnly } from '../lib/date.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText, getTokenUsage, sumTokenUsage } from '../lib/ai.js'
+import { withAiCache } from '../lib/aiCache.js'
 
 const MAX_TOOL_ROUNDS = 3
 const MAX_CHAT_ITEMS = 100
@@ -110,127 +111,141 @@ export default withCors(async (req: Req, res: Res) => {
     }
 
     const { message, items = [] } = parsed.data
-    const actions: string[] = []
-    const errors: string[] = []
 
     const cappedItems = items.slice(0, MAX_CHAT_ITEMS)
-    const boardContext = cappedItems.map(i =>
-      `[${i.id}] ${truncateText(String(i.title ?? ''), MAX_TITLE_CHARS)} | status: ${i.status} | priority: ${i.priority}${i.due_date ? ` | due: ${i.due_date}` : ''}`
-    ).join('\n')
+    const itemIds = cappedItems.map(i => i.id).sort()
+    const cacheInputs = { message: truncateText(message, MAX_MESSAGE_CHARS), itemIds }
 
-    const systemPrompt = `You are a helpful kanban board assistant. You can manage tasks on the user's board.
+    const { replyText, actions, errors, tokenUsage } = await withAiCache({
+      userId,
+      endpoint: 'chat',
+      inputs: cacheInputs,
+      isDemo,
+      fn: async () => {
+        const actions: string[] = []
+        const errors: string[] = []
+
+        const boardContext = cappedItems.map(i =>
+          `[${i.id}] ${truncateText(String(i.title ?? ''), MAX_TITLE_CHARS)} | status: ${i.status} | priority: ${i.priority}${i.due_date ? ` | due: ${i.due_date}` : ''}`
+        ).join('\n')
+
+        const systemPrompt = `You are a helpful kanban board assistant. You can manage tasks on the user's board.
 
 Current board state:
 ${boardContext || '(empty board)'}
 
 Today's date: ${formatDateOnly(new Date())}`
 
-    const messages: Anthropic.MessageParam[] = [
-      { role: 'user', content: truncateText(message, MAX_MESSAGE_CHARS) },
-    ]
+        const messages: Anthropic.MessageParam[] = [
+          { role: 'user', content: truncateText(message, MAX_MESSAGE_CHARS) },
+        ]
 
-    // First API call
-    let response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 1024,
-      system: systemPrompt,
-      tools: TOOLS,
-      messages,
-    })
-    let tokenUsage = getTokenUsage(response)
+        // First API call
+        let response = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: systemPrompt,
+          tools: TOOLS,
+          messages,
+        })
+        let tokenUsage = getTokenUsage(response)
 
-    // Agentic loop — execute tool calls and feed results back
-    let toolRounds = 0
-    let lastActionCount = 0
-    let stalledRounds = 0
-    while (response.stop_reason === 'tool_use' && ++toolRounds <= MAX_TOOL_ROUNDS) {
-      const toolUseBlocks = response.content.filter(
-        (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use'
-      )
+        // Agentic loop — execute tool calls and feed results back
+        let toolRounds = 0
+        let lastActionCount = 0
+        let stalledRounds = 0
+        while (response.stop_reason === 'tool_use' && ++toolRounds <= MAX_TOOL_ROUNDS) {
+          const toolUseBlocks = response.content.filter(
+            (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use'
+          )
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = []
+          const toolResults: Anthropic.ToolResultBlockParam[] = []
 
-      for (const toolUse of toolUseBlocks) {
-        const input = toolUse.input as Record<string, string>
-        let result = ''
+          for (const toolUse of toolUseBlocks) {
+            const input = toolUse.input as Record<string, string>
+            let result = ''
 
-        try {
-          if (toolUse.name === 'create_item') {
-            const parsed = ToolCreateItemSchema.safeParse(input)
-            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid create_item input')
-            const clean = sanitizeItemFields({
-              title:       parsed.data.title,
-              description: parsed.data.description ?? null,
-              assignee:    parsed.data.assignee    ?? null,
+            try {
+              if (toolUse.name === 'create_item') {
+                const parsed = ToolCreateItemSchema.safeParse(input)
+                if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid create_item input')
+                const clean = sanitizeItemFields({
+                  title:       parsed.data.title,
+                  description: parsed.data.description ?? null,
+                  assignee:    parsed.data.assignee    ?? null,
+                })
+                const item = await createItem(userId, {
+                  title:       clean.title || 'Untitled',
+                  status:      parsed.data.status      ?? 'not_started',
+                  priority:    parsed.data.priority    ?? 'medium',
+                  description: clean.description ?? null,
+                  assignee:    clean.assignee    ?? null,
+                  due_date:    parsed.data.due_date    ?? null,
+                })
+                result = JSON.stringify({ ok: true, id: item.id, title: item.title })
+                actions.push(`Created task: ${item.title}`)
+              } else if (toolUse.name === 'update_item') {
+                const parsed = ToolUpdateItemSchema.safeParse(input)
+                if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid update_item input')
+                const { id, ...fields } = parsed.data
+                const cleanFields = sanitizeItemFields(fields)
+                const item = await updateItem(userId, id, cleanFields as Partial<Item>)
+                result = JSON.stringify({ ok: true, id: item.id })
+                actions.push(`Updated task: ${item.title}`)
+              } else if (toolUse.name === 'delete_item') {
+                const parsed = ToolDeleteItemSchema.safeParse(input)
+                if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid delete_item input')
+                const item = await getItemById(userId, parsed.data.id)
+                const deleted = await deleteItem(userId, parsed.data.id)
+                result = JSON.stringify({ ok: deleted })
+                if (item) actions.push(`Deleted task: ${item.title}`)
+              } else if (toolUse.name === 'move_item') {
+                const parsed = ToolMoveItemSchema.safeParse(input)
+                if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid move_item input')
+                const item = await updateItem(userId, parsed.data.id, { status: parsed.data.new_status })
+                result = JSON.stringify({ ok: true, id: item.id, new_status: item.status })
+                actions.push(`Moved task '${item.title}' to ${item.status}`)
+              }
+            } catch (err) {
+              const msg = err instanceof Error ? err.message : 'Unknown error'
+              result = JSON.stringify({ ok: false, error: msg })
+              errors.push(`${toolUse.name} failed: ${msg}`)
+            }
+
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: result,
             })
-            const item = await createItem(userId, {
-              title:       clean.title || 'Untitled',
-              status:      parsed.data.status      ?? 'not_started',
-              priority:    parsed.data.priority    ?? 'medium',
-              description: clean.description ?? null,
-              assignee:    clean.assignee    ?? null,
-              due_date:    parsed.data.due_date    ?? null,
-            })
-            result = JSON.stringify({ ok: true, id: item.id, title: item.title })
-            actions.push(`Created task: ${item.title}`)
-          } else if (toolUse.name === 'update_item') {
-            const parsed = ToolUpdateItemSchema.safeParse(input)
-            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid update_item input')
-            const { id, ...fields } = parsed.data
-            const cleanFields = sanitizeItemFields(fields)
-            const item = await updateItem(userId, id, cleanFields as Partial<Item>)
-            result = JSON.stringify({ ok: true, id: item.id })
-            actions.push(`Updated task: ${item.title}`)
-          } else if (toolUse.name === 'delete_item') {
-            const parsed = ToolDeleteItemSchema.safeParse(input)
-            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid delete_item input')
-            const item = await getItemById(userId, parsed.data.id)
-            const deleted = await deleteItem(userId, parsed.data.id)
-            result = JSON.stringify({ ok: deleted })
-            if (item) actions.push(`Deleted task: ${item.title}`)
-          } else if (toolUse.name === 'move_item') {
-            const parsed = ToolMoveItemSchema.safeParse(input)
-            if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? 'Invalid move_item input')
-            const item = await updateItem(userId, parsed.data.id, { status: parsed.data.new_status })
-            result = JSON.stringify({ ok: true, id: item.id, new_status: item.status })
-            actions.push(`Moved task '${item.title}' to ${item.status}`)
           }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Unknown error'
-          result = JSON.stringify({ ok: false, error: msg })
-          errors.push(`${toolUse.name} failed: ${msg}`)
+
+          messages.push({ role: 'assistant', content: response.content })
+          messages.push({ role: 'user', content: toolResults })
+
+          response = await anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1024,
+            system: systemPrompt,
+            tools: TOOLS,
+            messages,
+          })
+          tokenUsage = sumTokenUsage(tokenUsage, getTokenUsage(response))
+
+          if (actions.length === lastActionCount) {
+            stalledRounds += 1
+            if (stalledRounds >= 2) break
+          } else {
+            stalledRounds = 0
+            lastActionCount = actions.length
+          }
         }
 
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: toolUse.id,
-          content: result,
-        })
-      }
+        const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
+        const replyText = textBlock?.text ?? ''
 
-      messages.push({ role: 'assistant', content: response.content })
-      messages.push({ role: 'user', content: toolResults })
-
-      response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 1024,
-        system: systemPrompt,
-        tools: TOOLS,
-        messages,
-      })
-      tokenUsage = sumTokenUsage(tokenUsage, getTokenUsage(response))
-
-      if (actions.length === lastActionCount) {
-        stalledRounds += 1
-        if (stalledRounds >= 2) break
-      } else {
-        stalledRounds = 0
-        lastActionCount = actions.length
-      }
-    }
-
-    const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
-    const replyText = textBlock?.text ?? ''
+        return { replyText, actions, errors, tokenUsage }
+      },
+    })
 
     await recordDailyUsage(userId, tokenUsage)
     if (ip) await recordIpDailyUsage(ip, tokenUsage)

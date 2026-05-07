@@ -13,6 +13,7 @@ import { getItems } from '../lib/db.js'
 import { parseDateOnly } from '../lib/date.js'
 import { parseJsonFromText, truncateText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
+import { withAiCache } from '../lib/aiCache.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const MAX_DUPLICATE_ITEMS = 200
@@ -202,17 +203,25 @@ export default withCors(async (req: Req, res: Res) => {
           }
         }
 
-        const itemList = aiItems.map((i) =>
-          `${i.id}: ${truncateText(i.title, 120)}${i.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
-        ).join('\n')
+        const itemIds = aiItems.map(i => i.id).sort()
 
-        const aiRes = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
-          messages: [
-            {
-              role: 'user',
-              content: `Identify groups of semantically duplicate or very similar tasks from this list.
+        const { aiRes, tokenUsage } = await withAiCache({
+          userId,
+          endpoint: 'insights',
+          inputs: { itemIds },
+          isDemo,
+          fn: async () => {
+            const itemList = aiItems.map((i) =>
+              `${i.id}: ${truncateText(i.title, 120)}${i.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
+            ).join('\n')
+
+            const aiRes = await anthropic.messages.create({
+              model: 'claude-haiku-4-5-20251001',
+              max_tokens: 1024,
+              messages: [
+                {
+                  role: 'user',
+                  content: `Identify groups of semantically duplicate or very similar tasks from this list.
 Only flag tasks that are clearly about the same work. Return ONLY valid JSON.
 
 Tasks:
@@ -220,16 +229,19 @@ ${itemList}
 
 Return format: {"groups": [["uuid1", "uuid2"], ...]}
 If no duplicates, return {"groups": []}`,
-            },
-          ],
+                },
+              ],
+            })
+            const tokenUsage = getTokenUsage(aiRes)
+            return { aiRes, tokenUsage }
+          },
         })
 
-        const tokenUsage = getTokenUsage(aiRes)
         await recordDailyUsage(userId, tokenUsage)
         if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
-        const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
-        const raw = textBlocks.map(b => b.text).join('')
+        const textBlocks = aiRes.content.filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        const raw = textBlocks.map(block => block.text).join('')
         const parsedRaw = parseJsonFromText<unknown>(raw)
         if (parsedRaw) {
           const parsed = DuplicateGroupsSchema.parse(parsedRaw)

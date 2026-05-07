@@ -10,6 +10,7 @@ import { parseJsonFromText, getTokenUsage } from '../lib/ai.js'
 import { formatDateOnly } from '../lib/date.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText } from '../lib/ai.js'
+import { withAiCache } from '../lib/aiCache.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const MAX_RECOMMEND_ITEMS = 200
@@ -48,35 +49,47 @@ export default withCors(async (req: Req, res: Res) => {
       }
     }
 
-    const itemList = nonDone.slice(0, MAX_RECOMMEND_ITEMS).map((i) =>
-      `${i.id}: [${i.priority}] ${truncateText(i.title, 120)}${i.due_date ? ` (due ${i.due_date})` : ''}${i.status === 'stuck' ? ' [STUCK]' : ''}`
-    ).join('\n')
+    const itemIds = nonDone.slice(0, MAX_RECOMMEND_ITEMS).map(i => i.id).sort()
 
-    const today = formatDateOnly(new Date())
+    const { tokenUsage, parsedRaw } = await withAiCache({
+      userId,
+      endpoint: 'recommend-next',
+      inputs: { itemIds },
+      isDemo,
+      fn: async () => {
+        const itemList = nonDone.slice(0, MAX_RECOMMEND_ITEMS).map((i) =>
+          `${i.id}: [${i.priority}] ${truncateText(i.title, 120)}${i.due_date ? ` (due ${i.due_date})` : ''}${i.status === 'stuck' ? ' [STUCK]' : ''}`
+        ).join('\n')
 
-    const aiRes = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 256,
-      messages: [
-        {
-          role: 'user',
-          content: `Today is ${today}. Pick the single most important task to work on next. Consider priority, due date, and whether it is stuck.
+        const today = formatDateOnly(new Date())
+
+        const aiRes = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 256,
+          messages: [
+            {
+              role: 'user',
+              content: `Today is ${today}. Pick the single most important task to work on next. Consider priority, due date, and whether it is stuck.
 
 Tasks:
 ${itemList}
 
 Return ONLY valid JSON: {"itemId": "<uuid>", "reason": "<1-sentence explanation>"}`,
-        },
-      ],
+            },
+          ],
+        })
+
+        const tokenUsage = getTokenUsage(aiRes)
+        const textBlocks = aiRes.content.filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        const raw = textBlocks.map(block => block.text).join('')
+        const parsedRaw = parseJsonFromText<unknown>(raw)
+        return { tokenUsage, parsedRaw }
+      },
     })
 
-    const tokenUsage = getTokenUsage(aiRes)
     await recordDailyUsage(userId, tokenUsage)
     if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
-    const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    const raw = textBlocks.map(b => b.text).join('')
-    const parsedRaw = parseJsonFromText<unknown>(raw)
     if (!parsedRaw) {
       return res.status(502).json({ error: 'AI returned malformed recommendation' })
     }

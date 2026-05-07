@@ -12,6 +12,7 @@ import { formatDateOnly, parseDateOnly, startOfToday } from '../lib/date.js'
 import { parseJsonFromText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText } from '../lib/ai.js'
+import { withAiCache } from '../lib/aiCache.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -48,30 +49,40 @@ export default withCors(async (req: Req, res: Res) => {
         }
       }
 
-      const aiRes = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        messages: [
-          {
-            role: 'user',
-            content: `Break this task into 2–4 concrete, actionable subtasks.
+      const { tokenUsage, parsedRaw } = await withAiCache({
+        userId,
+        endpoint: 'suggest-split',
+        inputs: { type: 'split', itemId },
+        isDemo,
+        fn: async () => {
+          const aiRes = await anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 512,
+            messages: [
+              {
+                role: 'user',
+                content: `Break this task into 2–4 concrete, actionable subtasks.
 
 Task: ${truncateText(item.title, 120)}
 ${item.description ? `Description: ${truncateText(item.description, 400)}` : ''}
 
 Return ONLY a JSON array:
 [{"title": "...", "description": "...", "estimated_priority": "low"|"medium"|"high"|"critical"}, ...]`,
-          },
-        ],
+              },
+            ],
+          })
+
+          const tokenUsage = getTokenUsage(aiRes)
+          const textBlocks = aiRes.content.filter((block): block is Anthropic.TextBlock => block.type === 'text')
+          const raw = textBlocks.map(block => block.text).join('')
+          const parsedRaw = parseJsonFromText<unknown>(raw)
+          return { tokenUsage, parsedRaw }
+        },
       })
 
-      const tokenUsage = getTokenUsage(aiRes)
       await recordDailyUsage(userId, tokenUsage)
       if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
-      const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      const raw = textBlocks.map(b => b.text).join('')
-      const parsedRaw = parseJsonFromText<unknown>(raw)
       if (!parsedRaw) {
         return res.status(502).json({ error: 'AI returned malformed split suggestions' })
       }
@@ -142,14 +153,22 @@ Return ONLY a JSON array:
     }
 
     const todayStr = formatDateOnly(today)
-    const upcomingText = upcoming.length
-      ? upcoming.map((i) => `  - ${truncateText(i.title, 120)} (due ${i.due_date}, ${i.priority})`).join('\n')
-      : '  (none in next 14 days)'
-    const doneText = recentDone.length
-      ? recentDone.map((i) => `  - ${truncateText(i.title, 120)}`).join('\n')
-      : '  (none recently)'
+    const upcomingIds = upcoming.map(i => i.id).sort()
 
-    const prompt = `Today is ${todayStr}.
+    const { tokenUsage, parsedRaw } = await withAiCache({
+      userId,
+      endpoint: 'suggest-reschedule',
+      inputs: { type: 'reschedule', itemId, upcomingIds },
+      isDemo,
+      fn: async () => {
+        const upcomingText = upcoming.length
+          ? upcoming.map((i) => `  - ${truncateText(i.title, 120)} (due ${i.due_date}, ${i.priority})`).join('\n')
+          : '  (none in next 14 days)'
+        const doneText = recentDone.length
+          ? recentDone.map((i) => `  - ${truncateText(i.title, 120)}`).join('\n')
+          : '  (none recently)'
+
+        const prompt = `Today is ${todayStr}.
 
 Task to reschedule:
   Title: ${truncateText(item.title, 120)}
@@ -166,21 +185,25 @@ ${doneText}
 Suggest 2–3 realistic new due dates for this task. Consider workload spacing and task complexity.
 Return ONLY a JSON array: [{"date": "YYYY-MM-DD", "label": "Friendly label e.g. Friday (3 days out)"}, ...]`
 
-    const aiRes = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 256,
-      messages: [
-        { role: 'user', content: prompt },
-      ],
+        const aiRes = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 256,
+          messages: [
+            { role: 'user', content: prompt },
+          ],
+        })
+
+        const tokenUsage = getTokenUsage(aiRes)
+        const textBlocks = aiRes.content.filter((block): block is Anthropic.TextBlock => block.type === 'text')
+        const raw = textBlocks.map(block => block.text).join('')
+        const parsedRaw = parseJsonFromText<unknown>(raw)
+        return { tokenUsage, parsedRaw }
+      },
     })
 
-    const tokenUsage = getTokenUsage(aiRes)
     await recordDailyUsage(userId, tokenUsage)
     if (ip) await recordIpDailyUsage(ip, tokenUsage)
 
-    const textBlocks = aiRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
-    const raw = textBlocks.map(b => b.text).join('')
-    const parsedRaw = parseJsonFromText<unknown>(raw)
     if (!parsedRaw) {
       return res.status(502).json({ error: 'AI returned malformed reschedule suggestions' })
     }

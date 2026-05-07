@@ -12,6 +12,7 @@ import { NarrativeSchema } from '../lib/validation.js'
 import { parseJsonFromText, getTokenUsage, sumTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText } from '../lib/ai.js'
+import { withAiCache } from '../lib/aiCache.js'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const MAX_LIST_ITEMS = 20
@@ -139,7 +140,15 @@ export default withCors(async (req: Req, res: Res) => {
       }
     }
 
-    const statsText = `Period: ${period}
+    const taskCreatedIds = tasksCreated.map(i => i.id).sort()
+
+    const { narrative, momentum, tokenUsage } = await withAiCache({
+      userId,
+      endpoint: 'narrative',
+      inputs: { period, taskCreatedIds, historyCount: history.length },
+      isDemo,
+      fn: async () => {
+        const statsText = `Period: ${period}
 Tasks created: ${summary.tasks_created}
 Tasks completed: ${summary.tasks_completed}
 Tasks stuck: ${summary.tasks_stuck}
@@ -149,44 +158,49 @@ Priority changes: ${summary.priority_changes}
 Completed tasks: ${tasksCompleted.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}
 Stuck tasks: ${tasksStuck.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}`
 
-    const [narrativeRes, momentumRes] = await Promise.all([
-      anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
-        messages: [{
-          role: 'user',
-          content: `Write a 2–3 sentence plain-English standup summary for this period.\n\n${statsText}`,
-        }],
-      }),
-      anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 256,
-        messages: [
-          {
-            role: 'user',
-            content: `Score the team's momentum from 0–100 and classify sentiment.\n\n${statsText}\n\nReturn ONLY valid JSON: {"score": N, "reasoning": "...", "sentiment": "healthy"|"at_risk"|"critical"}`,
-          },
-        ],
-      }),
-    ])
+        const [narrativeRes, momentumRes] = await Promise.all([
+          anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 256,
+            messages: [{
+              role: 'user',
+              content: `Write a 2–3 sentence plain-English standup summary for this period.\n\n${statsText}`,
+            }],
+          }),
+          anthropic.messages.create({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 256,
+            messages: [
+              {
+                role: 'user',
+                content: `Score the team's momentum from 0–100 and classify sentiment.\n\n${statsText}\n\nReturn ONLY valid JSON: {"score": N, "reasoning": "...", "sentiment": "healthy"|"at_risk"|"critical"}`,
+              },
+            ],
+          }),
+        ])
 
-    const tokenUsage = sumTokenUsage(getTokenUsage(narrativeRes), getTokenUsage(momentumRes))
+        const tokenUsage = sumTokenUsage(getTokenUsage(narrativeRes), getTokenUsage(momentumRes))
+
+        const narrativeText = narrativeRes.content.find((block): block is Anthropic.TextBlock => block.type === 'text')?.text ?? ''
+
+        let momentumData: { score: number; reasoning: string; sentiment: string } | null = null
+        try {
+          const textBlocks = momentumRes.content.filter((block): block is Anthropic.TextBlock => block.type === 'text')
+          const raw = textBlocks.map(block => block.text).join('')
+          const parsed = parseJsonFromText<{ score: number; reasoning: string; sentiment: string }>(raw)
+          if (parsed && typeof parsed.score === 'number' && typeof parsed.reasoning === 'string' && typeof parsed.sentiment === 'string') {
+            momentumData = parsed
+          }
+        } catch {
+          // momentum is optional
+        }
+
+        return { narrative: narrativeText, momentum: momentumData, tokenUsage }
+      },
+    })
+
     await recordDailyUsage(userId, tokenUsage)
     if (ip) await recordIpDailyUsage(ip, tokenUsage)
-
-    const narrative = narrativeRes.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text ?? ''
-
-    let momentum: { score: number; reasoning: string; sentiment: string } | null = null
-    try {
-      const textBlocks = momentumRes.content.filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      const raw = textBlocks.map(b => b.text).join('')
-      const parsed = parseJsonFromText<{ score: number; reasoning: string; sentiment: string }>(raw)
-      if (parsed && typeof parsed.score === 'number' && typeof parsed.reasoning === 'string' && typeof parsed.sentiment === 'string') {
-        momentum = parsed
-      }
-    } catch {
-      // momentum is optional
-    }
 
     res.status(200).json({
       period,

@@ -113,11 +113,11 @@ export default withCors(async (req: Req, res: Res) => {
     })
 
     // ── Partition history by type ──────────────────────────────────────────
-    const statusChanges    = enriched.filter((h) => h.field === 'status')
-    const priorityChanges  = enriched.filter((h) => h.field === 'priority')
-    const tasksCompleted   = statusChanges.filter((h) => h.new_value === 'done')
-    const tasksStuck       = statusChanges.filter((h) => h.new_value === 'stuck')
-    const tasksUnblocked   = statusChanges.filter((h) => h.old_value === 'stuck' && h.new_value !== 'stuck')
+    const statusChanges    = enriched.filter((entry) => entry.field === 'status')
+    const priorityChanges  = enriched.filter((entry) => entry.field === 'priority')
+    const tasksCompleted   = statusChanges.filter((entry) => entry.new_value === 'done')
+    const tasksStuck       = statusChanges.filter((entry) => entry.new_value === 'stuck')
+    const tasksUnblocked   = statusChanges.filter((entry) => entry.old_value === 'stuck' && entry.new_value !== 'stuck')
 
     const summary = {
       tasks_created:   tasksCreated.length,
@@ -155,8 +155,8 @@ Tasks stuck: ${summary.tasks_stuck}
 Tasks unblocked: ${summary.tasks_unblocked}
 Status changes: ${summary.status_changes}
 Priority changes: ${summary.priority_changes}
-Completed tasks: ${tasksCompleted.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}
-Stuck tasks: ${tasksStuck.slice(0, MAX_LIST_ITEMS).map((h) => truncateText(h.item_title ?? 'Task', 120)).join(', ') || 'none'}`
+Completed tasks: ${tasksCompleted.slice(0, MAX_LIST_ITEMS).map((entry) => truncateText(entry.item_title ?? 'Task', 120)).join(', ') || 'none'}
+Stuck tasks: ${tasksStuck.slice(0, MAX_LIST_ITEMS).map((entry) => truncateText(entry.item_title ?? 'Task', 120)).join(', ') || 'none'}`
 
         const [narrativeRes, momentumRes] = await Promise.all([
           anthropic.messages.create({

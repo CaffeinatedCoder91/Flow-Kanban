@@ -88,7 +88,7 @@ export default withCors(async (req: Req, res: Res) => {
         severity,
         title: `${stale.length} stale in-progress task${stale.length > 1 ? 's' : ''}`,
         description: `${stale.length} task${stale.length > 1 ? 's have' : ' has'} been in progress for over a week without any updates.`,
-        items: stale.map((i) => i.id),
+        items: stale.map((item) => item.id),
       })
     }
 
@@ -112,27 +112,27 @@ export default withCors(async (req: Req, res: Res) => {
           severity,
           title: `Bottleneck in "${status}"`,
           description: `${statusItems.length} tasks are piled up in "${status}", which is 3× more than any other column.`,
-          items: statusItems.map((i) => i.id),
+          items: statusItems.map((item) => item.id),
         })
       }
     }
 
     // ── Priority inflation ───────────────────────────────────────────────────
-    const highPriority = items.filter((i) => i.priority === 'high' || i.priority === 'critical')
+    const highPriority = items.filter((item) => item.priority === 'high' || item.priority === 'critical')
     if (items.length > 0 && highPriority.length / items.length >= 0.6) {
       insights.push({
         type: 'priority_inflation',
         severity: 'medium',
         title: 'Priority inflation detected',
         description: `${Math.round(highPriority.length / items.length * 100)}% of your tasks are high or critical priority — consider re-evaluating.`,
-        items: highPriority.map((i) => i.id),
+        items: highPriority.map((item) => item.id),
       })
     }
 
     // ── Deadline cluster ─────────────────────────────────────────────────────
     const upcoming = items
-      .filter((i) => i.due_date && i.status !== 'done')
-      .map((i) => ({ item: i, ts: parseDateOnly(i.due_date!).getTime() }))
+      .filter((item) => item.due_date && item.status !== 'done')
+      .map((item) => ({ item, ts: parseDateOnly(item.due_date!).getTime() }))
       .sort((a, b) => a.ts - b.ts)
 
     for (let i = 0; i < upcoming.length; i++) {
@@ -149,7 +149,7 @@ export default withCors(async (req: Req, res: Res) => {
           severity,
           title: `${cluster.length} deadlines in a 2-day window`,
           description: `${cluster.length} tasks are due within 2 days of each other — this may be overwhelming.`,
-          items: cluster.map((c) => c.item.id),
+          items: cluster.map((clusterItem) => clusterItem.item.id),
         })
         i += cluster.length - 1  // skip past this cluster
         break
@@ -211,8 +211,8 @@ export default withCors(async (req: Req, res: Res) => {
           inputs: { itemIds },
           isDemo,
           fn: async () => {
-            const itemList = aiItems.map((i) =>
-              `${i.id}: ${truncateText(i.title, 120)}${i.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
+            const itemList = aiItems.map((item) =>
+              `${item.id}: ${truncateText(item.title, 120)}${item.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
             ).join('\n')
 
             const aiRes = await anthropic.messages.create({
@@ -247,7 +247,7 @@ If no duplicates, return {"groups": []}`,
           const parsed = DuplicateGroupsSchema.parse(parsedRaw)
           for (const group of parsed.groups) {
             if (group.length >= 2) {
-              const dupeItems = group.map((id) => items.find((i) => i.id === id)).filter(Boolean) as Item[]
+              const dupeItems = group.map((id) => items.find((item) => item.id === id)).filter(Boolean) as Item[]
               let maxSim = 0
               let anyTitleMatch = false
               for (let i = 0; i < dupeItems.length; i++) {
@@ -265,7 +265,7 @@ If no duplicates, return {"groups": []}`,
                 type: 'duplicate',
                 severity: 'low',
                 title: `Possible duplicate tasks (${dupeItems.length})`,
-                description: `These tasks may be about the same work: ${dupeItems.map((i) => `"${i.title}"`).join(', ')}`,
+                description: `These tasks may be about the same work: ${dupeItems.map((item) => `"${item.title}"`).join(', ')}`,
                 items: group,
               })
             }

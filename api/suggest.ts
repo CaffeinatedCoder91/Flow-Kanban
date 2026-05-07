@@ -162,10 +162,10 @@ Return ONLY a JSON array:
       isDemo,
       fn: async () => {
         const upcomingText = upcoming.length
-          ? upcoming.map((i) => `  - ${truncateText(i.title, 120)} (due ${i.due_date}, ${i.priority})`).join('\n')
+          ? upcoming.map((item) => `  - ${truncateText(item.title, 120)} (due ${item.due_date}, ${item.priority})`).join('\n')
           : '  (none in next 14 days)'
         const doneText = recentDone.length
-          ? recentDone.map((i) => `  - ${truncateText(i.title, 120)}`).join('\n')
+          ? recentDone.map((item) => `  - ${truncateText(item.title, 120)}`).join('\n')
           : '  (none recently)'
 
         const prompt = `Today is ${todayStr}.

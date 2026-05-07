@@ -212,7 +212,7 @@ export default withCors(async (req: Req, res: Res) => {
           isDemo,
           fn: async () => {
             const itemList = aiItems.map((item) =>
-              `${item.id}: ${truncateText(item.title, 120)}${item.description ? ` — ${truncateText(i.description, MAX_DESC_CHARS)}` : ''}`
+              `${item.id}: ${truncateText(item.title, 120)}${item.description ? ` — ${truncateText(item.description, MAX_DESC_CHARS)}` : ''}`
             ).join('\n')
 
             const aiRes = await anthropic.messages.create({

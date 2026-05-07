@@ -9,7 +9,7 @@ import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJso
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import type { Item } from '../lib/supabase.js'
 import { DuplicateGroupsSchema } from '../lib/validation.js'
-import { getItems, getItemsNotDone, getItemsWithDueDate } from '../lib/db.js'
+import { getItems, getItemsWithDueDate } from '../lib/db.js'
 import { parseDateOnly, startOfToday } from '../lib/date.js'
 import { parseJsonFromText, truncateText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'

@@ -3,12 +3,12 @@
 // Body: { type: 'reschedule' | 'split', itemId: string }
 
 import Anthropic from '@anthropic-ai/sdk'
-import { getItemById, getItemsWithDueDate } from '../lib/db.js'
+import { getItemById, getItems, getItemsWithDueDate } from '../lib/db.js'
 import { supabaseAdmin } from '../lib/supabase.js'
 import { withCors, getClientIp, getUserContext, enforceJsonBodyLimit, requireJson, unauthorized, badRequest, notFound, serverError, type Req, type Res } from './_utils.js'
 import { checkRateLimit, ipRateLimit } from '../lib/rateLimit.js'
 import { SplitSuggestionSchema, RescheduleSuggestionSchema, SuggestSchema } from '../lib/validation.js'
-import { formatDateOnly, parseDateOnly, startOfToday } from '../lib/date.js'
+import { formatDateOnly, startOfToday } from '../lib/date.js'
 import { parseJsonFromText, getTokenUsage } from '../lib/ai.js'
 import { checkDailyBudget, checkIpDailyBudget, recordDailyUsage, recordIpDailyUsage } from '../lib/usage.js'
 import { truncateText } from '../lib/ai.js'
@@ -104,7 +104,7 @@ Return ONLY: [{"title": "...", "description": "...", "estimated_priority": "low"
       .slice(0, 10)
 
     const recentDone = (await getItems(userId, { status: 'done' }))
-      .sort((a, b) => new Date(b.last_modified).getTime() - new Date(a.last_modified).getTime())
+      .sort((itemA, itemB) => new Date(itemB.last_modified).getTime() - new Date(itemA.last_modified).getTime())
       .slice(0, 5)
 
     let pattern: { days: number; count: number } | null = null
@@ -153,10 +153,10 @@ Return ONLY: [{"title": "...", "description": "...", "estimated_priority": "low"
       isDemo,
       fn: async () => {
         const upcomingText = upcoming.length
-          ? upcoming.map((item) => `  - ${truncateText(item.title, 80)} (${item.due_date})`).join('\n')
+          ? upcoming.map((upcomingItem) => `  - ${truncateText(upcomingItem.title, 80)} (${upcomingItem.due_date})`).join('\n')
           : '  (none in next 14 days)'
         const doneText = recentDone.length
-          ? recentDone.map((item) => `  - ${truncateText(item.title, 80)}`).join('\n')
+          ? recentDone.map((doneItem) => `  - ${truncateText(doneItem.title, 80)}`).join('\n')
           : '  (none recently)'
 
         const prompt = `Today: ${todayStr}

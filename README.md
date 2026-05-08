@@ -18,7 +18,7 @@ AI-powered Kanban board with ambient intelligence — smart insights, natural la
 ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
 ![Emotion](https://img.shields.io/badge/Emotion-C865B9?style=flat-square&logo=css3&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude_Sonnet-D97706?style=flat-square&logo=anthropic&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude_Haiku%2FSonnet-D97706?style=flat-square&logo=anthropic&logoColor=white)
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)
 ![Storybook](https://img.shields.io/badge/Storybook-FF4785?style=flat-square&logo=storybook&logoColor=white)
 
@@ -51,7 +51,7 @@ The insight bar runs silently in the background and surfaces what matters — st
 Ask Flow anything in plain English. *"Create three tasks for the product launch"*, *"What's blocking me right now?"*, *"Mark the auth bug as done"* — the assistant reads your board, takes action, and explains its reasoning. Powered by Claude with tool use. Responses are cached for demo users (24h) and deduplicated across all users (30s) to minimise API costs.
 
 ### Natural Language Task Import
-Paste a meeting transcript, email thread, or bullet list and click Process. Flow extracts the action items, assigns priorities and due dates, shows confidence scores for each extracted field, and waits for your review before adding anything. Also accepts `.txt`, `.pdf`, and `.docx` uploads (up to 5 MB).
+Paste a meeting transcript, email thread, or bullet list and click Process. Flow extracts the action items, assigns priorities and due dates, shows confidence scores for each extracted field, and waits for your review before adding anything. Also accepts `.txt`, `.pdf`, and `.docx` uploads (up to 2 MB).
 
 ### Recommended Next Task
 A one-click spotlight that analyses your current workload and recommends the single highest-impact task to focus on next — with a plain-English explanation of why.
@@ -108,12 +108,12 @@ Vercel Serverless Functions (Node.js 22)
 │        ▼                 ▼                                    │
 │  ┌───────────┐   ┌─────────────────────┐  ┌──────────────┐  │
 │  │ Supabase  │   │  Anthropic Claude   │  │   Upstash    │  │
-│  │ Postgres  │   │  claude-sonnet-4-5  │  │    Redis     │  │
+│  │ Postgres  │   │  Haiku + Sonnet     │  │    Redis     │  │
 │  │           │   │                     │  │ rate limiting │  │
-│  │  items    │   │  chat · insights    │  └──────────────┘  │
-│  │  history  │   │  extraction ·       │                     │
-│  │  actions  │   │  narrative ·        │                     │
-│  │           │   │  deadline AI        │                     │
+│  │  items    │   │  chat (Haiku)       │  └──────────────┘  │
+│  │  history  │   │  insights (Haiku)   │                     │
+│  │  actions  │   │  narrative (Haiku)  │                     │
+│  │           │   │  extraction (Sonnet)│                     │
 │  └───────────┘   └─────────────────────┘                     │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -135,7 +135,7 @@ Vercel Serverless Functions (Node.js 22)
 | **Caching** | Upstash Redis | 24h response cache for demo users; 30s dedup for all users |
 | **Rate Limiting** | Upstash Redis | Sliding window rate limits on AI endpoints |
 | **File Parsing** | pdf-parse + mammoth | PDF and DOCX import support |
-| **Testing** | Vitest + React Testing Library | 296 unit and component tests |
+| **Testing** | Vitest + React Testing Library | 376 unit and component tests |
 | **Component Dev** | Storybook | Visual component sandbox |
 
 ---
@@ -208,7 +208,7 @@ Use `dev:full` to test API routes locally. Use `dev` for UI-only work.
 ```bash
 npm run dev             # Vite frontend (http://localhost:5173)
 npm run dev:full        # Full stack via vercel dev (http://localhost:3000)
-npm test                # Run all 296 tests
+npm test                # Run all 376 tests
 npm run test:watch      # Tests in watch mode
 npm run storybook       # Component explorer at :6006
 npm run build           # Production build
@@ -293,7 +293,7 @@ vercel --prod
 
 ## Testing
 
-296 unit and component tests using **Vitest** and **React Testing Library**. Every component has a collocated `*.test.tsx` file. A custom render wrapper injects the Emotion `ThemeProvider` so styled components resolve correctly in tests.
+376 unit and component tests using **Vitest** and **React Testing Library**. Every component has a collocated `*.test.tsx` file. A custom render wrapper injects the Emotion `ThemeProvider` so styled components resolve correctly in tests.
 
 ```bash
 npm test                                    # Full test suite
@@ -306,24 +306,20 @@ npm run storybook                           # Visual component sandbox
 
 ## Performance & Quality Metrics
 
-### Lighthouse Scores
-- 🎯 **Accessibility:** 100/100 (WCAG 2.1 AA compliant)
-- 🎯 **Best Practices:** 100/100 (CSP headers, modern standards)
-- 🎯 **SEO:** 100/100 (Search optimised)
-- ⚡ **Performance:** 88/100
-
 ### Technical Achievements
-- Zero accessibility violations (WCAG 2.1 AA)
+- 376 comprehensive tests (Vitest + React Testing Library)
 - Content Security Policy implemented
-- Optimised font loading (preload strategy)
 - Mobile-responsive design
 - Cross-browser compatible
+- Optimised API responses with intelligent caching
+- Cost-efficient AI with Haiku/Sonnet model selection
 
-### Audits Completed
-- ✅ Code Quality Audit (8/10)
-- ✅ Security Audit (5 critical issues fixed)
-- ✅ Performance Audit (N+1 queries fixed, 54MB deps removed)
-- ✅ Lighthouse Audit (3 perfect scores)
+### Quality Standards
+- TypeScript strict mode
+- ESLint enforced
+- No console errors in production
+- Rate limiting on all AI endpoints
+- Graceful Redis fallbacks
 
 ---
 
@@ -341,7 +337,7 @@ npm run storybook                           # Visual component sandbox
 | Done | Supabase Auth with demo guest login |
 | Done | Vercel serverless deployment |
 | Done | Upstash Redis rate limiting |
-| Done | Storybook component explorer with 296 tests |
+| Done | Storybook component explorer with 376 tests |
 | Next | Multi-board / workspace support |
 | Next | Team collaboration and real-time sync |
 | Next | Recurring tasks and reminders |

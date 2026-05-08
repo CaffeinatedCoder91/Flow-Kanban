@@ -6,7 +6,7 @@
 
 AI-powered Kanban board with ambient intelligence — smart insights, natural language task creation, deadline negotiation, and a conversational assistant that reads and updates your board directly.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-8B5CF6?style=for-the-badge&logo=vercel&logoColor=white)](https://jojo-flame.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20App-8B5CF6?style=for-the-badge&logo=vercel&logoColor=white)](https://flow-kanban-coral.vercel.app)
 &nbsp;
 [![License: MIT](https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge)](LICENSE)
 
@@ -28,7 +28,7 @@ AI-powered Kanban board with ambient intelligence — smart insights, natural la
 
 ## Try It
 
-**[jojo-flame.vercel.app](https://jojo-flame.vercel.app)** — click **Try Demo** to explore with a pre-configured guest account. No sign-up required.
+**[flow-kanban-coral.vercel.app](https://flow-kanban-coral.vercel.app)** — click **Try Demo** to explore with a pre-configured guest account. No sign-up required.
 
 ---
 

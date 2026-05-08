@@ -160,11 +160,7 @@ type Handler = (req: Req, res: Res) => Promise<void>
 export function withCors(handler: Handler): Handler {
   return async (req: Req, res: Res) => {
     const origin = typeof req?.headers?.origin === 'string' ? req.headers.origin : ''
-    if (process.env.NODE_ENV === 'production' && origin) {
-      if (ALLOWED_ORIGINS.size === 0) {
-        res.status(500).json({ error: 'CORS not configured' })
-        return
-      }
+    if (process.env.NODE_ENV === 'production' && origin && ALLOWED_ORIGINS.size > 0) {
       if (!ALLOWED_ORIGINS.has(origin)) {
         res.status(403).json({ error: 'Origin not allowed' })
         return

@@ -227,6 +227,15 @@ npm run lint            # ESLint
 | `ANTHROPIC_API_KEY` | Yes | Claude API key for all AI features |
 | `UPSTASH_REDIS_REST_URL` | No | Upstash Redis URL for rate limiting |
 | `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis token |
+| `CORS_ALLOWED_ORIGINS` | Yes (prod) | Comma-separated allowed origins for API CORS |
+| `SERVICE_ROLE_KEY` | No | Supabase service role key for Edge Functions |
+| `AI_DAILY_LIMIT` | No | Max AI requests per user per day (default 50) |
+| `AI_DAILY_TOKEN_LIMIT` | No | Max AI tokens per user per day |
+| `AI_IP_DAILY_LIMIT` | No | Max AI requests per IP per day (default 50) |
+| `AI_IP_DAILY_TOKEN_LIMIT` | No | Max AI tokens per IP per day |
+| `AI_DEMO_DAILY_LIMIT` | No | Max AI requests per guest user per day (default 10) |
+| `AI_DEMO_DAILY_TOKEN_LIMIT` | No | Max AI tokens per guest user per day |
+| `AI_TOKENS_PER_REQUEST` | No | Token budget per AI request (default 1500) |
 | `SENTRY_DSN` | No | Sentry error tracking DSN |
 | `VITE_SENTRY_DSN` | No | Sentry DSN for the frontend |
 
@@ -240,15 +249,18 @@ npm run lint            # ESLint
 Flow-Kanban/
 ├── src/
 │   ├── components/
-│   │   ├── Auth/           # LoginPage, AvatarDropdown
+│   │   ├── Auth/           # SignIn, SignUp
 │   │   ├── board/          # KanbanBoard, Column, TaskCard
-│   │   ├── modals/         # ImportModal, DeadlineNegotiationModal, HelpPage,
-│   │   │                   # WelcomeModal, ClearBoardModal, TaskPreview
-│   │   ├── panels/         # AssistantPanel, InsightCard, SpotlightCard,
-│   │   │                   # NarrativeWidget, SummaryView
-│   │   ├── ui/             # Button, Navbar
-│   │   └── GlobalStyles/   # Emotion global CSS injector
-│   ├── lib/                # supabaseBrowser, guestLogin
+│   │   ├── modals/         # AddTaskModal, ImportModal, DeadlineNegotiationModal,
+│   │   │                   # HelpModal, WelcomeModal, ClearBoardModal, TaskPreview
+│   │   ├── panels/         # AssistantPanel, InsightCard, InsightsBar, SpotlightCard,
+│   │   │                   # NarrativeWidget, OnboardingChecklist, SummaryView
+│   │   ├── ui/             # Button, Confetti, Logo, Navbar
+│   │   ├── DemoBanner/     # Guest session banner
+│   │   ├── ErrorBoundary/  # Top-level error boundary
+│   │   ├── GlobalStyles/   # Emotion global CSS injector
+│   │   └── layout/         # Navbar layout wrapper
+│   ├── lib/                # supabaseBrowser, guestLogin, api, errors
 │   ├── test/               # Shared render wrapper (ThemeProvider) + setup
 │   ├── App.tsx             # Root component — state, layout, orchestration
 │   ├── types.ts            # Shared TypeScript types (Item, Insight, ProposedTask...)

@@ -22,7 +22,7 @@ npx vitest run src/App.test.tsx
 This is a full-stack TypeScript kanban app:
 
 - **Frontend** (`src/`): React + Vite + Emotion CSS-in-JS. SPA that calls `/api/*` endpoints.
-- **API** (`api/`): Vercel serverless functions (one file per route). Node.js 20.
+- **API** (`api/`): Vercel serverless functions (one file per route). Node.js 22.
 - **Database**: Supabase (Postgres). Schema in `db/supabase-schema.sql`.
 - **Auth**: Supabase Auth. All API routes require `Authorization: Bearer <supabase-jwt>`.
 
